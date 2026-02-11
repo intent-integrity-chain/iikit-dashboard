@@ -1,6 +1,6 @@
 <!--
 SYNC IMPACT REPORT
-Version: 0.0.0 -> 1.0.0
+Version: 1.0.0 -> 1.1.0
 Change Type: MAJOR (initial constitution)
 Modified Principles: All (new)
 Added Sections: Core Principles, Quality Standards, Development Workflow, Governance
@@ -26,21 +26,7 @@ not the tests.
 problem where AI agents weaken assertions to match buggy code. Tests define
 the contract; implementation fulfills it.
 
-### II. Specification-Driven Development
-
-Every feature MUST begin with a specification that defines WHAT users need
-before any decisions about HOW to build it. Specifications MUST be
-technology-agnostic and focused on user value.
-
-Implementation MUST NOT begin until the specification is complete and the
-plan has been created. The specification is the source of truth for what
-the system does.
-
-**Rationale**: Starting with specifications ensures the team builds the
-right thing, not just something that works. It creates a traceable chain
-from intent to implementation.
-
-### III. Real-Time Accuracy
+### II. Real-Time Accuracy
 
 The system MUST reflect the true state of the project at all times. Displayed
 information MUST be derived directly from project artifacts on disk, not from
@@ -49,15 +35,17 @@ cached or stale data. When artifacts change, the display MUST update promptly.
 **Rationale**: A dashboard that shows stale information is worse than no
 dashboard at all. Users must trust that what they see is current.
 
-### IV. Graceful Degradation
+### IV. Professional Kanban UI
 
-The system MUST handle incomplete, malformed, or missing project data without
-crashing. Missing artifacts MUST be represented visually rather than causing
-errors. The system MUST work with projects at any stage of the IIKit workflow.
+The dashboard MUST look and feel like a professional kanban tool. The visual
+design MUST be on par with industry-leading kanban boards (Trello, Linear,
+Jira, Notion). Cards MUST have clean typography, smooth transitions, and
+clear visual hierarchy. The board MUST feel like a polished product, not a
+developer prototype.
 
-**Rationale**: Real projects are messy. Features may skip phases, artifacts
-may be partially written, or directories may be empty. The tool must be
-resilient to all of these conditions.
+**Rationale**: Developers already use best-in-class tools daily. A dashboard
+that looks like a homework project will not be adopted. Professional UI builds
+trust in the data it displays and makes the tool a pleasure to keep open.
 
 ### V. Simplicity
 
@@ -95,4 +83,4 @@ All contributions MUST comply with these principles. Amendments require:
 3. Version bump following semantic versioning (MAJOR for principle changes,
    MINOR for additions, PATCH for clarifications)
 
-**Version**: 1.0.0 | **Ratified**: 2026-02-10 | **Last Amended**: 2026-02-10
+**Version**: 1.1.0 | **Ratified**: 2026-02-10 | **Last Amended**: 2026-02-10
