@@ -3,115 +3,119 @@
 **Feature Branch**: `001-kanban-board`
 **Created**: 2026-02-10
 **Status**: Draft
-**Input**: User description: "Web-based kanban board dashboard that visualizes IIKit workflow status for all features in a project. Served locally in the browser with live updates. Shows each IIKit phase as columns, features as cards that move through columns based on which artifacts exist on disk. Includes assertion integrity status on feature cards. Auto-refreshes when project files change."
+**Input**: User description: "Web-based kanban board dashboard that visualizes IIKit workflow progress. Cards represent user stories, each containing live-updating task checkboxes. Features are switchable. Assertion integrity status displayed. Professional kanban UI on par with Trello/Linear/Jira."
 
 ## User Scenarios & Testing *(mandatory)*
 
-### User Story 1 - View Feature Progress at a Glance (Priority: P1)
+### User Story 1 - Watch an Agent Work in Real Time (Priority: P1)
 
-A developer working on an IIKit project runs a single command and opens a browser-based dashboard. The dashboard shows a kanban-style board where each column represents a workflow phase (specify, clarify, plan, checklist, testify, tasks, analyze, implement). Each feature in the project appears as a card positioned in the column corresponding to its current phase. Completed phases are visually indicated.
+A developer kicks off an AI agent to implement a feature, then opens the kanban dashboard in their browser. They see user story cards arranged in columns by IIKit phase. As the agent works — creating files, checking off tasks in tasks.md — the checkboxes inside each card tick off in real time. When all tasks for a story's current phase complete, the card slides to the next column. The developer watches the feature come to life without touching the terminal.
 
-**Why this priority**: This is the core value proposition. Without the board visualization, there is no product. A developer must be able to see where every feature stands in the IIKit workflow without manually inspecting files.
+**Why this priority**: This is the "wow" moment — watching AI work visualized live. It's the core reason to build this tool. Everything else is supporting infrastructure.
 
-**Independent Test**: Can be fully tested by creating a project with 2-3 features at different stages, launching the dashboard, and verifying the board renders correctly in a browser with each feature in the right column.
+**Independent Test**: Can be tested by opening the dashboard, then running a script that progressively checks off tasks in tasks.md at 2-second intervals. The dashboard should show checkboxes ticking off and cards moving.
 
 **Acceptance Scenarios**:
 
-1. **Given** a project with one feature that has spec.md and plan.md but no tasks.md, **When** the user opens the dashboard, **Then** the board shows the feature card in the "plan" column with "specify" and "clarify" marked as complete
-2. **Given** a project with three features at different stages, **When** the user opens the dashboard, **Then** each feature card appears in the column matching its current phase
-3. **Given** a project with no features (empty specs/ directory), **When** the user opens the dashboard, **Then** the board renders with empty columns and a message indicating no features exist
-4. **Given** a feature with all phases complete (all artifacts exist), **When** the board renders, **Then** the feature card appears in the "implement" column with all prior phases marked complete
+1. **Given** a feature with tasks.md containing 10 unchecked tasks tagged with [US1] and [US2], **When** the dashboard is open and an agent checks off a [US1] task, **Then** the checkbox for that task updates on the US1 card within 5 seconds
+2. **Given** a US1 card in the "implement" column with 3/4 tasks checked, **When** the final task is checked off, **Then** the card shows 4/4 tasks complete with a visual completion indicator
+3. **Given** the dashboard is open, **When** a new file is created in the feature directory (e.g., plan.md), **Then** the phase indicators on all story cards update to reflect the new artifact
 
 ---
 
-### User Story 2 - Live Dashboard Updates (Priority: P1)
+### User Story 2 - See Where Every Story Stands (Priority: P1)
 
-While the dashboard is open in the browser, it automatically receives updates when project artifacts change on disk (new files created, specs updated, tasks completed). The board re-renders without the user needing to refresh the page. This enables a developer to keep the dashboard open while working in their editor or terminal.
+A developer opens the dashboard and immediately sees all user stories for the current feature laid out as cards on a kanban board. Each card shows the story title, its priority, a task progress bar (e.g., "3/7 tasks"), and which IIKit phase it's in. The columns represent the IIKit workflow phases. The developer can tell at a glance which stories are in progress, which are blocked, and which are done.
 
-**Why this priority**: Live updates are a core requirement. Without them, the user must repeatedly refresh the page, which defeats the purpose of a persistent dashboard.
+**Why this priority**: The board is useless if the static view doesn't clearly communicate status. This is the foundation that the live updates build on.
 
-**Independent Test**: Can be tested by opening the dashboard, then in a separate terminal creating a new spec.md file, and verifying the board updates in the browser within a few seconds without manual page refresh.
+**Independent Test**: Can be tested by creating a feature with a spec.md containing 3 user stories and a tasks.md with tasks tagged by story, then opening the dashboard and verifying each story appears as a card in the correct column with accurate task counts.
 
 **Acceptance Scenarios**:
 
-1. **Given** the dashboard is open showing one feature in the "specify" phase, **When** a plan.md file is created for that feature, **Then** the board updates within 5 seconds to show the feature moved to the "plan" column
-2. **Given** the dashboard is open, **When** a new feature directory is created in specs/ with a spec.md, **Then** a new card appears on the board within 5 seconds
-3. **Given** the dashboard is open, **When** a feature's test-specs.md is modified, **Then** the integrity status indicator updates accordingly
+1. **Given** a feature spec with 4 user stories (P1, P1, P2, P3), **When** the dashboard loads, **Then** 4 cards appear on the board, each showing the story title and priority
+2. **Given** a tasks.md with 5 tasks tagged [US1] where 3 are checked, **When** the board renders, **Then** the US1 card shows a progress bar at 3/5 (60%)
+3. **Given** a feature with spec.md and plan.md but no tasks.md, **When** the board renders, **Then** story cards appear in the "plan" column (highest completed phase) with no task checkboxes shown
+4. **Given** no features exist in the project, **When** the dashboard loads, **Then** an empty state message is displayed
 
 ---
 
-### User Story 3 - Feature Card Details (Priority: P2)
+### User Story 3 - Switch Between Features (Priority: P2)
 
-Each feature card on the board shows useful metadata beyond just the feature name: the feature number, a progress indicator (how many phases complete out of total), and the assertion integrity status for features that have test specifications. A user can see at a glance what's done, what's remaining, and whether test integrity is maintained.
+A project may have multiple features (e.g., `001-auth`, `002-payments`). The dashboard shows one feature's board at a time, with a feature selector (tabs or dropdown) to switch between them. The selector shows the feature number and name, and indicates which features have activity.
 
-**Why this priority**: While the board position tells the current phase, the card details provide richer context about completeness and integrity, helping developers decide what to work on next and catch integrity violations early.
+**Why this priority**: Multi-feature support is needed for real projects but the core value (watching one feature's progress) doesn't depend on it.
 
-**Independent Test**: Can be tested by creating a feature with specific artifacts and verifying the card displays the correct metadata including integrity status.
+**Independent Test**: Can be tested by creating a project with 3 features at different stages, opening the dashboard, and switching between features via the selector.
 
 **Acceptance Scenarios**:
 
-1. **Given** a feature with spec.md, plan.md, and checklists/ present, **When** the board renders, **Then** the feature card shows "3/8 phases" and indicates which artifacts exist
-2. **Given** a feature with test-specs.md that has a valid integrity hash, **When** the board renders, **Then** the testify phase shows a "verified" indicator
-3. **Given** a feature with test-specs.md that has a mismatched integrity hash, **When** the board renders, **Then** the testify phase shows a "tampered" warning indicator
+1. **Given** a project with features 001-auth and 002-payments, **When** the dashboard loads, **Then** a feature selector is visible showing both features
+2. **Given** the dashboard is showing 001-auth, **When** the user selects 002-payments, **Then** the board updates to show 002-payments' user stories and tasks
+3. **Given** a feature with no spec.md (empty directory), **When** it appears in the selector, **Then** it is visually marked as "not started"
 
 ---
 
-### User Story 4 - Multiple Project Support (Priority: P3)
+### User Story 4 - Assertion Integrity at a Glance (Priority: P2)
 
-A developer can point the dashboard at any IIKit project directory, not just the current working directory. This enables viewing the status of different projects by specifying a path when launching the dashboard.
+For features that have gone through `/iikit-05-testify`, the dashboard shows the assertion integrity status. If test-specs.md assertions have been tampered with (hash mismatch), a prominent warning appears on the affected story cards. This lets the developer catch integrity violations without running git commands.
 
-**Why this priority**: Nice-to-have for developers managing multiple IIKit projects. The core use case (current directory) is covered by P1.
+**Why this priority**: Integrity monitoring is a key differentiator of IIKit. Surfacing it visually complements the git hooks with a persistent, always-visible indicator.
 
-**Independent Test**: Can be tested by running the dashboard with a path argument pointing to a different project directory.
+**Independent Test**: Can be tested by creating a feature with test-specs.md, storing a hash, then modifying assertions and verifying the dashboard shows a tamper warning.
 
 **Acceptance Scenarios**:
 
-1. **Given** two IIKit projects in different directories, **When** the user launches the dashboard with a path argument, **Then** the board shows features from the specified project
-2. **Given** a path argument pointing to a non-IIKit directory (no specs/ folder), **When** the user launches the dashboard, **Then** a clear error message is displayed
+1. **Given** a feature with test-specs.md and a valid assertion hash, **When** the board renders, **Then** the testify phase shows a "verified" badge
+2. **Given** a feature where test-specs.md assertions were modified after testify, **When** the board renders, **Then** a "tampered" warning badge appears prominently
+3. **Given** a feature with no test-specs.md, **When** the board renders, **Then** the testify phase shows as "pending" with no integrity indicator
 
 ---
 
 ### Edge Cases
 
-- What happens when a feature directory exists but contains no artifacts? (Show as "new" in the first column with an empty-state indicator)
-- How does the board handle very long feature names? (Truncate with ellipsis, show full name on hover)
-- What happens when there are more than 10 features? (Scrollable board area)
-- How does the board handle a feature with artifacts out of order (e.g., tasks.md but no plan.md)? (Show in the highest-phase column, visually indicate skipped phases)
-- What happens if the browser window is too narrow for all 8 columns? (Responsive layout — horizontal scroll or collapsed columns)
-- What happens when the project directory is deleted while the dashboard is running? (Show an error state, attempt to reconnect)
+- What happens when tasks.md has tasks not tagged with any user story? (Show in a separate "Unassigned" section or aggregate card)
+- How does the board handle a user story with zero tasks? (Show the card with "No tasks yet" indicator)
+- What happens when a feature directory exists but contains no spec.md? (Show as "not started" in the feature selector, empty board if selected)
+- How does the board handle very long story titles? (Truncate with ellipsis, show full title on hover)
+- What happens when tasks.md is malformed or unparseable? (Show the feature with an error indicator, don't crash)
+- What happens when the project directory becomes unavailable while the dashboard is running? (Show disconnected state, attempt to reconnect)
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: System MUST scan the project's `specs/` directory to discover all features by their numbered directory names
-- **FR-002**: System MUST determine each feature's current workflow phase by checking which artifacts exist (spec.md, plan.md, checklists/, tests/test-specs.md, tasks.md)
-- **FR-003**: System MUST render a columnar kanban board in the browser with one column per IIKit workflow phase
-- **FR-004**: System MUST display each feature as a card in the column corresponding to its current (highest completed) phase
-- **FR-005**: System MUST push live updates to connected browsers when project artifacts change on disk, without requiring page refresh
-- **FR-006**: System MUST serve a local web interface accessible via a browser
-- **FR-007**: System MUST check assertion integrity status for features that have test-specs.md (valid/invalid/missing hash)
-- **FR-008**: System MUST show a progress indicator on each feature card (phases completed / total phases)
-- **FR-009**: System MUST accept an optional path argument to specify the project directory
-- **FR-010**: System MUST handle missing, incomplete, or malformed project data gracefully without crashing
-- **FR-011**: System MUST display the project name and summary information on the dashboard
-- **FR-012**: System MUST visually distinguish between phase states (complete, current, pending, skipped)
+- **FR-001**: System MUST parse spec.md to extract user stories (title, priority, acceptance scenarios)
+- **FR-002**: System MUST parse tasks.md to extract tasks and their checked/unchecked status, grouped by user story tag ([US1], [US2], etc.)
+- **FR-003**: System MUST render a kanban board in the browser with one column per IIKit workflow phase (specify, clarify, plan, checklist, testify, tasks, analyze, implement)
+- **FR-004**: System MUST display each user story as a card containing its title, priority, and task checkboxes
+- **FR-005**: System MUST push live updates to the browser when tasks.md or any artifact file changes on disk, without requiring page refresh
+- **FR-006**: System MUST determine each feature's current workflow phase by checking which artifacts exist on disk
+- **FR-007**: System MUST provide a feature selector to switch between multiple features in the project
+- **FR-008**: System MUST check assertion integrity status (valid/tampered/missing) for features with test-specs.md and display the result
+- **FR-009**: System MUST serve a local web interface accessible via a browser
+- **FR-010**: System MUST accept an optional path argument to specify the project directory
+- **FR-011**: System MUST handle missing, incomplete, or malformed project data without crashing
+- **FR-012**: System MUST display task progress on each story card (checked tasks / total tasks)
+- **FR-013**: System MUST visually distinguish between phase states (complete, current, pending)
+- **FR-014**: System MUST present a professional, polished UI comparable to industry kanban tools
 
 ### Key Entities
 
 - **Feature**: A numbered directory under specs/ (e.g., `001-kanban-board`) containing workflow artifacts. Key attributes: number, name, current phase, artifact presence map, integrity status
+- **User Story**: A prioritized user journey defined in spec.md with acceptance scenarios. Identified by US1, US2, etc. Contains zero or more associated tasks.
+- **Task**: A checkbox item from tasks.md, tagged with a user story ([US1], [US2]). Has a checked/unchecked status and a description.
 - **Phase**: One of the 8 IIKit workflow stages, each associated with a specific artifact on disk. Ordered: specify, clarify, plan, checklist, testify, tasks, analyze, implement
-- **Card**: The visual representation of a feature on the board, showing name, progress, phase status, and integrity indicators
-- **Board**: The full kanban visualization with columns for each phase, holding zero or more cards per column
-- **Integrity Status**: The assertion hash verification state for a feature's test-specs.md: valid (hash matches), tampered (hash mismatch), or missing (no hash stored)
+- **Card**: The visual representation of a user story on the board, showing title, priority, task checkboxes, and progress
+- **Board**: The full kanban visualization for one feature, with columns for each phase
 
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can see the status of all features in a project within 3 seconds of opening the dashboard
-- **SC-002**: Board updates reflect file system changes within 5 seconds without page refresh
-- **SC-003**: The board renders correctly for projects with 1 to 20 features
-- **SC-004**: Users can identify which phase each feature is in without reading documentation
+- **SC-001**: Users can see the status of all user stories for a feature within 3 seconds of opening the dashboard
+- **SC-002**: Task checkbox changes in tasks.md are reflected on the dashboard within 5 seconds without page refresh
+- **SC-003**: The board renders correctly for features with 1 to 10 user stories and up to 50 tasks
+- **SC-004**: Users can identify which phase each story is in and how many tasks are complete without reading documentation
 - **SC-005**: The board correctly reports assertion integrity status (valid/tampered/missing) for features with test specifications
-- **SC-006**: The dashboard is usable on common screen sizes (laptop and desktop) without horizontal scrolling for up to 8 columns
+- **SC-006**: The dashboard UI is visually comparable to professional kanban tools (clean cards, clear typography, visual hierarchy)
