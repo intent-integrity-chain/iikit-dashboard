@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IIKit Kanban Board</title>
+  <style>
+    /* ====== CSS Custom Properties ====== */
+    :root {
+      --color-bg: #0f1117;
+      --color-surface: #1a1d27;
+      --color-surface-elevated: #222536;
+      --color-surface-hover: #2a2d40;
+      --color-border: #2e3148;
+      --color-border-subtle: #252839;
+      --color-text: #e8eaed;
+      --color-text-secondary: #9aa0b4;
+      --color-text-muted: #6b7189;
+      --color-accent: #6c63ff;
+      --color-accent-hover: #7c74ff;
+      --color-todo: #4a90d9;
+      --color-inprogress: #f5a623;
+      --color-done: #27c93f;
+      --color-p1: #ff4757;
+      --color-p2: #ffa502;
+      --color-p3: #3498db;
+      --color-verified: #27c93f;
+      --color-tampered: #ff4757;
+      --color-missing: #6b7189;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-card: 0 2px 8px rgba(0,0,0,0.3), 0 1px 3px rgba(0,0,0,0.2);
+      --shadow-card-hover: 0 8px 24px rgba(0,0,0,0.4), 0 2px 8px rgba(0,0,0,0.3);
+      --shadow-column: 0 1px 4px rgba(0,0,0,0.2);
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.25s ease;
+      --transition-slow: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Oxygen, sans-serif;
+      --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
+    }
+
+    /* ====== Reset & Base ====== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ====== Header ====== */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 28px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: -0.3px;
+      color: var(--color-text);
+    }
+
+    .logo-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--color-accent), #8b5cf6);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: white;
+      font-weight: 800;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    /* ====== Feature Selector ====== */
+    .feature-selector {
+      position: relative;
+    }
+
+    .feature-selector select {
+      appearance: none;
+      background: var(--color-surface-elevated);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 36px 8px 12px;
+      font-size: 13px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+      min-width: 200px;
+    }
+
+    .feature-selector select:hover {
+      border-color: var(--color-accent);
+    }
+
+    .feature-selector select:focus {
+      outline: none;
+      border-color: var(--color-accent);
+      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+    }
+
+    .feature-selector::after {
+      content: '';
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-left: 4px solid transparent;
+      border-right: 4px solid transparent;
+      border-top: 5px solid var(--color-text-secondary);
+      pointer-events: none;
+    }
+
+    /* ====== Integrity Badge ====== */
+    .integrity-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      transition: all var(--transition-fast);
+    }
+
+    .integrity-badge.valid {
+      background: rgba(39, 201, 63, 0.12);
+      color: var(--color-verified);
+      border: 1px solid rgba(39, 201, 63, 0.25);
+    }
+
+    .integrity-badge.tampered {
+      background: rgba(255, 71, 87, 0.12);
+      color: var(--color-tampered);
+      border: 1px solid rgba(255, 71, 87, 0.25);
+      animation: pulse-warning 2s ease-in-out infinite;
+    }
+
+    .integrity-badge.missing {
+      background: rgba(107, 113, 137, 0.12);
+      color: var(--color-missing);
+      border: 1px solid rgba(107, 113, 137, 0.25);
+    }
+
+    @keyframes pulse-warning {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .integrity-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .integrity-badge.valid .integrity-dot { background: var(--color-verified); }
+    .integrity-badge.tampered .integrity-dot { background: var(--color-tampered); }
+    .integrity-badge.missing .integrity-dot { background: var(--color-missing); }
+
+    /* ====== Connection Status ====== */
+    .connection-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      transition: background var(--transition-fast);
+    }
+
+    .connection-indicator.connected { background: var(--color-verified); }
+    .connection-indicator.disconnected { background: var(--color-tampered); animation: pulse-warning 1.5s infinite; }
+    .connection-indicator.connecting { background: var(--color-inprogress); animation: pulse-warning 1s infinite; }
+
+    /* ====== Board Layout ====== */
+    .board-container {
+      padding: 24px 28px;
+      overflow-x: auto;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      min-width: 900px;
+    }
+
+    /* ====== Columns ====== */
+    .column {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border-subtle);
+      box-shadow: var(--shadow-column);
+      display: flex;
+      flex-direction: column;
+      min-height: 200px;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px 12px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .column-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--color-text-secondary);
+    }
+
+    .column-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .column.todo .column-dot { background: var(--color-todo); }
+    .column.in-progress .column-dot { background: var(--color-inprogress); }
+    .column.done .column-dot { background: var(--color-done); }
+
+    .column-count {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 10px;
+      min-width: 22px;
+      text-align: center;
+    }
+
+    .column-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+
+    /* ====== Cards ====== */
+    .card {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      box-shadow: var(--shadow-card);
+      transition: transform var(--transition-normal), box-shadow var(--transition-normal), opacity var(--transition-slow);
+      cursor: default;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--color-accent);
+    }
+
+    /* Card slide animation classes */
+    .card.entering {
+      animation: cardEnter 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    .card.exiting {
+      animation: cardExit 0.3s ease-in forwards;
+    }
+
+    @keyframes cardEnter {
+      from { opacity: 0; transform: translateY(-10px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    @keyframes cardExit {
+      from { opacity: 1; transform: translateY(0) scale(1); }
+      to { opacity: 0; transform: translateY(10px) scale(0.97); }
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      color: var(--color-text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .card-title:hover {
+      -webkit-line-clamp: unset;
+    }
+
+    .card-id {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      margin-bottom: 4px;
+    }
+
+    /* ====== Priority Badges ====== */
+    .priority-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+    }
+
+    .priority-badge.p1 {
+      background: rgba(255, 71, 87, 0.15);
+      color: var(--color-p1);
+    }
+
+    .priority-badge.p2 {
+      background: rgba(255, 165, 2, 0.15);
+      color: var(--color-p2);
+    }
+
+    .priority-badge.p3 {
+      background: rgba(52, 152, 219, 0.15);
+      color: var(--color-p3);
+    }
+
+    /* ====== Progress Bar ====== */
+    .progress-container {
+      margin: 10px 0;
+    }
+
+    .progress-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--color-text-muted);
+      font-weight: 500;
+    }
+
+    .progress-value {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--color-text-secondary);
+      font-weight: 600;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: var(--color-border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width var(--transition-slow);
+      min-width: 0;
+    }
+
+    .column.todo .progress-fill { background: var(--color-todo); }
+    .column.in-progress .progress-fill { background: var(--color-inprogress); }
+    .column.done .progress-fill { background: var(--color-done); }
+
+    /* ====== Task List ====== */
+    .task-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .task-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 5px 6px;
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--color-text-secondary);
+      transition: background var(--transition-fast);
+    }
+
+    .task-item:hover {
+      background: var(--color-surface-hover);
+    }
+
+    .task-checkbox {
+      flex-shrink: 0;
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+      border: 1.5px solid var(--color-border);
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .task-checkbox.checked {
+      background: var(--color-done);
+      border-color: var(--color-done);
+    }
+
+    .task-checkbox.checked::after {
+      content: '';
+      display: block;
+      width: 4px;
+      height: 7px;
+      border: solid white;
+      border-width: 0 1.5px 1.5px 0;
+      transform: rotate(45deg) translate(-0.5px, -0.5px);
+    }
+
+    .task-item.checked .task-description {
+      text-decoration: line-through;
+      color: var(--color-text-muted);
+    }
+
+    .task-id {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--color-text-muted);
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .task-description {
+      flex: 1;
+      transition: color var(--transition-fast);
+    }
+
+    /* ====== Empty State ====== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+
+    .empty-state-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--color-surface-elevated);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 6px;
+    }
+
+    .empty-state-text {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      max-width: 300px;
+    }
+
+    .column-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      color: var(--color-text-muted);
+      font-size: 12px;
+      font-style: italic;
+      flex: 1;
+    }
+
+    /* ====== Completion Celebration ====== */
+    .card.just-completed {
+      animation: celebrateComplete 0.6s ease-out;
+    }
+
+    @keyframes celebrateComplete {
+      0% { transform: scale(1); }
+      30% { transform: scale(1.03); box-shadow: 0 0 20px rgba(39, 201, 63, 0.3); }
+      100% { transform: scale(1); }
+    }
+
+    /* ====== Loading ====== */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      grid-column: 1 / -1;
+    }
+
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--color-border);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ====== Responsive ====== */
+    @media (max-width: 1024px) {
+      .board {
+        min-width: unset;
+        grid-template-columns: 1fr;
+      }
+      .column { min-height: 100px; }
+    }
+
+    /* ====== Scrollbar ====== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="header-left">
+      <div class="logo">
+        <div class="logo-icon" aria-hidden="true">K</div>
+        <span>IIKit Kanban</span>
+      </div>
+      <div class="feature-selector" role="navigation" aria-label="Feature selector">
+        <select id="featureSelect" aria-label="Select feature to display" tabindex="0">
+          <option value="">Loading features...</option>
+        </select>
+      </div>
+    </div>
+    <div class="header-right">
+      <div id="integrityBadge" class="integrity-badge missing" role="status" aria-label="Test integrity status">
+        <span class="integrity-dot" aria-hidden="true"></span>
+        <span class="integrity-text">Checking...</span>
+      </div>
+      <div id="connectionIndicator" class="connection-indicator connecting" role="status" aria-label="WebSocket connection status" title="Connecting..."></div>
+    </div>
+  </header>
+
+  <!-- Board -->
+  <main class="board-container" role="main">
+    <div id="board" class="board" role="region" aria-label="Kanban board">
+      <div class="loading" id="loadingState">
+        <div class="loading-spinner" aria-label="Loading board data"></div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    (function() {
+      'use strict';
+
+      // ====== State ======
+      let currentFeature = null;
+      let currentBoard = null;
+      let ws = null;
+      let reconnectTimer = null;
+      let previousCardColumns = {}; // Track card positions for animations
+
+      // ====== DOM References ======
+      const boardEl = document.getElementById('board');
+      const featureSelect = document.getElementById('featureSelect');
+      const integrityBadge = document.getElementById('integrityBadge');
+      const connectionIndicator = document.getElementById('connectionIndicator');
+      const loadingState = document.getElementById('loadingState');
+
+      // ====== Feature Loading ======
+      async function loadFeatures() {
+        try {
+          const res = await fetch('/api/features');
+          const features = await res.json();
+          updateFeatureSelector(features);
+
+          if (features.length > 0 && !currentFeature) {
+            currentFeature = features[0].id;
+            featureSelect.value = currentFeature;
+            loadBoard(currentFeature);
+          } else if (features.length === 0) {
+            showEmptyState();
+          }
+        } catch (err) {
+          console.error('Failed to load features:', err);
+        }
+      }
+
+      function updateFeatureSelector(features) {
+        featureSelect.innerHTML = '';
+        if (features.length === 0) {
+          featureSelect.innerHTML = '<option value="">No features found</option>';
+          return;
+        }
+        for (const f of features) {
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          opt.textContent = `${f.id} — ${f.name} (${f.progress})`;
+          featureSelect.appendChild(opt);
+        }
+      }
+
+      featureSelect.addEventListener('change', () => {
+        const val = featureSelect.value;
+        if (val && val !== currentFeature) {
+          currentFeature = val;
+          previousCardColumns = {};
+          loadBoard(val);
+          // Resubscribe WebSocket
+          if (ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({ type: 'subscribe', feature: val }));
+          }
+        }
+      });
+
+      featureSelect.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          // Default browser behavior handles this
+          return;
+        }
+      });
+
+      // ====== Board Loading ======
+      async function loadBoard(featureId) {
+        try {
+          showLoading();
+          const res = await fetch(`/api/board/${featureId}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const board = await res.json();
+          currentBoard = board;
+          renderBoard(board);
+          updateIntegrity(board.integrity);
+        } catch (err) {
+          console.error('Failed to load board:', err);
+          showEmptyState('Failed to load board data');
+        }
+      }
+
+      function showLoading() {
+        boardEl.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+      }
+
+      function showEmptyState(msg) {
+        boardEl.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">&#9776;</div>
+            <div class="empty-state-title">${msg || 'No features found'}</div>
+            <div class="empty-state-text">Create a feature with spec.md and tasks.md in your specs/ directory to get started.</div>
+          </div>`;
+      }
+
+      // ====== Board Rendering ======
+      function renderBoard(board) {
+        if (!board) return;
+
+        const columns = [
+          { key: 'todo', label: 'Todo', cards: board.todo || [] },
+          { key: 'in_progress', label: 'In Progress', cards: board.in_progress || [] },
+          { key: 'done', label: 'Done', cards: board.done || [] }
+        ];
+
+        // Build new card positions
+        const newCardColumns = {};
+        for (const col of columns) {
+          for (const card of col.cards) {
+            newCardColumns[card.id] = col.key;
+          }
+        }
+
+        // Detect moved cards
+        const movedCards = {};
+        for (const [cardId, newCol] of Object.entries(newCardColumns)) {
+          const oldCol = previousCardColumns[cardId];
+          if (oldCol && oldCol !== newCol) {
+            movedCards[cardId] = { from: oldCol, to: newCol };
+          }
+        }
+
+        boardEl.innerHTML = '';
+
+        for (const col of columns) {
+          const colEl = document.createElement('div');
+          colEl.className = `column ${col.key === 'in_progress' ? 'in-progress' : col.key}`;
+          colEl.setAttribute('role', 'region');
+          colEl.setAttribute('aria-label', `${col.label} column with ${col.cards.length} stories`);
+
+          colEl.innerHTML = `
+            <div class="column-header">
+              <div class="column-title">
+                <span class="column-dot" aria-hidden="true"></span>
+                ${col.label}
+              </div>
+              <span class="column-count">${col.cards.length}</span>
+            </div>
+            <div class="column-body" id="col-${col.key}"></div>`;
+
+          boardEl.appendChild(colEl);
+
+          const bodyEl = colEl.querySelector('.column-body');
+
+          if (col.cards.length === 0) {
+            bodyEl.innerHTML = '<div class="column-empty">No stories</div>';
+          } else {
+            for (const card of col.cards) {
+              const cardEl = createCardElement(card, col.key);
+
+              // Add animation class if card just moved here
+              if (movedCards[card.id]) {
+                cardEl.classList.add('entering');
+                if (movedCards[card.id].to === 'done') {
+                  cardEl.classList.add('just-completed');
+                }
+                // Remove animation class after it completes
+                cardEl.addEventListener('animationend', () => {
+                  cardEl.classList.remove('entering', 'just-completed');
+                }, { once: true });
+              }
+
+              bodyEl.appendChild(cardEl);
+            }
+          }
+        }
+
+        previousCardColumns = newCardColumns;
+      }
+
+      function createCardElement(card, columnKey) {
+        const el = document.createElement('div');
+        el.className = 'card';
+        el.setAttribute('data-card-id', card.id);
+        el.setAttribute('role', 'article');
+        el.setAttribute('aria-label', `${card.title} - ${card.priority} - ${card.progress} tasks complete`);
+
+        const progressParts = card.progress.split('/');
+        const checked = parseInt(progressParts[0], 10);
+        const total = parseInt(progressParts[1], 10);
+        const pct = total > 0 ? Math.round((checked / total) * 100) : 0;
+
+        const priorityClass = card.priority ? card.priority.toLowerCase() : 'p3';
+
+        el.innerHTML = `
+          <div class="card-id">${card.id}</div>
+          <div class="card-header">
+            <div class="card-title" title="${escapeHtml(card.title)}">${escapeHtml(card.title)}</div>
+            <span class="priority-badge ${priorityClass}" aria-label="Priority ${card.priority}">${card.priority}</span>
+          </div>
+          <div class="progress-container">
+            <div class="progress-info">
+              <span class="progress-label">Progress</span>
+              <span class="progress-value">${card.progress} (${pct}%)</span>
+            </div>
+            <div class="progress-bar" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100">
+              <div class="progress-fill" style="width: ${pct}%"></div>
+            </div>
+          </div>
+          <ul class="task-list" aria-label="Tasks for ${card.id}">
+            ${(card.tasks || []).map(t => `
+              <li class="task-item ${t.checked ? 'checked' : ''}">
+                <span class="task-checkbox ${t.checked ? 'checked' : ''}" aria-hidden="true"></span>
+                <span class="task-id">${t.id}</span>
+                <span class="task-description">${escapeHtml(t.description)}</span>
+              </li>
+            `).join('')}
+          </ul>`;
+
+        return el;
+      }
+
+      function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      // ====== Integrity Badge ======
+      function updateIntegrity(integrity) {
+        if (!integrity) return;
+        const badge = integrityBadge;
+        const textEl = badge.querySelector('.integrity-text');
+
+        badge.className = `integrity-badge ${integrity.status}`;
+
+        switch (integrity.status) {
+          case 'valid':
+            textEl.textContent = 'Verified';
+            badge.setAttribute('aria-label', 'Test integrity: verified');
+            badge.title = 'Assertion hash matches stored hash';
+            break;
+          case 'tampered':
+            textEl.textContent = 'Tampered';
+            badge.setAttribute('aria-label', 'Test integrity: tampered - assertions may have been modified');
+            badge.title = 'Assertion hash does not match stored hash!';
+            break;
+          case 'missing':
+            textEl.textContent = 'Missing';
+            badge.setAttribute('aria-label', 'Test integrity: no hash data available');
+            badge.title = 'No test-specs.md or context.json found';
+            break;
+        }
+      }
+
+      // ====== WebSocket ======
+      function connectWebSocket() {
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url = `${protocol}//${location.host}`;
+
+        setConnectionStatus('connecting');
+
+        try {
+          ws = new WebSocket(url);
+        } catch (err) {
+          setConnectionStatus('disconnected');
+          scheduleReconnect();
+          return;
+        }
+
+        ws.onopen = () => {
+          setConnectionStatus('connected');
+          if (reconnectTimer) {
+            clearTimeout(reconnectTimer);
+            reconnectTimer = null;
+          }
+          // Subscribe to current feature
+          if (currentFeature) {
+            ws.send(JSON.stringify({ type: 'subscribe', feature: currentFeature }));
+          }
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            handleMessage(msg);
+          } catch (err) {
+            console.error('Failed to parse WebSocket message:', err);
+          }
+        };
+
+        ws.onclose = () => {
+          setConnectionStatus('disconnected');
+          ws = null;
+          scheduleReconnect();
+        };
+
+        ws.onerror = () => {
+          // onclose will fire after onerror
+        };
+      }
+
+      function handleMessage(msg) {
+        switch (msg.type) {
+          case 'board_update':
+            if (msg.feature === currentFeature && msg.board) {
+              currentBoard = msg.board;
+              renderBoard(msg.board);
+              updateIntegrity(msg.board.integrity);
+            }
+            break;
+
+          case 'features_update':
+            if (msg.features) {
+              updateFeatureSelector(msg.features);
+              if (currentFeature) {
+                featureSelect.value = currentFeature;
+              }
+            }
+            break;
+        }
+      }
+
+      function scheduleReconnect() {
+        if (reconnectTimer) return;
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          connectWebSocket();
+        }, 3000);
+      }
+
+      function setConnectionStatus(status) {
+        connectionIndicator.className = `connection-indicator ${status}`;
+        const labels = {
+          connected: 'Connected',
+          disconnected: 'Disconnected - reconnecting...',
+          connecting: 'Connecting...'
+        };
+        connectionIndicator.title = labels[status] || status;
+        connectionIndicator.setAttribute('aria-label', `WebSocket: ${labels[status] || status}`);
+      }
+
+      // ====== Init ======
+      loadFeatures();
+      connectWebSocket();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "name": "iikit-kanban",
+  "version": "1.0.0",
+  "description": "IIKit Kanban Board — live-updating dashboard for specification-driven development",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node bin/iikit-kanban.js",
+    "test": "jest --forceExit"
+  },
+  "keywords": [
+    "kanban",
+    "iikit",
+    "dashboard"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "express": "^5.2.1",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0"
+  }
+}

@@ -14,10 +14,10 @@
 
 **Purpose**: Project initialization and basic structure
 
-- [ ] T001 Initialize package.json with name, version, scripts (start, test)
-- [ ] T002 Install dependencies: express, ws, chokidar
-- [ ] T003 Install dev dependencies: jest
-- [ ] T004 Create directory structure: src/, src/public/, test/, bin/
+- [x] T001 Initialize package.json with name, version, scripts (start, test)
+- [x] T002 Install dependencies: express, ws, chokidar
+- [x] T003 Install dev dependencies: jest
+- [x] T004 Create directory structure: src/, src/public/, test/, bin/
 
 ---
 
@@ -27,13 +27,13 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Implement spec.md parser in src/parser.js — extract user stories (title, priority) from markdown headings (FR-001, must pass TS-014)
-- [ ] T006 [P] Implement tasks.md parser in src/parser.js — extract tasks with checkbox status and [USx] tags (FR-002, must pass TS-015)
-- [ ] T007 Implement board state computation in src/board.js — assign stories to todo/in_progress/done columns based on task completion (FR-006, must pass TS-016)
-- [ ] T008 [P] Implement integrity checker in src/integrity.js — SHA256 hash comparison for test-specs.md assertions (FR-008, must pass TS-017)
-- [ ] T009 Create Express server skeleton in src/server.js — serve static files from src/public/ (FR-006, FR-009)
-- [ ] T010 [P] Create CLI entry point in bin/iikit-kanban.js — parse --path argument, start server, open browser, print URL (FR-009, FR-010, FR-013)
-- [ ] T010b [P] Add error handling to parsers — malformed markdown, missing files, invalid UTF-8 return empty/default state instead of throwing (FR-011)
+- [x] T005 Implement spec.md parser in src/parser.js — extract user stories (title, priority) from markdown headings (FR-001, must pass TS-014)
+- [x] T006 [P] Implement tasks.md parser in src/parser.js — extract tasks with checkbox status and [USx] tags (FR-002, must pass TS-015)
+- [x] T007 Implement board state computation in src/board.js — assign stories to todo/in_progress/done columns based on task completion (FR-006, must pass TS-016)
+- [x] T008 [P] Implement integrity checker in src/integrity.js — SHA256 hash comparison for test-specs.md assertions (FR-008, must pass TS-017)
+- [x] T009 Create Express server skeleton in src/server.js — serve static files from src/public/ (FR-006, FR-009)
+- [x] T010 [P] Create CLI entry point in bin/iikit-kanban.js — parse --path argument, start server, open browser, print URL (FR-009, FR-010, FR-013)
+- [x] T010b [P] Add error handling to parsers — malformed markdown, missing files, invalid UTF-8 return empty/default state instead of throwing (FR-011)
 
 **Checkpoint**: Foundation ready — user story implementation can begin
 
@@ -45,12 +45,12 @@
 
 **Independent Test**: Check off tasks in tasks.md at intervals → dashboard updates live
 
-- [ ] T011 [US1] Add chokidar file watcher to src/server.js — watch specs/ and .specify/ with 300ms debounce (FR-005, FR-014)
-- [ ] T012 [US1] Add WebSocket server (ws) to src/server.js — push board_update messages on file change (FR-005, must pass TS-013)
-- [ ] T013 [US1] Implement GET /api/board/:feature endpoint in src/server.js (FR-003, FR-004, must pass TS-012)
-- [ ] T014 [US1] Create src/public/index.html — board layout with three columns (Todo, In Progress, Done), WebSocket client with auto-reconnect (FR-003)
-- [ ] T015 [US1] Add card rendering in index.html — story cards with title, priority badge, task checkboxes, progress bar (FR-004, FR-012)
-- [ ] T016 [US1] Add live DOM update logic in index.html — on WebSocket message, diff and update cards with CSS transitions (FR-006, must pass TS-001, TS-002, TS-003)
+- [x] T011 [US1] Add chokidar file watcher to src/server.js — watch specs/ and .specify/ with 300ms debounce (FR-005, FR-014)
+- [x] T012 [US1] Add WebSocket server (ws) to src/server.js — push board_update messages on file change (FR-005, must pass TS-013)
+- [x] T013 [US1] Implement GET /api/board/:feature endpoint in src/server.js (FR-003, FR-004, must pass TS-012)
+- [x] T014 [US1] Create src/public/index.html — board layout with three columns (Todo, In Progress, Done), WebSocket client with auto-reconnect (FR-003)
+- [x] T015 [US1] Add card rendering in index.html — story cards with title, priority badge, task checkboxes, progress bar (FR-004, FR-012)
+- [x] T016 [US1] Add live DOM update logic in index.html — on WebSocket message, diff and update cards with CSS transitions (FR-006, must pass TS-001, TS-002, TS-003)
 
 **Checkpoint**: US1 complete — live dashboard with real-time task updates working
 
@@ -62,10 +62,10 @@
 
 **Independent Test**: Create feature with stories at various completion states → board shows correct columns
 
-- [ ] T017 [US2] Implement initial board load via GET /api/board/:feature on page open (FR-003, FR-004, must pass TS-004, TS-005, TS-006)
-- [ ] T018 [US2] Add progress bar styling — show "3/7" text and visual bar on each card (FR-012, must pass TS-005)
-- [ ] T019 [US2] Add empty state for board — message when no features or no tasks exist (FR-011, must pass TS-004 scenario 4)
-- [ ] T020 [US2] Style column headers (Todo, In Progress, Done) with distinct visual treatment (FR-012, FR-013)
+- [x] T017 [US2] Implement initial board load via GET /api/board/:feature on page open (FR-003, FR-004, must pass TS-004, TS-005, TS-006)
+- [x] T018 [US2] Add progress bar styling — show "3/7" text and visual bar on each card (FR-012, must pass TS-005)
+- [x] T019 [US2] Add empty state for board — message when no features or no tasks exist (FR-011, must pass TS-004 scenario 4)
+- [x] T020 [US2] Style column headers (Todo, In Progress, Done) with distinct visual treatment (FR-012, FR-013)
 
 **Checkpoint**: US2 complete — accurate static board with progress indicators
 
@@ -77,9 +77,9 @@
 
 **Independent Test**: Create project with 2 features → switch between them via selector
 
-- [ ] T021 [US3] Implement GET /api/features endpoint in src/server.js (FR-007, must pass TS-011)
-- [ ] T022 [US3] Add feature selector dropdown to index.html — show feature names, trigger board reload on selection (FR-007, must pass TS-007, TS-008)
-- [ ] T023 [US3] Add feature auto-detection — load first feature with tasks.md on startup (FR-007)
+- [x] T021 [US3] Implement GET /api/features endpoint in src/server.js (FR-007, must pass TS-011)
+- [x] T022 [US3] Add feature selector dropdown to index.html — show feature names, trigger board reload on selection (FR-007, must pass TS-007, TS-008)
+- [x] T023 [US3] Add feature auto-detection — load first feature with tasks.md on startup (FR-007)
 
 **Checkpoint**: US3 complete — multi-feature switching works
 
@@ -91,8 +91,8 @@
 
 **Independent Test**: Store hash, tamper test-specs.md → badge changes to "tampered"
 
-- [ ] T024 [US4] Wire integrity check into board state computation — call integrity.js on each board rebuild (FR-008, must pass TS-009, TS-010)
-- [ ] T025 [US4] Add integrity badge UI to index.html — "verified" (green), "tampered" (red warning), "missing" (gray) (FR-008)
+- [x] T024 [US4] Wire integrity check into board state computation — call integrity.js on each board rebuild (FR-008, must pass TS-009, TS-010)
+- [x] T025 [US4] Add integrity badge UI to index.html — "verified" (green), "tampered" (red warning), "missing" (gray) (FR-008)
 
 **Checkpoint**: US4 complete — integrity status visible on dashboard
 
@@ -102,11 +102,11 @@
 
 **Purpose**: Professional UI and final refinements
 
-- [ ] T026 Style cards to professional kanban standard — shadows, rounded corners, typography, hover states (FR-012, Constitution III)
-- [ ] T027 Add card slide animations — smooth CSS transitions when cards move between columns (FR-012)
-- [ ] T028 Add responsive layout — handle narrow viewports with horizontal scroll (FR-010)
-- [ ] T029 Add ARIA labels and semantic HTML for accessibility (FR-015)
-- [ ] T030 Add keyboard navigation for feature selector (FR-016)
+- [x] T026 Style cards to professional kanban standard — shadows, rounded corners, typography, hover states (FR-012, Constitution III)
+- [x] T027 Add card slide animations — smooth CSS transitions when cards move between columns (FR-012)
+- [x] T028 Add responsive layout — handle narrow viewports with horizontal scroll (FR-010)
+- [x] T029 Add ARIA labels and semantic HTML for accessibility (FR-015)
+- [x] T030 Add keyboard navigation for feature selector (FR-016)
 
 **Checkpoint**: All user stories complete with professional polish
 
