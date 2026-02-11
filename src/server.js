@@ -10,6 +10,7 @@ const { parseSpecStories, parseTasks, parseConstitutionPrinciples } = require('.
 const { computeBoardState } = require('./board');
 const { computeAssertionHash, checkIntegrity } = require('./integrity');
 const { computePipelineState } = require('./pipeline');
+const { computeStoryMapState } = require('./storymap');
 
 /**
  * List features from specs/ directory.
@@ -28,11 +29,9 @@ function listFeatures(projectPath) {
     const tasksPath = path.join(featureDir, 'tasks.md');
     const specPath = path.join(featureDir, 'spec.md');
 
-    if (!fs.existsSync(tasksPath)) continue;
-
     // Parse to get summary info
     const specContent = fs.existsSync(specPath) ? fs.readFileSync(specPath, 'utf-8') : '';
-    const tasksContent = fs.readFileSync(tasksPath, 'utf-8');
+    const tasksContent = fs.existsSync(tasksPath) ? fs.readFileSync(tasksPath, 'utf-8') : '';
     const stories = parseSpecStories(specContent);
     const tasks = parseTasks(tasksContent);
 
@@ -143,6 +142,20 @@ function createServer({ projectPath, port = 3000 }) {
     }
   });
 
+  // API: story map state for a feature
+  app.get('/api/storymap/:feature', (req, res) => {
+    try {
+      const featureDir = path.join(projectPath, 'specs', req.params.feature);
+      if (!fs.existsSync(featureDir)) {
+        return res.status(404).json({ error: 'Feature not found' });
+      }
+      const storymap = computeStoryMapState(projectPath, req.params.feature);
+      res.json(storymap);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // API: board state for a feature
   app.get('/api/board/:feature', (req, res) => {
     try {
@@ -214,6 +227,14 @@ function createServer({ projectPath, port = 3000 }) {
                   type: 'pipeline_update',
                   feature: ws.currentFeature,
                   pipeline
+                }));
+              }
+              const storymap = computeStoryMapState(projectPath, ws.currentFeature);
+              if (storymap) {
+                ws.send(JSON.stringify({
+                  type: 'storymap_update',
+                  feature: ws.currentFeature,
+                  storymap
                 }));
               }
             } catch {
