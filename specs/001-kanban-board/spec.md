@@ -94,6 +94,9 @@ For features that have test-specs.md with stored integrity hashes, the dashboard
 - **FR-011**: System MUST handle missing, incomplete, or malformed project data without crashing
 - **FR-012**: System MUST present a professional, polished UI comparable to industry kanban tools
 - **FR-013**: System MUST launch automatically when `/iikit-08-implement` starts and provide a browser URL
+- **FR-014**: System MUST debounce file change events (300ms after last change) to avoid excessive re-parsing during rapid edits
+- **FR-015**: System MUST use semantic markup and ARIA labels on key interactive elements for basic accessibility
+- **FR-016**: System MUST be keyboard-navigable for the feature selector and card interactions
 
 ### Key Entities
 
