@@ -89,8 +89,8 @@ Description.
 - [ ] T002 [US1] Add payment form
 `);
 
-    // context.json with a hash (intentionally wrong for tampered test)
-    fs.writeFileSync(path.join(specifyDir, 'context.json'), JSON.stringify({
+    // context.json per feature with a hash (intentionally wrong for tampered test)
+    fs.writeFileSync(path.join(feature1Dir, 'context.json'), JSON.stringify({
       testify: {
         assertion_hash: 'intentionally_wrong_hash',
         generated_at: '2026-02-10T00:00:00Z',
@@ -170,5 +170,40 @@ Description.
     expect(res.data.integrity.status).toBeDefined();
     // We stored an intentionally wrong hash, so it should be tampered
     expect(res.data.integrity.status).toBe('tampered');
+  });
+
+  // TS-012: GET /api/pipeline/:feature returns correct phase array
+  test('GET /api/pipeline/:feature returns pipeline with 9 phases', async () => {
+    const res = await httpGet(port, '/api/pipeline/001-auth');
+    expect(res.status).toBe(200);
+    expect(res.data).toHaveProperty('phases');
+    expect(res.data.phases).toHaveLength(9);
+
+    const ids = res.data.phases.map(p => p.id);
+    expect(ids).toEqual([
+      'constitution', 'spec', 'clarify', 'plan',
+      'checklist', 'testify', 'tasks', 'analyze', 'implement'
+    ]);
+  });
+
+  // TS-013: Pipeline API returns correct status values per phase
+  test('GET /api/pipeline/:feature returns correct statuses', async () => {
+    const res = await httpGet(port, '/api/pipeline/001-auth');
+    const phases = res.data.phases;
+
+    // spec.md exists -> complete
+    expect(phases.find(p => p.id === 'spec').status).toBe('complete');
+    // tasks.md exists -> complete
+    expect(phases.find(p => p.id === 'tasks').status).toBe('complete');
+    // tasks has 2/5 checked -> in_progress with 40%
+    const impl = phases.find(p => p.id === 'implement');
+    expect(impl.status).toBe('in_progress');
+    expect(impl.progress).toBe('40%');
+  });
+
+  // TS-014: Pipeline API returns 404 for nonexistent feature
+  test('GET /api/pipeline/:feature returns 404 for missing feature', async () => {
+    const res = await httpGet(port, '/api/pipeline/999-nonexistent');
+    expect(res.status).toBe(404);
   });
 });

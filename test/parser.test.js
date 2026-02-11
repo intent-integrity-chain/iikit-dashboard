@@ -1,4 +1,7 @@
-const { parseSpecStories, parseTasks } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications } = require('../src/parser');
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 // TS-014: Parser extracts user stories from spec.md
 describe('parseSpecStories', () => {
@@ -133,5 +136,111 @@ describe('parseTasks', () => {
     expect(tasks).toHaveLength(1);
     expect(tasks[0].id).toBe('T002');
     expect(tasks[0].storyTag).toBeNull();
+  });
+});
+
+// T006: Tests for parseChecklists
+describe('parseChecklists', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'checklist-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('returns zeros for missing directory', () => {
+    const result = parseChecklists('/nonexistent/path');
+    expect(result).toEqual({ total: 0, checked: 0, percentage: 0 });
+  });
+
+  test('returns zeros for empty directory', () => {
+    const result = parseChecklists(tmpDir);
+    expect(result).toEqual({ total: 0, checked: 0, percentage: 0 });
+  });
+
+  test('counts checked and unchecked items', () => {
+    fs.writeFileSync(path.join(tmpDir, 'req.md'), '- [x] CHK001 Done\n- [x] CHK002 Done\n- [ ] CHK003 Not done\n- [ ] CHK004 Not done\n');
+    const result = parseChecklists(tmpDir);
+    expect(result.total).toBe(4);
+    expect(result.checked).toBe(2);
+    expect(result.percentage).toBe(50);
+  });
+
+  test('aggregates across multiple files', () => {
+    fs.writeFileSync(path.join(tmpDir, 'req.md'), '- [x] CHK001 Done\n- [ ] CHK002 Not done\n');
+    fs.writeFileSync(path.join(tmpDir, 'ux.md'), '- [x] CHK003 Done\n- [x] CHK004 Done\n');
+    const result = parseChecklists(tmpDir);
+    expect(result.total).toBe(4);
+    expect(result.checked).toBe(3);
+    expect(result.percentage).toBe(75);
+  });
+
+  test('returns 100% when all checked', () => {
+    fs.writeFileSync(path.join(tmpDir, 'req.md'), '- [x] CHK001 Done\n- [x] CHK002 Done\n');
+    const result = parseChecklists(tmpDir);
+    expect(result.percentage).toBe(100);
+  });
+
+  test('ignores non-md files', () => {
+    fs.writeFileSync(path.join(tmpDir, 'notes.txt'), '- [ ] Not a checklist\n');
+    const result = parseChecklists(tmpDir);
+    expect(result.total).toBe(0);
+  });
+});
+
+// T007: Tests for parseConstitutionTDD
+describe('parseConstitutionTDD', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tdd-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('returns true when TDD + MUST keywords present', () => {
+    const filePath = path.join(tmpDir, 'CONSTITUTION.md');
+    fs.writeFileSync(filePath, '# Constitution\nTDD MUST be used for all development.\n');
+    expect(parseConstitutionTDD(filePath)).toBe(true);
+  });
+
+  test('returns true when test-first + NON-NEGOTIABLE present', () => {
+    const filePath = path.join(tmpDir, 'CONSTITUTION.md');
+    fs.writeFileSync(filePath, '# Constitution\n### Test-First Development (NON-NEGOTIABLE)\nTests must be written before code.\n');
+    expect(parseConstitutionTDD(filePath)).toBe(true);
+  });
+
+  test('returns false when no TDD keywords', () => {
+    const filePath = path.join(tmpDir, 'CONSTITUTION.md');
+    fs.writeFileSync(filePath, '# Constitution\nBe nice to each other.\nCode must be reviewed.\n');
+    expect(parseConstitutionTDD(filePath)).toBe(false);
+  });
+
+  test('returns false for missing file', () => {
+    expect(parseConstitutionTDD('/nonexistent/CONSTITUTION.md')).toBe(false);
+  });
+});
+
+// T008: Tests for hasClarifications
+describe('hasClarifications', () => {
+  test('returns true when spec has Clarifications section', () => {
+    expect(hasClarifications('# Spec\n## Clarifications\n### Session\n- Q: x -> A: y\n')).toBe(true);
+  });
+
+  test('returns false when spec has no Clarifications section', () => {
+    expect(hasClarifications('# Spec\n## Requirements\n- FR-001\n')).toBe(false);
+  });
+
+  test('returns false for empty string', () => {
+    expect(hasClarifications('')).toBe(false);
+  });
+
+  test('returns false for null', () => {
+    expect(hasClarifications(null)).toBe(false);
   });
 });
