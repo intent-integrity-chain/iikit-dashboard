@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "description": "IIKit Kanban Board — live-updating dashboard for specification-driven development",
   "main": "src/server.js",
+  "bin": {
+    "iikit-kanban": "bin/iikit-kanban.js"
+  },
+  "files": [
+    "bin/",
+    "src/"
+  ],
   "scripts": {
     "start": "node bin/iikit-kanban.js",
     "test": "jest --forceExit"
@@ -10,9 +17,21 @@
   "keywords": [
     "kanban",
     "iikit",
-    "dashboard"
+    "intent-integrity",
+    "dashboard",
+    "tdd",
+    "specification",
+    "live-updates"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/intent-integrity-chain/iikit-kanban"
+  },
+  "author": "Baruch Sadogursky",
   "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "chokidar": "^3.6.0",
     "express": "^5.2.1",
