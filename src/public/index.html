@@ -16,8 +16,8 @@
       --color-text: #e8eaed;
       --color-text-secondary: #9aa0b4;
       --color-text-muted: #6b7189;
-      --color-accent: #6c63ff;
-      --color-accent-hover: #7c74ff;
+      --color-accent: #3B82F6;
+      --color-accent-hover: #60A5FA;
       --color-todo: #4a90d9;
       --color-inprogress: #f5a623;
       --color-done: #27c93f;
@@ -51,8 +51,8 @@
       --color-text: #1a1d27;
       --color-text-secondary: #5a5f72;
       --color-text-muted: #8b90a0;
-      --color-accent: #5b54e6;
-      --color-accent-hover: #4b44d6;
+      --color-accent: #2563EB;
+      --color-accent-hover: #3B82F6;
       --shadow-card: 0 1px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
       --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06);
       --shadow-column: 0 1px 3px rgba(0,0,0,0.06);
@@ -82,12 +82,21 @@
       top: 0;
       z-index: 100;
       backdrop-filter: blur(12px);
+      gap: 16px;
     }
 
     .header-left {
       display: flex;
       align-items: center;
       gap: 16px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .feature-selector {
+      position: relative;
+      min-width: 100px;
+      flex: 0 1 300px;
     }
 
     .logo {
@@ -103,7 +112,7 @@
     .logo-icon {
       width: 28px;
       height: 28px;
-      background: linear-gradient(135deg, var(--color-accent), #8b5cf6);
+      background: linear-gradient(135deg, var(--color-accent), #1D4ED8);
       border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
@@ -117,12 +126,10 @@
       display: flex;
       align-items: center;
       gap: 14px;
+      flex-shrink: 0;
     }
 
     /* ====== Feature Selector ====== */
-    .feature-selector {
-      position: relative;
-    }
 
     .feature-selector select {
       appearance: none;
@@ -136,7 +143,7 @@
       font-weight: 500;
       cursor: pointer;
       transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
-      min-width: 200px;
+      width: 100%;
     }
 
     .feature-selector select:hover {
@@ -146,7 +153,7 @@
     .feature-selector select:focus {
       outline: none;
       border-color: var(--color-accent);
-      box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.2);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
     }
 
     .feature-selector::after {
@@ -213,16 +220,31 @@
     .integrity-badge.missing .integrity-dot { background: var(--color-missing); }
 
     /* ====== Connection Status ====== */
-    .connection-indicator {
-      width: 8px;
-      height: 8px;
+    .activity-indicator {
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      transition: background var(--transition-fast);
+      cursor: help;
+      transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
+      background-color: var(--color-text-muted);
     }
 
-    .connection-indicator.connected { background: var(--color-verified); }
-    .connection-indicator.disconnected { background: var(--color-tampered); animation: pulse-warning 1.5s infinite; }
-    .connection-indicator.connecting { background: var(--color-inprogress); animation: pulse-warning 1s infinite; }
+    .activity-indicator.active {
+      background-color: var(--color-verified);
+      box-shadow: 0 0 8px rgba(39, 201, 63, 0.6);
+      animation: pulse-glow 1.5s ease-in-out infinite;
+    }
+
+    .activity-indicator.idle {
+      background-color: var(--color-text-muted);
+      box-shadow: none;
+      animation: none;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 4px rgba(39, 201, 63, 0.4); }
+      50% { box-shadow: 0 0 12px rgba(39, 201, 63, 0.8); }
+    }
 
     /* ====== Board Layout ====== */
     .board-container {
@@ -677,7 +699,6 @@
       padding: 14px 28px;
       background: var(--color-surface);
       border-bottom: 1px solid var(--color-border);
-      overflow-x: auto;
       position: sticky;
       top: 58px;
       z-index: 90;
@@ -692,9 +713,13 @@
       border-radius: var(--radius-md);
       cursor: pointer;
       transition: background var(--transition-fast), transform var(--transition-fast);
-      min-width: 80px;
+      flex: 0 1 96px;
+      width: 96px;
+      min-width: 40px;
       position: relative;
-      border: 2px solid transparent;
+      border: 1px solid var(--color-border-subtle);
+      background: transparent;
+      overflow: hidden;
     }
 
     .pipeline-node:hover {
@@ -708,7 +733,7 @@
     }
 
     .pipeline-node.active {
-      border-color: var(--color-accent);
+      border: 2px solid var(--color-accent);
       background: var(--color-surface-elevated);
     }
 
@@ -749,7 +774,7 @@
     }
 
     .pipeline-dot.available {
-      background: rgba(108, 99, 255, 0.1);
+      background: rgba(59, 130, 246, 0.12);
       border: 2px solid var(--color-accent);
       color: var(--color-accent);
     }
@@ -761,6 +786,9 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
       white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
     }
 
     .pipeline-progress {
@@ -771,10 +799,10 @@
     }
 
     .pipeline-connector {
-      width: 24px;
+      flex: 1 1 24px;
+      min-width: 4px;
       height: 2px;
       background: var(--color-border);
-      flex-shrink: 0;
       margin-top: -16px;
     }
 
@@ -827,6 +855,187 @@
       max-width: 360px;
     }
 
+    /* ====== Constitution Tab ====== */
+    .constitution-view {
+      padding: 24px 28px;
+    }
+
+    .constitution-layout {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 900px) {
+      .constitution-layout { flex-direction: column; }
+    }
+
+    .constitution-left {
+      flex: 1 1 50%;
+      min-width: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    .constitution-right {
+      flex: 1 1 40%;
+      min-width: 0;
+    }
+
+    .constitution-summary {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      margin-bottom: 20px;
+    }
+
+    .constitution-summary-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+      border-bottom: 1px solid var(--color-border-subtle);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+
+    .constitution-summary-item:last-child { border-bottom: none; }
+    .constitution-summary-item:hover { background: var(--color-surface-hover); }
+    .constitution-summary-item.selected { background: var(--color-surface-elevated); border-left: 3px solid var(--color-accent); }
+
+    .constitution-summary-item .principle-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-text-muted);
+      flex-shrink: 0;
+      width: 24px;
+    }
+
+    .constitution-summary-item .level-badge {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      margin-left: auto;
+      flex-shrink: 0;
+      letter-spacing: 0.3px;
+    }
+
+    .level-badge.must { background: rgba(59, 130, 246, 0.15); color: var(--color-accent); }
+    .level-badge.should { background: rgba(245, 166, 35, 0.15); color: var(--color-inprogress); }
+    .level-badge.may { background: rgba(107, 113, 137, 0.15); color: var(--color-text-muted); }
+
+    .constitution-body {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+
+    @media (max-width: 768px) {
+      .constitution-body { flex-direction: column; }
+    }
+
+    .radar-container {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .radar-container svg {
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+
+    .radar-axis {
+      cursor: pointer;
+      transition: opacity var(--transition-fast);
+    }
+
+    .radar-axis:hover { opacity: 0.8; }
+    .radar-axis:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+
+    .detail-card {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      margin-top: 12px;
+      animation: cardEnter 0.25s ease;
+    }
+
+    .detail-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 4px;
+      color: var(--color-text);
+    }
+
+    .detail-card .detail-level {
+      margin-bottom: 12px;
+    }
+
+    .detail-card .detail-text {
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--color-text-secondary);
+      margin-bottom: 16px;
+    }
+
+    .detail-card .detail-rationale {
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--color-text-muted);
+      padding-top: 12px;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .detail-card .detail-rationale strong {
+      color: var(--color-text-secondary);
+    }
+
+    .amendment-timeline {
+      margin-top: 24px;
+      padding: 16px 0;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .amendment-timeline-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-text-muted);
+      margin-bottom: 8px;
+    }
+
+    .amendment-timeline-content {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--color-text-secondary);
+    }
+
+    .amendment-timeline-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--color-accent);
+      flex-shrink: 0;
+    }
+
+    .amendment-timeline-line {
+      flex: 1;
+      height: 2px;
+      background: var(--color-border);
+    }
+
     /* ====== Scrollbar ====== */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -856,7 +1065,7 @@
       <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle theme" tabindex="0">
         <span id="themeIcon">&#9790;</span>
       </button>
-      <div id="connectionIndicator" class="connection-indicator connecting" role="status" aria-label="WebSocket connection status" title="Connecting..."></div>
+      <div id="activityIndicator" class="activity-indicator idle" role="status" aria-label="Agent activity: idle" title="Agent idle — no recent file changes"></div>
     </div>
   </header>
 
@@ -894,7 +1103,9 @@
       const boardEl = document.getElementById('board');
       const featureSelect = document.getElementById('featureSelect');
       const integrityBadge = document.getElementById('integrityBadge');
-      const connectionIndicator = document.getElementById('connectionIndicator');
+      const activityIndicator = document.getElementById('activityIndicator');
+      let lastActivityTime = 0;
+      const ACTIVITY_TIMEOUT = 10000; // 10 seconds
       const loadingState = document.getElementById('loadingState');
       const pipelineBar = document.getElementById('pipelineBar');
       const contentArea = document.getElementById('contentArea');
@@ -951,6 +1162,8 @@
 
         if (phaseId === 'implement') {
           renderBoardView();
+        } else if (phaseId === 'constitution') {
+          renderConstitutionView();
         } else {
           renderPlaceholderView(phaseId);
         }
@@ -977,9 +1190,198 @@
         const name = phaseNames[phaseId] || phaseId;
         contentArea.innerHTML = `
           <div class="placeholder-view">
-            <div class="placeholder-view-icon">&#128736;</div>
             <div class="placeholder-view-title">${name} View</div>
             <div class="placeholder-view-text">This phase visualization is coming soon. It will be available in a future update.</div>
+          </div>`;
+      }
+
+      // ====== Constitution View ======
+      let currentConstitution = null;
+      let selectedPrinciple = null;
+
+      async function renderConstitutionView() {
+        try {
+          if (!currentConstitution) {
+            const res = await fetch('/api/constitution');
+            currentConstitution = await res.json();
+          }
+          renderConstitutionContent(currentConstitution);
+        } catch (err) {
+          console.error('Failed to load constitution:', err);
+          contentArea.innerHTML = '<div class="placeholder-view"><div class="placeholder-view-title">Failed to load constitution</div></div>';
+        }
+      }
+
+      function renderConstitutionContent(data) {
+        if (!data || !data.exists) {
+          contentArea.innerHTML = `
+            <div class="placeholder-view">
+              <div class="placeholder-view-title">No Constitution Found</div>
+              <div class="placeholder-view-text">Run /iikit-00-constitution to define your project's governance principles.</div>
+            </div>`;
+          return;
+        }
+
+        const principles = data.principles;
+        if (principles.length === 0) {
+          contentArea.innerHTML = `
+            <div class="placeholder-view">
+              <div class="placeholder-view-title">No Principles Found</div>
+              <div class="placeholder-view-text">Your CONSTITUTION.md exists but has no parseable principles.</div>
+            </div>`;
+          return;
+        }
+
+        // Summary list
+        const summaryHtml = principles.map((p, i) => {
+          const isSelected = selectedPrinciple && selectedPrinciple.number === p.number;
+          return `<div class="constitution-summary-item${isSelected ? ' selected' : ''}" id="principle-item-${i}"><span class="principle-num">${escapeHtml(p.number)}.</span> ${escapeHtml(p.name)} <span class="level-badge ${p.level.toLowerCase()}">${p.level}</span></div>`;
+        }).join('');
+
+        // Radar chart SVG
+        const radarSvg = generateRadarSVG(principles);
+
+        // Detail card — only shown when a principle is selected
+        const detailHtml = selectedPrinciple
+          ? `<div class="detail-card">${renderDetailCard(selectedPrinciple)}</div>`
+          : '';
+
+        // Timeline
+        const timelineHtml = data.version ? renderTimeline(data.version) : '';
+
+        contentArea.innerHTML = `
+          <div class="constitution-view">
+            <div class="constitution-layout">
+              <div class="constitution-left">
+                <div class="radar-container">${radarSvg}</div>
+              </div>
+              <div class="constitution-right">
+                <div class="constitution-summary">${summaryHtml}</div>
+                ${detailHtml}
+              </div>
+            </div>
+            ${timelineHtml}
+          </div>`;
+
+        // Attach click handlers to radar axes AND list items
+        function selectPrinciple(p) {
+          selectedPrinciple = p;
+          renderConstitutionContent(data);
+        }
+
+        principles.forEach((p, i) => {
+          const axisEl = document.getElementById(`radar-axis-${i}`);
+          if (axisEl) {
+            axisEl.addEventListener('click', () => selectPrinciple(p));
+            axisEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectPrinciple(p); } });
+          }
+          const itemEl = document.getElementById(`principle-item-${i}`);
+          if (itemEl) {
+            itemEl.addEventListener('click', () => selectPrinciple(p));
+          }
+        });
+      }
+
+      function generateRadarSVG(principles) {
+        const size = 360;
+        const cx = size / 2;
+        const cy = size / 2;
+        const maxR = size / 2 - 60;
+        const levels = { 'MUST': 1, 'SHOULD': 0.66, 'MAY': 0.33 };
+        const n = principles.length;
+        const angleStep = (2 * Math.PI) / n;
+        const startAngle = -Math.PI / 2; // Start from top
+
+        // Ring lines (33%, 66%, 100%)
+        let rings = '';
+        [0.33, 0.66, 1].forEach(pct => {
+          const r = maxR * pct;
+          const points = [];
+          for (let i = 0; i < n; i++) {
+            const angle = startAngle + i * angleStep;
+            points.push(`${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`);
+          }
+          rings += `<polygon points="${points.join(' ')}" fill="none" stroke="var(--color-border)" stroke-width="1" opacity="0.5"/>`;
+        });
+
+        // Axis lines from center to outer edge
+        let axes = '';
+        for (let i = 0; i < n; i++) {
+          const angle = startAngle + i * angleStep;
+          const x2 = cx + maxR * Math.cos(angle);
+          const y2 = cy + maxR * Math.sin(angle);
+          axes += `<line x1="${cx}" y1="${cy}" x2="${x2}" y2="${y2}" stroke="var(--color-border)" stroke-width="1" opacity="0.3"/>`;
+        }
+
+        // Filled polygon connecting principle values
+        const valuePoints = principles.map((p, i) => {
+          const angle = startAngle + i * angleStep;
+          const r = maxR * (levels[p.level] || 0.66);
+          return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+        });
+        const polygon = `<polygon points="${valuePoints.join(' ')}" fill="var(--color-accent)" fill-opacity="0.2" stroke="var(--color-accent)" stroke-width="2"/>`;
+
+        // Value dots and clickable areas
+        let dots = '';
+        principles.forEach((p, i) => {
+          const angle = startAngle + i * angleStep;
+          const r = maxR * (levels[p.level] || 0.66);
+          const x = cx + r * Math.cos(angle);
+          const y = cy + r * Math.sin(angle);
+
+          // Label position (pushed further out)
+          const labelR = maxR + 24;
+          const lx = cx + labelR * Math.cos(angle);
+          const ly = cy + labelR * Math.sin(angle);
+          const anchor = Math.abs(Math.cos(angle)) < 0.1 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end';
+
+          const isSelected = selectedPrinciple && selectedPrinciple.number === p.number;
+
+          dots += `
+            <g id="radar-axis-${i}" class="radar-axis" tabindex="0" role="button"
+               aria-label="${escapeHtml(p.name)} (${p.level})">
+              <circle cx="${x}" cy="${y}" r="${isSelected ? 7 : 5}" fill="var(--color-accent)" stroke="${isSelected ? 'var(--color-text)' : 'none'}" stroke-width="2"/>
+              <circle cx="${x}" cy="${y}" r="16" fill="transparent"/>
+              <text x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle"
+                    font-size="11" font-weight="600" fill="var(--color-text-secondary)"
+                    style="letter-spacing: 0.2px;">${escapeHtml(p.name)}</text>
+            </g>`;
+        });
+
+        const ariaLabel = `Radar chart showing ${n} constitution principles: ${principles.map(p => p.name + ' (' + p.level + ')').join(', ')}`;
+
+        return `<svg viewBox="0 0 ${size} ${size}" role="img" aria-label="${escapeHtml(ariaLabel)}">${rings}${axes}${polygon}${dots}</svg>`;
+      }
+
+      function renderDetailCard(principle) {
+        // Strip rationale from main text to avoid duplication
+        let mainText = principle.text;
+        if (principle.rationale) {
+          const ratIdx = mainText.indexOf('**Rationale**');
+          if (ratIdx > -1) mainText = mainText.substring(0, ratIdx);
+        }
+        mainText = mainText.trim();
+
+        return `
+          <h3>${escapeHtml(principle.number)}. ${escapeHtml(principle.name)}</h3>
+          <div class="detail-level"><span class="level-badge ${principle.level.toLowerCase()}">${principle.level}</span></div>
+          <div class="detail-text">${escapeHtml(mainText).replace(/\n\n/g, '<br><br>').replace(/\n/g, ' ')}</div>
+          ${principle.rationale ? `<div class="detail-rationale"><strong>Rationale:</strong> ${escapeHtml(principle.rationale)}</div>` : ''}`;
+      }
+
+      function renderTimeline(version) {
+        return `
+          <div class="amendment-timeline">
+            <div class="amendment-timeline-label">Amendment History</div>
+            <div class="amendment-timeline-content">
+              <div class="amendment-timeline-dot"></div>
+              <span>v${escapeHtml(version.version)} &mdash; Ratified ${escapeHtml(version.ratified)}</span>
+              ${version.ratified !== version.lastAmended ? `
+                <div class="amendment-timeline-line"></div>
+                <div class="amendment-timeline-dot"></div>
+                <span>Amended ${escapeHtml(version.lastAmended)}</span>
+              ` : ''}
+            </div>
           </div>`;
       }
 
@@ -1267,18 +1669,18 @@
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
         const url = `${protocol}//${location.host}`;
 
-        setConnectionStatus('connecting');
+        // connecting
 
         try {
           ws = new WebSocket(url);
         } catch (err) {
-          setConnectionStatus('disconnected');
+          // disconnected
           scheduleReconnect();
           return;
         }
 
         ws.onopen = () => {
-          setConnectionStatus('connected');
+          // connected
           if (reconnectTimer) {
             clearTimeout(reconnectTimer);
             reconnectTimer = null;
@@ -1299,7 +1701,7 @@
         };
 
         ws.onclose = () => {
-          setConnectionStatus('disconnected');
+          // disconnected
           ws = null;
           scheduleReconnect();
         };
@@ -1309,7 +1711,30 @@
         };
       }
 
+      function markActivity() {
+        lastActivityTime = Date.now();
+        if (!activityIndicator.classList.contains('active')) {
+          activityIndicator.classList.remove('idle');
+          activityIndicator.classList.add('active');
+          activityIndicator.title = 'Agent active \u2014 files changing';
+          activityIndicator.setAttribute('aria-label', 'Agent activity: active');
+        }
+      }
+
+      // Check activity every 2 seconds
+      setInterval(() => {
+        if (lastActivityTime > 0 && Date.now() - lastActivityTime > ACTIVITY_TIMEOUT) {
+          if (activityIndicator.classList.contains('active')) {
+            activityIndicator.classList.remove('active');
+            activityIndicator.classList.add('idle');
+            activityIndicator.title = 'Agent idle \u2014 no recent file changes';
+            activityIndicator.setAttribute('aria-label', 'Agent activity: idle');
+          }
+        }
+      }, 2000);
+
       function handleMessage(msg) {
+        markActivity();
         switch (msg.type) {
           case 'board_update':
             if (msg.feature === currentFeature && msg.board) {
@@ -1325,6 +1750,15 @@
             if (msg.feature === currentFeature && msg.pipeline) {
               currentPipeline = msg.pipeline;
               renderPipeline(msg.pipeline);
+            }
+            break;
+
+          case 'constitution_update':
+            if (msg.constitution) {
+              currentConstitution = msg.constitution;
+              if (activeTab === 'constitution') {
+                renderConstitutionContent(msg.constitution);
+              }
             }
             break;
 
@@ -1347,16 +1781,6 @@
         }, 3000);
       }
 
-      function setConnectionStatus(status) {
-        connectionIndicator.className = `connection-indicator ${status}`;
-        const labels = {
-          connected: 'Connected',
-          disconnected: 'Disconnected - reconnecting...',
-          connecting: 'Connecting...'
-        };
-        connectionIndicator.title = labels[status] || status;
-        connectionIndicator.setAttribute('aria-label', `WebSocket: ${labels[status] || status}`);
-      }
 
       // ====== Theme Toggle ======
       const themeToggle = document.getElementById('themeToggle');

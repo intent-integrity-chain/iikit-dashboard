@@ -6,7 +6,7 @@ const { WebSocketServer } = require('ws');
 const path = require('path');
 const fs = require('fs');
 const chokidar = require('chokidar');
-const { parseSpecStories, parseTasks } = require('./parser');
+const { parseSpecStories, parseTasks, parseConstitutionPrinciples } = require('./parser');
 const { computeBoardState } = require('./board');
 const { computeAssertionHash, checkIntegrity } = require('./integrity');
 const { computePipelineState } = require('./pipeline');
@@ -119,6 +119,16 @@ function createServer({ projectPath, port = 3000 }) {
     }
   });
 
+  // API: constitution data (project-level, not feature-specific)
+  app.get('/api/constitution', (req, res) => {
+    try {
+      const constitution = parseConstitutionPrinciples(projectPath);
+      res.json(constitution);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // API: pipeline state for a feature
   app.get('/api/pipeline/:feature', (req, res) => {
     try {
@@ -173,16 +183,13 @@ function createServer({ projectPath, port = 3000 }) {
   // File watcher with 300ms debounce
   let debounceTimer = null;
   const constitutionPath = path.join(projectPath, 'CONSTITUTION.md');
-  const watchPaths = [
-    path.join(projectPath, 'specs'),
-    path.join(projectPath, '.specify'),
-    ...(fs.existsSync(constitutionPath) ? [constitutionPath] : [])
-  ].filter(p => fs.existsSync(p));
+  const watchPaths = [projectPath];
 
   let watcher = null;
   if (watchPaths.length > 0) {
     watcher = chokidar.watch(watchPaths, {
       ignoreInitial: true,
+      ignored: ['**/node_modules/**', '**/.git/**'],
       awaitWriteFinish: { stabilityThreshold: 200, pollInterval: 50 }
     });
 
@@ -213,6 +220,19 @@ function createServer({ projectPath, port = 3000 }) {
               // ignore errors during push
             }
           }
+        }
+
+        // Also push constitution_update to ALL clients
+        try {
+          const constitution = parseConstitutionPrinciples(projectPath);
+          const constitutionMsg = JSON.stringify({ type: 'constitution_update', constitution });
+          for (const ws of wss.clients) {
+            if (ws.readyState === 1) {
+              ws.send(constitutionMsg);
+            }
+          }
+        } catch {
+          // ignore
         }
 
         // Also push features_update
