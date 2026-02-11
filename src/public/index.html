@@ -40,6 +40,24 @@
       --font-mono: 'SF Mono', 'Fira Code', 'Cascadia Code', 'JetBrains Mono', monospace;
     }
 
+    /* ====== Light Theme ====== */
+    [data-theme="light"] {
+      --color-bg: #f5f6f8;
+      --color-surface: #ffffff;
+      --color-surface-elevated: #f0f1f4;
+      --color-surface-hover: #e8e9ee;
+      --color-border: #d8dae0;
+      --color-border-subtle: #e4e6eb;
+      --color-text: #1a1d27;
+      --color-text-secondary: #5a5f72;
+      --color-text-muted: #8b90a0;
+      --color-accent: #5b54e6;
+      --color-accent-hover: #4b44d6;
+      --shadow-card: 0 1px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-card-hover: 0 4px 12px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.06);
+      --shadow-column: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
     /* ====== Reset & Base ====== */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -576,6 +594,81 @@
       .column { min-height: 100px; }
     }
 
+    /* ====== Theme Toggle ====== */
+    .theme-toggle {
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      transition: border-color var(--transition-fast), background var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .theme-toggle:hover {
+      border-color: var(--color-accent);
+      background: var(--color-surface-hover);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    /* ====== Collapsible Task List ====== */
+    .task-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 4px 6px;
+      border: none;
+      background: none;
+      color: var(--color-text-muted);
+      font-size: 11px;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: color var(--transition-fast), background var(--transition-fast);
+      width: 100%;
+      text-align: left;
+    }
+
+    .task-toggle:hover {
+      color: var(--color-text-secondary);
+      background: var(--color-surface-hover);
+    }
+
+    .task-toggle-icon {
+      transition: transform var(--transition-fast);
+      font-size: 9px;
+    }
+
+    .task-toggle-icon.expanded {
+      transform: rotate(90deg);
+    }
+
+    .task-list {
+      overflow: hidden;
+      transition: max-height var(--transition-normal), opacity var(--transition-fast);
+    }
+
+    .task-list.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+    }
+
+    .task-list.expanded {
+      max-height: 2000px;
+      opacity: 1;
+    }
+
     /* ====== Scrollbar ====== */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -602,6 +695,9 @@
         <span class="integrity-dot" aria-hidden="true"></span>
         <span class="integrity-text">Checking...</span>
       </div>
+      <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle theme" tabindex="0">
+        <span id="themeIcon">&#9790;</span>
+      </button>
       <div id="connectionIndicator" class="connection-indicator connecting" role="status" aria-label="WebSocket connection status" title="Connecting..."></div>
     </div>
   </header>
@@ -819,7 +915,11 @@
               <div class="progress-fill" style="width: ${pct}%"></div>
             </div>
           </div>
-          <ul class="task-list" aria-label="Tasks for ${card.id}">
+          <button class="task-toggle" onclick="toggleTasks(this)" aria-expanded="false" aria-controls="tasks-${card.id}">
+            <span class="task-toggle-icon" aria-hidden="true">&#9654;</span>
+            ${(card.tasks || []).length} tasks
+          </button>
+          <ul class="task-list collapsed" id="tasks-${card.id}" aria-label="Tasks for ${card.id}">
             ${(card.tasks || []).map(t => `
               <li class="task-item ${t.checked ? 'checked' : ''}">
                 <span class="task-checkbox ${t.checked ? 'checked' : ''}" aria-hidden="true"></span>
@@ -951,10 +1051,68 @@
         connectionIndicator.setAttribute('aria-label', `WebSocket: ${labels[status] || status}`);
       }
 
+      // ====== Theme Toggle ======
+      const themeToggle = document.getElementById('themeToggle');
+      const themeIcon = document.getElementById('themeIcon');
+      const html = document.documentElement;
+
+      function getPreferredTheme() {
+        const stored = localStorage.getItem('iikit-theme');
+        if (stored) return stored;
+        return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+
+      function applyTheme(theme) {
+        if (theme === 'light') {
+          html.setAttribute('data-theme', 'light');
+          themeIcon.textContent = '\u2600'; // sun
+          themeToggle.setAttribute('aria-label', 'Switch to dark theme');
+        } else {
+          html.removeAttribute('data-theme');
+          themeIcon.textContent = '\u263E'; // moon
+          themeToggle.setAttribute('aria-label', 'Switch to light theme');
+        }
+        localStorage.setItem('iikit-theme', theme);
+      }
+
+      themeToggle.addEventListener('click', () => {
+        const current = html.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        applyTheme(current === 'light' ? 'dark' : 'light');
+      });
+
+      // Listen for OS theme changes
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
+        if (!localStorage.getItem('iikit-theme')) {
+          applyTheme(e.matches ? 'light' : 'dark');
+        }
+      });
+
+      // Apply on load
+      applyTheme(getPreferredTheme());
+
       // ====== Init ======
       loadFeatures();
       connectWebSocket();
     })();
+
+    // ====== Task List Toggle (global, called from onclick) ======
+    function toggleTasks(btn) {
+      const list = btn.nextElementSibling;
+      const icon = btn.querySelector('.task-toggle-icon');
+      const isCollapsed = list.classList.contains('collapsed');
+
+      if (isCollapsed) {
+        list.classList.remove('collapsed');
+        list.classList.add('expanded');
+        icon.classList.add('expanded');
+        btn.setAttribute('aria-expanded', 'true');
+      } else {
+        list.classList.remove('expanded');
+        list.classList.add('collapsed');
+        icon.classList.remove('expanded');
+        btn.setAttribute('aria-expanded', 'false');
+      }
+    }
   </script>
 </body>
 </html>
