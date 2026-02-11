@@ -1,0 +1,7 @@
+{
+  "testify": {
+    "assertion_hash": "2001192370016ce5cdeaa5572b0ec9cd6497ae5cd00360355c64a08b418ffaa5",
+    "generated_at": "2026-02-11T01:11:44Z",
+    "test_specs_file": "specs/001-kanban-board/tests/test-specs.md"
+  }
+}
