@@ -112,4 +112,94 @@ function hasClarifications(specContent) {
   return /^## Clarifications/m.test(specContent);
 }
 
-module.exports = { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications };
+/**
+ * Parse CONSTITUTION.md to extract principles with full details and version metadata.
+ *
+ * @param {string} projectPath - Path to the project root
+ * @returns {{principles: Array<{number: string, name: string, text: string, rationale: string, level: string}>, version: {version: string, ratified: string, lastAmended: string}|null, exists: boolean}}
+ */
+function parseConstitutionPrinciples(projectPath) {
+  const constitutionPath = path.join(projectPath, 'CONSTITUTION.md');
+
+  if (!fs.existsSync(constitutionPath)) {
+    return { principles: [], version: null, exists: false };
+  }
+
+  const content = fs.readFileSync(constitutionPath, 'utf-8');
+  const lines = content.split('\n');
+  const principles = [];
+
+  // Find principles: ### N. Name pattern (Roman numerals)
+  const principleRegex = /^### ([IVXLC]+)\.\s+(.+?)(?:\s+\(.*\))?\s*$/;
+
+  let currentPrinciple = null;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const match = line.match(principleRegex);
+
+    if (match) {
+      // Save previous principle
+      if (currentPrinciple) {
+        finalizePrinciple(currentPrinciple);
+        principles.push(currentPrinciple);
+      }
+      currentPrinciple = {
+        number: match[1],
+        name: match[2].trim(),
+        text: '',
+        rationale: '',
+        level: 'SHOULD'
+      };
+    } else if (currentPrinciple) {
+      // Stop collecting if we hit a ## heading (next section)
+      if (/^## /.test(line)) {
+        finalizePrinciple(currentPrinciple);
+        principles.push(currentPrinciple);
+        currentPrinciple = null;
+      } else {
+        currentPrinciple.text += line + '\n';
+      }
+    }
+  }
+
+  // Don't forget the last principle
+  if (currentPrinciple) {
+    finalizePrinciple(currentPrinciple);
+    principles.push(currentPrinciple);
+  }
+
+  // Parse version from footer
+  const versionMatch = content.match(/\*\*Version\*\*:\s*(\S+)\s*\|\s*\*\*Ratified\*\*:\s*(\S+)\s*\|\s*\*\*Last Amended\*\*:\s*(\S+)/);
+  const version = versionMatch
+    ? { version: versionMatch[1], ratified: versionMatch[2], lastAmended: versionMatch[3] }
+    : null;
+
+  return { principles, version, exists: true };
+}
+
+/**
+ * Finalize a principle: extract rationale and determine obligation level.
+ */
+function finalizePrinciple(principle) {
+  const text = principle.text.trim();
+
+  // Extract rationale
+  const rationaleMatch = text.match(/\*\*Rationale\*\*:\s*([\s\S]*?)$/m);
+  if (rationaleMatch) {
+    principle.rationale = rationaleMatch[1].trim();
+  }
+
+  // Determine obligation level (strongest keyword wins)
+  if (/\bMUST\b/.test(text)) {
+    principle.level = 'MUST';
+  } else if (/\bSHOULD\b/.test(text)) {
+    principle.level = 'SHOULD';
+  } else if (/\bMAY\b/.test(text)) {
+    principle.level = 'MAY';
+  }
+
+  principle.text = text;
+}
+
+module.exports = { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples };

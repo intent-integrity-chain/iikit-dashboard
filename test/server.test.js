@@ -172,6 +172,23 @@ Description.
     expect(res.data.integrity.status).toBe('tampered');
   });
 
+  // TS-008: GET /api/constitution returns principles
+  test('GET /api/constitution returns principles array', async () => {
+    const res = await httpGet(port, '/api/constitution');
+    expect(res.status).toBe(200);
+    expect(res.data).toHaveProperty('principles');
+    expect(res.data).toHaveProperty('exists');
+  });
+
+  // TS-009: GET /api/constitution returns empty when no file
+  test('GET /api/constitution returns exists false when no CONSTITUTION.md', async () => {
+    // testDir has no CONSTITUTION.md by default
+    const res = await httpGet(port, '/api/constitution');
+    expect(res.status).toBe(200);
+    expect(res.data.exists).toBe(false);
+    expect(res.data.principles).toEqual([]);
+  });
+
   // TS-012: GET /api/pipeline/:feature returns correct phase array
   test('GET /api/pipeline/:feature returns pipeline with 9 phases', async () => {
     const res = await httpGet(port, '/api/pipeline/001-auth');
