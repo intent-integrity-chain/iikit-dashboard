@@ -211,7 +211,7 @@ function finalizePrinciple(principle) {
   const text = principle.text.trim();
 
   // Extract rationale
-  const rationaleMatch = text.match(/\*\*Rationale\*\*:\s*([\s\S]*)/);
+  const rationaleMatch = text.match(/\*\*Rationale\*\*:\s*([\s\S]*?)$/m);
   if (rationaleMatch) {
     principle.rationale = rationaleMatch[1].trim();
   }
