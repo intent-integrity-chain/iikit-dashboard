@@ -31,6 +31,7 @@
 
 ## Notes
 
-- Spec is clean of implementation details -- no tech stack, frameworks, or APIs mentioned
-- 4 user stories with 13 acceptance scenarios covering core board, auto-refresh, card details, and multi-project
-- 10 functional requirements, 5 success criteria, 5 edge cases identified
+- Spec is clean of implementation details — describes web dashboard as user-facing concept
+- 4 user stories with 12 acceptance scenarios
+- 12 functional requirements, 6 success criteria, 6 edge cases
+- Constitution alignment: real-time accuracy (FR-005), graceful degradation (FR-010), simplicity (5 entities)
