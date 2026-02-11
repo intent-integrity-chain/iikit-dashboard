@@ -1,4 +1,4 @@
-const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples } = require('../src/parser');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -242,5 +242,170 @@ describe('hasClarifications', () => {
 
   test('returns false for null', () => {
     expect(hasClarifications(null)).toBe(false);
+  });
+});
+
+// T001: Tests for parseConstitutionPrinciples (TS-011 through TS-017)
+describe('parseConstitutionPrinciples', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'constitution-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  // TS-011: Extracts principle name from heading
+  test('extracts principle number and name from heading', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+
+## Core Principles
+
+### I. Test-First Development (NON-NEGOTIABLE)
+
+TDD MUST be used for all feature development.
+
+**Rationale**: Prevents circular verification.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles).toHaveLength(1);
+    expect(result.principles[0].number).toBe('I');
+    expect(result.principles[0].name).toBe('Test-First Development');
+  });
+
+  // TS-012: Extracts obligation level MUST
+  test('extracts obligation level MUST', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Test-First Development
+TDD MUST be used for all feature development.
+**Rationale**: Prevents bugs.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles[0].level).toBe('MUST');
+  });
+
+  // TS-013: Extracts obligation level SHOULD
+  test('extracts obligation level SHOULD', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Code Documentation
+Code SHOULD be well documented.
+**Rationale**: Helps readability.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles[0].level).toBe('SHOULD');
+  });
+
+  // TS-014: Defaults to SHOULD when no keywords
+  test('defaults to SHOULD when no MUST/SHOULD/MAY keywords', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Be Nice
+Be nice to each other.
+**Rationale**: Good vibes.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles[0].level).toBe('SHOULD');
+  });
+
+  // TS-015: Extracts rationale text
+  test('extracts rationale text', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Test-First Development
+TDD MUST be used.
+
+**Rationale**: Prevents circular verification problem where AI agents weaken assertions.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles[0].rationale).toContain('Prevents circular verification');
+  });
+
+  // TS-016: Extracts version metadata from footer
+  test('extracts version metadata from footer', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Simplicity
+Keep it simple. This MUST be followed.
+**Rationale**: Less is more.
+
+**Version**: 1.1.0 | **Ratified**: 2026-02-10 | **Last Amended**: 2026-02-10
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.version).not.toBeNull();
+    expect(result.version.version).toBe('1.1.0');
+    expect(result.version.ratified).toBe('2026-02-10');
+    expect(result.version.lastAmended).toBe('2026-02-10');
+  });
+
+  // TS-017: Returns null version when no footer
+  test('returns null version when no footer', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Simplicity
+Keep it simple.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.version).toBeNull();
+  });
+
+  test('extracts multiple principles', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Test-First Development (NON-NEGOTIABLE)
+TDD MUST be used.
+**Rationale**: Tests first.
+### II. Real-Time Accuracy
+The system MUST reflect true state.
+**Rationale**: No stale data.
+### IV. Simplicity
+Start simple. Code MAY be refactored later.
+**Rationale**: YAGNI.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles).toHaveLength(3);
+    expect(result.principles[0].number).toBe('I');
+    expect(result.principles[0].level).toBe('MUST');
+    expect(result.principles[1].number).toBe('II');
+    expect(result.principles[1].level).toBe('MUST');
+    expect(result.principles[2].number).toBe('IV');
+    expect(result.principles[2].level).toBe('MAY');
+  });
+
+  test('returns empty when no CONSTITUTION.md', () => {
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles).toEqual([]);
+    expect(result.version).toBeNull();
+    expect(result.exists).toBe(false);
+  });
+
+  test('returns exists true when file found', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Test
+Something MUST happen.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.exists).toBe(true);
+  });
+
+  // TS-018: Obligation level mapping values
+  test('MUST is strongest, SHOULD is moderate, MAY is weakest', () => {
+    fs.writeFileSync(path.join(tmpDir, 'CONSTITUTION.md'), `# Constitution
+## Core Principles
+### I. Strong
+This MUST happen.
+### II. Moderate
+This SHOULD happen.
+### III. Optional
+This MAY happen.
+`);
+    const result = parseConstitutionPrinciples(tmpDir);
+    expect(result.principles[0].level).toBe('MUST');
+    expect(result.principles[1].level).toBe('SHOULD');
+    expect(result.principles[2].level).toBe('MAY');
   });
 });
