@@ -811,7 +811,6 @@
     }
 
     .pipeline-node.optional .pipeline-label {
-      font-style: italic;
       opacity: 0.8;
     }
 
@@ -855,6 +854,478 @@
       max-width: 360px;
     }
 
+    /* ====== Spec Story Map Tab ====== */
+    .storymap-view {
+      padding: 24px 28px;
+      display: flex;
+      transition: padding-right var(--transition-normal);
+    }
+
+    .storymap-view.sidebar-open {
+      padding-right: 340px;
+    }
+
+    .storymap-main {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .storymap-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--color-text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* Story Map Swim Lanes */
+    .swim-lanes {
+      margin-bottom: 32px;
+    }
+
+    .swim-lane {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      min-height: 80px;
+    }
+
+    .swim-lane-label {
+      width: 40px;
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 8px 0;
+      text-align: center;
+      border-radius: var(--radius-sm);
+      color: white;
+    }
+
+    .swim-lane-label.p1 { background: var(--color-p1); }
+    .swim-lane-label.p2 { background: var(--color-p2); }
+    .swim-lane-label.p3 { background: var(--color-p3); }
+
+    .swim-lane-cards {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      flex: 1;
+      min-height: 40px;
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--color-border-subtle);
+    }
+
+    .swim-lane-cards:empty::after {
+      content: 'No stories';
+      color: var(--color-text-muted);
+      font-size: 12px;
+      font-style: italic;
+      padding: 8px;
+    }
+
+    /* Story Cards */
+    .story-card {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      padding: 12px 14px;
+      min-width: 200px;
+      max-width: 280px;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .story-card:hover {
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-card-hover);
+    }
+
+    .story-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .story-card-id {
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      color: var(--color-accent);
+    }
+
+    .story-card-priority {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      color: white;
+    }
+
+    .story-card-priority.p1 { background: var(--color-p1); }
+    .story-card-priority.p2 { background: var(--color-p2); }
+    .story-card-priority.p3 { background: var(--color-p3); }
+
+    .story-card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--color-text);
+      margin-bottom: 8px;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .story-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .story-card-badge {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 6px;
+      border-radius: 8px;
+      background: var(--color-surface-elevated);
+      color: var(--color-text-secondary);
+      font-family: var(--font-mono);
+    }
+
+    .story-card-badge.scenarios {
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--color-accent);
+    }
+
+    .story-card-badge.clarifications {
+      background: rgba(245, 166, 35, 0.12);
+      color: var(--color-inprogress);
+      cursor: pointer;
+    }
+
+    .story-card-badge.clarifications:hover {
+      background: rgba(245, 166, 35, 0.25);
+    }
+
+    /* Requirements Graph */
+    .graph-container {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+
+    .graph-svg {
+      width: 100%;
+      cursor: grab;
+    }
+
+    .graph-svg:active { cursor: grabbing; }
+
+    .graph-edge {
+      stroke: var(--color-border);
+      stroke-width: 1.5;
+      fill: none;
+      transition: opacity var(--transition-fast), stroke var(--transition-fast);
+    }
+
+    .graph-edge.highlighted {
+      stroke: var(--color-accent);
+      stroke-width: 2.5;
+    }
+
+    .graph-edge.dimmed { opacity: 0.15; }
+
+    .graph-node { cursor: pointer; }
+    .graph-node.dimmed { opacity: 0.2; }
+
+    .graph-node circle {
+      transition: stroke var(--transition-fast), r var(--transition-fast);
+    }
+
+    .graph-node.highlighted circle {
+      stroke: var(--color-accent);
+      stroke-width: 3;
+    }
+
+    .graph-node-us circle { fill: var(--color-accent); }
+    .graph-node-fr circle { fill: var(--color-done); }
+    .graph-node-sc circle { fill: var(--color-inprogress); }
+
+    .graph-node text {
+      font-size: 10px;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      fill: var(--color-text);
+      text-anchor: middle;
+      pointer-events: none;
+    }
+
+    .graph-tooltip {
+      position: absolute;
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 12px;
+      color: var(--color-text);
+      max-width: 300px;
+      pointer-events: none;
+      z-index: 50;
+      box-shadow: var(--shadow-card);
+      display: none;
+    }
+
+    .graph-empty {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 200px;
+      color: var(--color-text-muted);
+      font-size: 13px;
+    }
+
+    .graph-legend {
+      display: flex;
+      gap: 16px;
+      padding: 8px 14px;
+      border-top: 1px solid var(--color-border-subtle);
+      font-size: 11px;
+      color: var(--color-text-secondary);
+    }
+
+    .graph-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .graph-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .graph-legend-dot.us { background: var(--color-accent); }
+    .graph-legend-dot.fr { background: var(--color-done); }
+    .graph-legend-dot.sc { background: var(--color-inprogress); }
+
+    /* Clarification Sidebar */
+    .clarification-sidebar {
+      position: fixed;
+      top: 57px;
+      right: 0;
+      width: 320px;
+      height: calc(100vh - 57px);
+      background: var(--color-surface);
+      border-left: 1px solid var(--color-border);
+      transform: translateX(100%);
+      transition: transform var(--transition-normal);
+      z-index: 90;
+      display: flex;
+      flex-direction: column;
+      box-shadow: -4px 0 16px rgba(0,0,0,0.15);
+    }
+
+    .clarification-sidebar.open {
+      transform: translateX(0);
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .sidebar-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--color-text);
+    }
+
+    .sidebar-close {
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+
+    .sidebar-close:hover {
+      background: var(--color-surface-hover);
+    }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 18px;
+    }
+
+    .clarification-entry {
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+
+    .clarification-entry:last-child {
+      border-bottom: none;
+    }
+
+    .clarification-session {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .clarification-question {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 4px;
+    }
+
+    .clarification-answer {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      line-height: 1.5;
+    }
+
+    .sidebar-empty {
+      color: var(--color-text-muted);
+      font-size: 13px;
+      text-align: center;
+      padding: 40px 20px;
+    }
+
+    .sidebar-toggle {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      z-index: 80;
+      background: var(--color-accent);
+      color: white;
+      border: none;
+      border-radius: 28px;
+      padding: 10px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: var(--shadow-card);
+      transition: background var(--transition-fast), transform var(--transition-fast);
+      display: none;
+    }
+
+    .sidebar-toggle:hover {
+      background: var(--color-accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .sidebar-toggle.visible { display: block; }
+
+    /* Detail Panel — floating left sidebar */
+    .detail-panel {
+      position: fixed;
+      left: 0;
+      top: 57px;
+      width: 360px;
+      height: calc(100vh - 57px);
+      overflow-y: auto;
+      background: var(--color-surface);
+      border-right: 1px solid var(--color-border);
+      padding: 20px 24px;
+      box-shadow: 4px 0 16px rgba(0,0,0,0.15);
+      z-index: 90;
+      animation: slideIn 0.2s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-12px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .detail-panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .detail-panel-id {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+      padding: 3px 8px;
+      border-radius: 8px;
+      color: white;
+    }
+
+    .detail-panel-id.us { background: var(--color-accent); }
+    .detail-panel-id.fr { background: var(--color-done); }
+    .detail-panel-id.sc { background: var(--color-inprogress); }
+
+    .detail-panel-close {
+      background: none;
+      border: none;
+      color: var(--color-text-secondary);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
+    }
+
+    .detail-panel-close:hover {
+      background: var(--color-surface-hover);
+    }
+
+    .detail-panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 12px;
+    }
+
+    .detail-panel-body {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .detail-panel-body strong {
+      color: var(--color-text);
+    }
+
+    /* Storymap empty state */
+    .storymap-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 13px;
+    }
+
     /* ====== Constitution Tab ====== */
     .constitution-view {
       padding: 24px 28px;
@@ -871,11 +1342,15 @@
     }
 
     .constitution-left {
-      flex: 0 0 280px;
+      flex: 1 1 50%;
+      min-width: 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
     }
 
     .constitution-right {
-      flex: 1 1 300px;
+      flex: 1 1 40%;
       min-width: 0;
     }
 
@@ -890,14 +1365,19 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      padding: 6px 0;
+      padding: 6px 8px;
       font-size: 13px;
       font-weight: 500;
       color: var(--color-text);
       border-bottom: 1px solid var(--color-border-subtle);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: background var(--transition-fast);
     }
 
     .constitution-summary-item:last-child { border-bottom: none; }
+    .constitution-summary-item:hover { background: var(--color-surface-hover); }
+    .constitution-summary-item.selected { background: var(--color-surface-elevated); border-left: 3px solid var(--color-accent); }
 
     .constitution-summary-item .principle-num {
       font-family: var(--font-mono);
@@ -933,14 +1413,14 @@
     }
 
     .radar-container {
-      flex: 0 0 auto;
       width: 100%;
-      max-width: 280px;
+      max-width: 520px;
     }
 
     .radar-container svg {
       width: 100%;
       height: auto;
+      overflow: visible;
     }
 
     .radar-axis {
@@ -952,11 +1432,11 @@
     .radar-axis:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 
     .detail-card {
-      flex: 1 1 280px;
       background: var(--color-surface-elevated);
       border: 1px solid var(--color-border);
       border-radius: var(--radius-lg);
       padding: 20px;
+      margin-top: 12px;
       animation: cardEnter 0.25s ease;
     }
 
@@ -1151,10 +1631,16 @@
         // Re-render pipeline to update active state
         if (currentPipeline) renderPipeline(currentPipeline);
 
+        // Hide sidebar toggle when not on spec tab
+        const toggle = document.querySelector('.sidebar-toggle');
+        if (toggle) toggle.classList.toggle('visible', phaseId === 'spec');
+
         if (phaseId === 'implement') {
           renderBoardView();
         } else if (phaseId === 'constitution') {
           renderConstitutionView();
+        } else if (phaseId === 'spec') {
+          renderStoryMapView();
         } else {
           renderPlaceholderView(phaseId);
         }
@@ -1184,6 +1670,456 @@
             <div class="placeholder-view-title">${name} View</div>
             <div class="placeholder-view-text">This phase visualization is coming soon. It will be available in a future update.</div>
           </div>`;
+      }
+
+      // ====== Spec Story Map View ======
+      let currentStoryMap = null;
+      let clarificationSidebarOpen = false;
+
+      async function renderStoryMapView() {
+        if (!currentFeature) return;
+
+        try {
+          if (!currentStoryMap) {
+            const res = await fetch(`/api/storymap/${currentFeature}`);
+            if (!res.ok) throw new Error('Failed to load');
+            currentStoryMap = await res.json();
+          }
+          renderStoryMapContent(currentStoryMap);
+        } catch {
+          contentArea.innerHTML = '<div class="storymap-empty">Failed to load story map data.</div>';
+        }
+      }
+
+      function renderStoryMapContent(data) {
+        if (!data.stories.length && !data.requirements.length) {
+          contentArea.innerHTML = `
+            <div class="storymap-empty">
+              <div class="placeholder-view-title">No Specification Data</div>
+              <div>This feature's spec.md has no user stories or requirements yet.</div>
+            </div>`;
+          return;
+        }
+
+        contentArea.innerHTML = `
+          <div class="storymap-view${clarificationSidebarOpen ? ' sidebar-open' : ''}" role="region" aria-label="Spec Story Map">
+            <div class="storymap-main">
+              <div class="storymap-section-title">Story Map</div>
+              <div class="swim-lanes" role="list" aria-label="User stories by priority"></div>
+              <div class="storymap-section-title">Requirements Graph</div>
+              <div class="graph-container">
+                <svg class="graph-svg" aria-label="Requirements relationship graph"></svg>
+                <div class="graph-tooltip"></div>
+                <div class="graph-legend">
+                  <div class="graph-legend-item"><span class="graph-legend-dot us"></span> User Story</div>
+                  <div class="graph-legend-item"><span class="graph-legend-dot fr"></span> Requirement</div>
+                  <div class="graph-legend-item"><span class="graph-legend-dot sc"></span> Success Criterion</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="clarification-sidebar${clarificationSidebarOpen ? ' open' : ''}" role="complementary" aria-label="Clarification trail">
+            <div class="sidebar-header">
+              <span class="sidebar-title">Clarifications</span>
+              <button class="sidebar-close" aria-label="Close clarification panel">&times;</button>
+            </div>
+            <div class="sidebar-body"></div>
+          </div>
+          <div class="detail-panel-slot"></div>
+          <button class="sidebar-toggle visible" aria-label="Toggle clarification panel">
+            ${data.clarifications.length} Clarification${data.clarifications.length !== 1 ? 's' : ''}
+          </button>`;
+
+        renderSwimLanes(data);
+        renderRequirementsGraph(data);
+        renderClarificationEntries(data.clarifications);
+        setupSidebarToggle();
+      }
+
+      function renderSwimLanes(data) {
+        const container = contentArea.querySelector('.swim-lanes');
+        if (!container) return;
+
+        const lanes = { P1: [], P2: [], P3: [] };
+        for (const story of data.stories) {
+          const p = story.priority || 'P3';
+          if (!lanes[p]) lanes[p] = [];
+          lanes[p].push(story);
+        }
+
+        let html = '';
+        for (const [priority, stories] of Object.entries(lanes)) {
+          html += `<div class="swim-lane" role="listitem">
+            <div class="swim-lane-label ${priority.toLowerCase()}">${priority}</div>
+            <div class="swim-lane-cards">`;
+          for (const story of stories) {
+            const refs = (story.requirementRefs || []).map(r => `<span class="story-card-badge">${escapeHtml(r)}</span>`).join('');
+            const clarCount = story.clarificationCount || 0;
+            const clarBadge = clarCount > 0
+              ? `<span class="story-card-badge clarifications" data-action="open-sidebar">${clarCount} clarif.</span>`
+              : '';
+            html += `<div class="story-card" data-story-id="${escapeHtml(story.id)}" tabindex="0" role="button" aria-label="${escapeHtml(story.title)}">
+              <div class="story-card-header">
+                <span class="story-card-id">${escapeHtml(story.id)}</span>
+                <span class="story-card-priority ${story.priority.toLowerCase()}">${escapeHtml(story.priority)}</span>
+              </div>
+              <div class="story-card-title">${escapeHtml(story.title)}</div>
+              <div class="story-card-meta">
+                <span class="story-card-badge scenarios">${story.scenarioCount || 0} scenario${(story.scenarioCount || 0) !== 1 ? 's' : ''}</span>
+                ${refs}${clarBadge}
+              </div>
+            </div>`;
+          }
+          html += '</div></div>';
+        }
+        container.innerHTML = html;
+
+        // Story card click → highlight graph node + show detail (FR-016)
+        container.querySelectorAll('.story-card').forEach(card => {
+          card.addEventListener('click', (e) => {
+            if (e.target.closest('[data-action="open-sidebar"]')) {
+              openClarificationSidebar();
+              return;
+            }
+            const storyId = card.dataset.storyId;
+            highlightGraphNode(storyId);
+            const story = data.stories.find(s => s.id === storyId);
+            if (story) showDetailPanel(storyId, 'us', story.title, story.body || '');
+            const nodeEl = contentArea.querySelector(`.graph-node[data-id="${storyId}"]`);
+            if (nodeEl) nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          });
+          card.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); card.click(); }
+          });
+        });
+      }
+
+      function renderRequirementsGraph(data) {
+        const svg = contentArea.querySelector('.graph-svg');
+        if (!svg) return;
+
+        if (!data.requirements.length && !data.successCriteria.length) {
+          const container = svg.parentElement;
+          container.innerHTML = '<div class="graph-empty">No requirements or success criteria defined yet.</div>' +
+            container.querySelector('.graph-legend')?.outerHTML || '';
+          return;
+        }
+
+        // Build nodes
+        const nodes = [];
+        const nodeMap = {};
+
+        for (const s of data.stories) {
+          const n = { id: s.id, type: 'us', label: s.id, desc: s.title, x: 0, y: 0, vx: 0, vy: 0 };
+          nodes.push(n);
+          nodeMap[s.id] = n;
+        }
+        for (const r of data.requirements) {
+          const n = { id: r.id, type: 'fr', label: r.id, desc: r.text, x: 0, y: 0, vx: 0, vy: 0 };
+          nodes.push(n);
+          nodeMap[r.id] = n;
+        }
+        for (const sc of data.successCriteria) {
+          const n = { id: sc.id, type: 'sc', label: sc.id, desc: sc.text, x: 0, y: 0, vx: 0, vy: 0 };
+          nodes.push(n);
+          nodeMap[sc.id] = n;
+        }
+
+        // Size SVG based on node count
+        const width = svg.clientWidth || 800;
+        const height = Math.min(width, Math.max(300, nodes.length * 30 + 100));
+        svg.style.height = height + 'px';
+        svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+
+        // Initial positions: spread nodes randomly within bounds
+        const pad = 50;
+        for (const n of nodes) {
+          n.x = pad + Math.random() * (width - 2 * pad);
+          n.y = pad + Math.random() * (height - 2 * pad);
+        }
+
+        // Build edges
+        const edges = data.edges.filter(e => nodeMap[e.from] && nodeMap[e.to]);
+
+        // Simple force-directed layout
+        for (let iter = 0; iter < 120; iter++) {
+          // Repulsion between all pairs
+          for (let i = 0; i < nodes.length; i++) {
+            for (let j = i + 1; j < nodes.length; j++) {
+              let dx = nodes[j].x - nodes[i].x;
+              let dy = nodes[j].y - nodes[i].y;
+              let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+              let force = 3000 / (dist * dist);
+              let fx = (dx / dist) * force;
+              let fy = (dy / dist) * force;
+              nodes[i].vx -= fx;
+              nodes[i].vy -= fy;
+              nodes[j].vx += fx;
+              nodes[j].vy += fy;
+            }
+          }
+          // Attraction along edges
+          for (const e of edges) {
+            const a = nodeMap[e.from];
+            const b = nodeMap[e.to];
+            let dx = b.x - a.x;
+            let dy = b.y - a.y;
+            let dist = Math.sqrt(dx * dx + dy * dy) || 1;
+            let force = (dist - 100) * 0.05;
+            let fx = (dx / dist) * force;
+            let fy = (dy / dist) * force;
+            a.vx += fx;
+            a.vy += fy;
+            b.vx -= fx;
+            b.vy -= fy;
+          }
+          // Apply velocities with damping
+          for (const n of nodes) {
+            n.vx *= 0.7;
+            n.vy *= 0.7;
+            n.x += n.vx;
+            n.y += n.vy;
+            n.x = Math.max(pad, Math.min(width - pad, n.x));
+            n.y = Math.max(pad, Math.min(height - pad, n.y));
+          }
+        }
+
+        // Render edges
+        let svgContent = '';
+        for (const e of edges) {
+          const a = nodeMap[e.from];
+          const b = nodeMap[e.to];
+          svgContent += `<line class="graph-edge" data-from="${e.from}" data-to="${e.to}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"/>`;
+        }
+
+        // Render nodes
+        const radius = { us: 18, fr: 14, sc: 12 };
+        for (const n of nodes) {
+          const r = radius[n.type] || 14;
+          svgContent += `<g class="graph-node graph-node-${n.type}" data-id="${n.id}" data-desc="${escapeHtml(n.desc)}" tabindex="0" role="button" aria-label="${n.label}: ${escapeHtml(n.desc)}">
+            <circle cx="${n.x}" cy="${n.y}" r="${r}" stroke="var(--color-bg)" stroke-width="2"/>
+            <text x="${n.x}" y="${n.y + r + 14}">${n.label}</text>
+          </g>`;
+        }
+
+        svg.innerHTML = svgContent;
+
+        // Click-to-highlight + detail panel (FR-006)
+        svg.addEventListener('click', (e) => {
+          const nodeEl = e.target.closest('.graph-node');
+          if (nodeEl) {
+            const id = nodeEl.dataset.id;
+            highlightGraphNode(id);
+            // Show detail panel
+            const story = data.stories.find(s => s.id === id);
+            const req = data.requirements.find(r => r.id === id);
+            const sc = data.successCriteria.find(s => s.id === id);
+            if (story) showDetailPanel(id, 'us', story.title, story.body || '');
+            else if (req) showDetailPanel(id, 'fr', id, req.text);
+            else if (sc) showDetailPanel(id, 'sc', id, sc.text);
+          } else {
+            clearGraphHighlight();
+            closeDetailPanel();
+          }
+        });
+
+        // Tooltip on hover (FR-014)
+        const tooltip = contentArea.querySelector('.graph-tooltip');
+        svg.addEventListener('mouseover', (e) => {
+          const nodeEl = e.target.closest('.graph-node');
+          if (nodeEl && tooltip) {
+            tooltip.textContent = nodeEl.dataset.desc;
+            tooltip.style.display = 'block';
+          }
+        });
+        svg.addEventListener('mousemove', (e) => {
+          if (tooltip && tooltip.style.display === 'block') {
+            const rect = svg.parentElement.getBoundingClientRect();
+            tooltip.style.left = (e.clientX - rect.left + 12) + 'px';
+            tooltip.style.top = (e.clientY - rect.top - 8) + 'px';
+          }
+        });
+        svg.addEventListener('mouseout', (e) => {
+          if (!e.target.closest('.graph-node') && tooltip) {
+            tooltip.style.display = 'none';
+          }
+        });
+
+        // Drag nodes (FR-007)
+        let dragNode = null;
+        let dragOffset = { x: 0, y: 0 };
+
+        svg.addEventListener('mousedown', (e) => {
+          const nodeEl = e.target.closest('.graph-node');
+          if (!nodeEl) return;
+          e.preventDefault();
+          dragNode = nodeEl;
+          const circle = nodeEl.querySelector('circle');
+          const svgRect = svg.getBoundingClientRect();
+          const viewBox = svg.viewBox.baseVal;
+          const scaleX = viewBox.width / svgRect.width;
+          const scaleY = viewBox.height / svgRect.height;
+          dragOffset.x = parseFloat(circle.getAttribute('cx')) - (e.clientX - svgRect.left) * scaleX;
+          dragOffset.y = parseFloat(circle.getAttribute('cy')) - (e.clientY - svgRect.top) * scaleY;
+          svg.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!dragNode) return;
+          const svgRect = svg.getBoundingClientRect();
+          const viewBox = svg.viewBox.baseVal;
+          const scaleX = viewBox.width / svgRect.width;
+          const scaleY = viewBox.height / svgRect.height;
+          const nx = (e.clientX - svgRect.left) * scaleX + dragOffset.x;
+          const ny = (e.clientY - svgRect.top) * scaleY + dragOffset.y;
+          const circle = dragNode.querySelector('circle');
+          const text = dragNode.querySelector('text');
+          circle.setAttribute('cx', nx);
+          circle.setAttribute('cy', ny);
+          text.setAttribute('x', nx);
+          text.setAttribute('y', ny + parseFloat(circle.getAttribute('r')) + 14);
+          // Update connected edges
+          const nodeId = dragNode.dataset.id;
+          svg.querySelectorAll('.graph-edge').forEach(edge => {
+            if (edge.dataset.from === nodeId) { edge.setAttribute('x1', nx); edge.setAttribute('y1', ny); }
+            if (edge.dataset.to === nodeId) { edge.setAttribute('x2', nx); edge.setAttribute('y2', ny); }
+          });
+        });
+
+        document.addEventListener('mouseup', () => {
+          if (dragNode) {
+            dragNode = null;
+            svg.style.cursor = 'grab';
+          }
+        });
+
+        // Zoom/pan via wheel (FR-008)
+        svg.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const viewBox = svg.viewBox.baseVal;
+          const scale = e.deltaY > 0 ? 1.1 : 0.9;
+          const svgRect = svg.getBoundingClientRect();
+          const mx = ((e.clientX - svgRect.left) / svgRect.width) * viewBox.width + viewBox.x;
+          const my = ((e.clientY - svgRect.top) / svgRect.height) * viewBox.height + viewBox.y;
+          const nw = viewBox.width * scale;
+          const nh = viewBox.height * scale;
+          viewBox.x = mx - (mx - viewBox.x) * scale;
+          viewBox.y = my - (my - viewBox.y) * scale;
+          viewBox.width = nw;
+          viewBox.height = nh;
+        }, { passive: false });
+      }
+
+      function highlightGraphNode(nodeId) {
+        const svg = contentArea.querySelector('.graph-svg');
+        if (!svg) return;
+
+        // Build connected set
+        const connected = new Set([nodeId]);
+        svg.querySelectorAll('.graph-edge').forEach(edge => {
+          if (edge.dataset.from === nodeId) connected.add(edge.dataset.to);
+          if (edge.dataset.to === nodeId) connected.add(edge.dataset.from);
+        });
+
+        svg.querySelectorAll('.graph-node').forEach(n => {
+          const id = n.dataset.id;
+          n.classList.toggle('highlighted', id === nodeId);
+          n.classList.toggle('dimmed', !connected.has(id));
+        });
+        svg.querySelectorAll('.graph-edge').forEach(e => {
+          const isConnected = e.dataset.from === nodeId || e.dataset.to === nodeId;
+          e.classList.toggle('highlighted', isConnected);
+          e.classList.toggle('dimmed', !isConnected);
+        });
+      }
+
+      function clearGraphHighlight() {
+        const svg = contentArea.querySelector('.graph-svg');
+        if (!svg) return;
+        svg.querySelectorAll('.graph-node').forEach(n => { n.classList.remove('highlighted', 'dimmed'); });
+        svg.querySelectorAll('.graph-edge').forEach(e => { e.classList.remove('highlighted', 'dimmed'); });
+      }
+
+      function showDetailPanel(id, type, title, body) {
+        const slot = contentArea.querySelector('.detail-panel-slot');
+        if (!slot) return;
+
+        // Simple markdown-like rendering: bold, italic, numbered lists
+        const rendered = body
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.+?)\*/g, '<em>$1</em>')
+          .replace(/^(\d+)\.\s+/gm, '<br>$1. ');
+
+        slot.innerHTML = `
+          <div class="detail-panel" role="region" aria-label="Detail view for ${escapeHtml(id)}">
+            <div class="detail-panel-header">
+              <span class="detail-panel-id ${type}">${escapeHtml(id)}</span>
+              <button class="detail-panel-close" aria-label="Close detail panel">&times;</button>
+            </div>
+            <div class="detail-panel-title">${escapeHtml(title)}</div>
+            <div class="detail-panel-body">${rendered}</div>
+          </div>`;
+
+        slot.querySelector('.detail-panel-close').addEventListener('click', closeDetailPanel);
+        slot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function closeDetailPanel() {
+        const slot = contentArea.querySelector('.detail-panel-slot');
+        if (slot) slot.innerHTML = '';
+      }
+
+      function renderClarificationEntries(clarifications) {
+        const body = document.querySelector('.sidebar-body');
+        if (!body) return;
+
+        if (!clarifications.length) {
+          body.innerHTML = '<div class="sidebar-empty">No clarifications were recorded for this feature.</div>';
+          return;
+        }
+
+        let html = '';
+        for (const c of clarifications) {
+          html += `<div class="clarification-entry">
+            <div class="clarification-session">Session ${escapeHtml(c.session)}</div>
+            <div class="clarification-question">Q: ${escapeHtml(c.question)}</div>
+            <div class="clarification-answer">A: ${escapeHtml(c.answer)}</div>
+          </div>`;
+        }
+        body.innerHTML = html;
+      }
+
+      function setupSidebarToggle() {
+        const toggle = document.querySelector('.sidebar-toggle');
+        const closeBtn = document.querySelector('.clarification-sidebar .sidebar-close');
+
+        if (toggle) {
+          toggle.addEventListener('click', () => {
+            clarificationSidebarOpen ? closeClarificationSidebar() : openClarificationSidebar();
+          });
+        }
+        if (closeBtn) {
+          closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            closeClarificationSidebar();
+          });
+        }
+      }
+
+      function openClarificationSidebar() {
+        clarificationSidebarOpen = true;
+        const sidebar = document.querySelector('.clarification-sidebar');
+        const view = contentArea.querySelector('.storymap-view');
+        if (sidebar) sidebar.classList.add('open');
+        if (view) view.classList.add('sidebar-open');
+      }
+
+      function closeClarificationSidebar() {
+        clarificationSidebarOpen = false;
+        const sidebar = document.querySelector('.clarification-sidebar');
+        const view = contentArea.querySelector('.storymap-view');
+        if (sidebar) sidebar.classList.remove('open');
+        if (view) view.classList.remove('sidebar-open');
       }
 
       // ====== Constitution View ======
@@ -1224,9 +2160,10 @@
         }
 
         // Summary list
-        const summaryHtml = principles.map(p =>
-          `<div class="constitution-summary-item"><span class="principle-num">${escapeHtml(p.number)}.</span> ${escapeHtml(p.name)} <span class="level-badge ${p.level.toLowerCase()}">${p.level}</span></div>`
-        ).join('');
+        const summaryHtml = principles.map((p, i) => {
+          const isSelected = selectedPrinciple && selectedPrinciple.number === p.number;
+          return `<div class="constitution-summary-item${isSelected ? ' selected' : ''}" id="principle-item-${i}"><span class="principle-num">${escapeHtml(p.number)}.</span> ${escapeHtml(p.name)} <span class="level-badge ${p.level.toLowerCase()}">${p.level}</span></div>`;
+        }).join('');
 
         // Radar chart SVG
         const radarSvg = generateRadarSVG(principles);
@@ -1244,30 +2181,39 @@
             <div class="constitution-layout">
               <div class="constitution-left">
                 <div class="radar-container">${radarSvg}</div>
-                ${timelineHtml}
               </div>
               <div class="constitution-right">
                 <div class="constitution-summary">${summaryHtml}</div>
                 ${detailHtml}
               </div>
             </div>
+            ${timelineHtml}
           </div>`;
 
-        // Attach click handlers to radar axes
+        // Attach click handlers to radar axes AND list items
+        function selectPrinciple(p) {
+          selectedPrinciple = p;
+          renderConstitutionContent(data);
+        }
+
         principles.forEach((p, i) => {
           const axisEl = document.getElementById(`radar-axis-${i}`);
           if (axisEl) {
-            axisEl.addEventListener('click', () => { selectedPrinciple = p; renderConstitutionContent(data); });
-            axisEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectedPrinciple = p; renderConstitutionContent(data); } });
+            axisEl.addEventListener('click', () => selectPrinciple(p));
+            axisEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectPrinciple(p); } });
+          }
+          const itemEl = document.getElementById(`principle-item-${i}`);
+          if (itemEl) {
+            itemEl.addEventListener('click', () => selectPrinciple(p));
           }
         });
       }
 
       function generateRadarSVG(principles) {
-        const size = 260;
+        const size = 360;
         const cx = size / 2;
         const cy = size / 2;
-        const maxR = size / 2 - 36;
+        const maxR = size / 2 - 60;
         const levels = { 'MUST': 1, 'SHOULD': 0.66, 'MAY': 0.33 };
         const n = principles.length;
         const angleStep = (2 * Math.PI) / n;
@@ -1311,7 +2257,7 @@
           const y = cy + r * Math.sin(angle);
 
           // Label position (pushed further out)
-          const labelR = maxR + 16;
+          const labelR = maxR + 24;
           const lx = cx + labelR * Math.cos(angle);
           const ly = cy + labelR * Math.sin(angle);
           const anchor = Math.abs(Math.cos(angle)) < 0.1 ? 'middle' : Math.cos(angle) > 0 ? 'start' : 'end';
@@ -1324,7 +2270,7 @@
               <circle cx="${x}" cy="${y}" r="${isSelected ? 7 : 5}" fill="var(--color-accent)" stroke="${isSelected ? 'var(--color-text)' : 'none'}" stroke-width="2"/>
               <circle cx="${x}" cy="${y}" r="16" fill="transparent"/>
               <text x="${lx}" y="${ly}" text-anchor="${anchor}" dominant-baseline="middle"
-                    font-size="9" font-weight="600" fill="var(--color-text-secondary)"
+                    font-size="11" font-weight="600" fill="var(--color-text-secondary)"
                     style="letter-spacing: 0.2px;">${escapeHtml(p.name)}</text>
             </g>`;
         });
@@ -1335,10 +2281,18 @@
       }
 
       function renderDetailCard(principle) {
+        // Strip rationale from main text to avoid duplication
+        let mainText = principle.text;
+        if (principle.rationale) {
+          const ratIdx = mainText.indexOf('**Rationale**');
+          if (ratIdx > -1) mainText = mainText.substring(0, ratIdx);
+        }
+        mainText = mainText.trim();
+
         return `
           <h3>${escapeHtml(principle.number)}. ${escapeHtml(principle.name)}</h3>
           <div class="detail-level"><span class="level-badge ${principle.level.toLowerCase()}">${principle.level}</span></div>
-          <div class="detail-text">${escapeHtml(principle.text).replace(/\n/g, '<br>')}</div>
+          <div class="detail-text">${escapeHtml(mainText).replace(/\n\n/g, '<br><br>').replace(/\n/g, ' ')}</div>
           ${principle.rationale ? `<div class="detail-rationale"><strong>Rationale:</strong> ${escapeHtml(principle.rationale)}</div>` : ''}`;
       }
 
@@ -1434,6 +2388,7 @@
           currentFeature = val;
           previousCardColumns = {};
           activeTab = null; // Reset tab selection for new feature
+          currentStoryMap = null; // Reset story map cache
           loadPipeline(val);
           loadBoard(val);
           // Resubscribe WebSocket
@@ -1723,6 +2678,15 @@
             if (msg.feature === currentFeature && msg.pipeline) {
               currentPipeline = msg.pipeline;
               renderPipeline(msg.pipeline);
+            }
+            break;
+
+          case 'storymap_update':
+            if (msg.feature === currentFeature && msg.storymap) {
+              currentStoryMap = msg.storymap;
+              if (activeTab === 'spec') {
+                renderStoryMapContent(msg.storymap);
+              }
             }
             break;
 

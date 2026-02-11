@@ -1,7 +1,7 @@
 {
   "testify": {
-    "assertion_hash": "2001192370016ce5cdeaa5572b0ec9cd6497ae5cd00360355c64a08b418ffaa5",
-    "generated_at": "2026-02-11T01:11:44Z",
-    "test_specs_file": "specs/001-kanban-board/tests/test-specs.md"
+    "assertion_hash": "6f1ea3ac6cb5c8ba01d887f28571c02448cc4876c12cb9a25ca9b8c22e5a362b",
+    "generated_at": "2026-02-11T16:47:04Z",
+    "test_specs_file": "specs/002-intent-flow-pipeline/tests/test-specs.md"
   }
 }

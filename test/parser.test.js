@@ -1,4 +1,4 @@
-const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs } = require('../src/parser');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -26,10 +26,10 @@ Last one.
 `;
     const stories = parseSpecStories(content);
     expect(stories).toHaveLength(4);
-    expect(stories[0]).toEqual({ id: 'US1', title: 'Watch an Agent Work', priority: 'P1' });
-    expect(stories[1]).toEqual({ id: 'US2', title: 'See Where Every Story Stands', priority: 'P1' });
-    expect(stories[2]).toEqual({ id: 'US3', title: 'Switch Between Features', priority: 'P2' });
-    expect(stories[3]).toEqual({ id: 'US4', title: 'Assertion Integrity at a Glance', priority: 'P2' });
+    expect(stories[0]).toMatchObject({ id: 'US1', title: 'Watch an Agent Work', priority: 'P1' });
+    expect(stories[1]).toMatchObject({ id: 'US2', title: 'See Where Every Story Stands', priority: 'P1' });
+    expect(stories[2]).toMatchObject({ id: 'US3', title: 'Switch Between Features', priority: 'P2' });
+    expect(stories[3]).toMatchObject({ id: 'US4', title: 'Assertion Integrity at a Glance', priority: 'P2' });
   });
 
   test('returns empty array for content with no user stories', () => {
@@ -47,7 +47,7 @@ Last one.
     const content = '### User Story 1 - Watch an Agent Work in Real Time (Priority: P1)\n';
     const stories = parseSpecStories(content);
     expect(stories).toHaveLength(1);
-    expect(stories[0]).toEqual({ id: 'US1', title: 'Watch an Agent Work in Real Time', priority: 'P1' });
+    expect(stories[0]).toMatchObject({ id: 'US1', title: 'Watch an Agent Work in Real Time', priority: 'P1' });
   });
 
   test('handles malformed input gracefully', () => {
@@ -407,5 +407,197 @@ This MAY happen.
     expect(result.principles[0].level).toBe('MUST');
     expect(result.principles[1].level).toBe('SHOULD');
     expect(result.principles[2].level).toBe('MAY');
+  });
+});
+
+// TS-019, TS-024: parseRequirements
+describe('parseRequirements', () => {
+  test('extracts FR-xxx with description text', () => {
+    const content = `## Requirements
+
+### Functional Requirements
+
+- **FR-001**: System MUST render a story map
+- **FR-002**: System MUST display each story as a card
+`;
+    const reqs = parseRequirements(content);
+    expect(reqs).toHaveLength(2);
+    expect(reqs[0]).toEqual({ id: 'FR-001', text: 'System MUST render a story map' });
+    expect(reqs[1]).toEqual({ id: 'FR-002', text: 'System MUST display each story as a card' });
+  });
+
+  test('returns empty array for spec with no Requirements section', () => {
+    const content = '# Feature\n\n## User Stories\n\nSome stories.\n';
+    const reqs = parseRequirements(content);
+    expect(reqs).toEqual([]);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseRequirements('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseRequirements(null)).toEqual([]);
+  });
+});
+
+// TS-020: parseSuccessCriteria
+describe('parseSuccessCriteria', () => {
+  test('extracts SC-xxx with description text', () => {
+    const content = `## Success Criteria
+
+### Measurable Outcomes
+
+- **SC-001**: Developers can identify priority distribution within 3 seconds
+- **SC-002**: Developers can trace from any story to requirements in under 3 clicks
+`;
+    const criteria = parseSuccessCriteria(content);
+    expect(criteria).toHaveLength(2);
+    expect(criteria[0]).toEqual({ id: 'SC-001', text: 'Developers can identify priority distribution within 3 seconds' });
+    expect(criteria[1]).toEqual({ id: 'SC-002', text: 'Developers can trace from any story to requirements in under 3 clicks' });
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseSuccessCriteria('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseSuccessCriteria(null)).toEqual([]);
+  });
+});
+
+// TS-021, TS-025: parseClarifications
+describe('parseClarifications', () => {
+  test('extracts Q&A pairs with session date', () => {
+    const content = `## Clarifications
+
+### Session 2026-02-11
+
+- Q: How should cross-linking work? -> A: Only draw US to FR edges
+- Q: Should nodes show coverage? -> A: No, coverage belongs to Tasks phase
+`;
+    const clarifications = parseClarifications(content);
+    expect(clarifications).toHaveLength(2);
+    expect(clarifications[0]).toEqual({
+      session: '2026-02-11',
+      question: 'How should cross-linking work?',
+      answer: 'Only draw US to FR edges'
+    });
+    expect(clarifications[1]).toEqual({
+      session: '2026-02-11',
+      question: 'Should nodes show coverage?',
+      answer: 'No, coverage belongs to Tasks phase'
+    });
+  });
+
+  test('returns empty array for spec with no Clarifications section', () => {
+    const content = '# Feature\n\n## Requirements\n\n- FR-001\n';
+    expect(parseClarifications(content)).toEqual([]);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseClarifications('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseClarifications(null)).toEqual([]);
+  });
+});
+
+// TS-022, TS-026: parseStoryRequirementRefs
+describe('parseStoryRequirementRefs', () => {
+  test('extracts FR-xxx references from story sections', () => {
+    const content = `### User Story 1 - View Story Map (Priority: P1)
+
+A developer sees stories linked to FR-001 and FR-002.
+
+**Acceptance Scenarios**:
+1. **Given** a spec with FR-001, **When** loaded, **Then** display
+
+---
+
+### User Story 2 - Explore Graph (Priority: P1)
+
+The graph shows FR-003 connections.
+`;
+    const edges = parseStoryRequirementRefs(content);
+    expect(edges).toContainEqual({ from: 'US1', to: 'FR-001' });
+    expect(edges).toContainEqual({ from: 'US1', to: 'FR-002' });
+    expect(edges).toContainEqual({ from: 'US2', to: 'FR-003' });
+  });
+
+  test('returns empty edges for stories with no FR references', () => {
+    const content = `### User Story 1 - Simple View (Priority: P1)
+
+A simple story with no requirement references.
+`;
+    const edges = parseStoryRequirementRefs(content);
+    expect(edges).toEqual([]);
+  });
+
+  test('deduplicates FR references within a story', () => {
+    const content = `### User Story 1 - View Map (Priority: P1)
+
+FR-001 is mentioned here and FR-001 again in acceptance.
+
+**Acceptance Scenarios**:
+1. **Given** FR-001, **When** loaded, **Then** display
+`;
+    const edges = parseStoryRequirementRefs(content);
+    const us1Edges = edges.filter(e => e.from === 'US1' && e.to === 'FR-001');
+    expect(us1Edges).toHaveLength(1);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseStoryRequirementRefs('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseStoryRequirementRefs(null)).toEqual([]);
+  });
+});
+
+// TS-023: parseSpecStories extended with scenarioCount
+describe('parseSpecStories extended', () => {
+  test('returns scenarioCount per story', () => {
+    const content = `### User Story 1 - View Map (Priority: P1)
+
+Description.
+
+**Acceptance Scenarios**:
+
+1. **Given** state, **When** action, **Then** result
+2. **Given** state2, **When** action2, **Then** result2
+3. **Given** state3, **When** action3, **Then** result3
+
+---
+
+### User Story 2 - Graph (Priority: P2)
+
+Description.
+
+**Acceptance Scenarios**:
+
+1. **Given** state, **When** action, **Then** result
+`;
+    const stories = parseSpecStories(content);
+    expect(stories[0].scenarioCount).toBe(3);
+    expect(stories[1].scenarioCount).toBe(1);
+  });
+
+  test('returns 0 scenarioCount for story with no scenarios', () => {
+    const content = `### User Story 1 - Simple (Priority: P1)
+
+Just a description, no scenarios.
+
+---
+
+### User Story 2 - Another (Priority: P2)
+
+Also no scenarios.
+`;
+    const stories = parseSpecStories(content);
+    expect(stories[0].scenarioCount).toBe(0);
+    expect(stories[1].scenarioCount).toBe(0);
   });
 });

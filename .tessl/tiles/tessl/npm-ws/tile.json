@@ -1,0 +1,7 @@
+{
+  "name": "tessl/npm-ws",
+  "version": "8.18.0",
+  "docs": "docs/index.md",
+  "describes": "pkg:npm/ws@8.18.2",
+  "summary": "Simple to use, blazing fast and thoroughly tested WebSocket client and server for Node.js"
+}

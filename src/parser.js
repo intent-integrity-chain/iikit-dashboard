@@ -15,13 +15,39 @@ function parseSpecStories(content) {
 
   const regex = /### User Story (\d+) - (.+?) \(Priority: (P\d+)\)/g;
   const stories = [];
+  const storyStarts = [];
   let match;
 
   while ((match = regex.exec(content)) !== null) {
-    stories.push({
+    storyStarts.push({
       id: `US${match[1]}`,
       title: match[2].trim(),
-      priority: match[3]
+      priority: match[3],
+      index: match.index
+    });
+  }
+
+  for (let i = 0; i < storyStarts.length; i++) {
+    const start = storyStarts[i].index;
+    const end = i + 1 < storyStarts.length ? storyStarts[i + 1].index : content.length;
+    const section = content.substring(start, end);
+
+    // Count Given/When/Then scenario blocks (numbered list items starting with digit + .)
+    const scenarioCount = (section.match(/^\d+\.\s+\*\*Given\*\*/gm) || []).length;
+
+    // Extract body text (everything after the heading line, trimmed, stop at ---)
+    const headingEnd = section.indexOf('\n');
+    let body = headingEnd >= 0 ? section.substring(headingEnd + 1) : '';
+    const separatorIdx = body.indexOf('\n---');
+    if (separatorIdx >= 0) body = body.substring(0, separatorIdx);
+    body = body.trim();
+
+    stories.push({
+      id: storyStarts[i].id,
+      title: storyStarts[i].title,
+      priority: storyStarts[i].priority,
+      scenarioCount,
+      body
     });
   }
 
@@ -202,4 +228,140 @@ function finalizePrinciple(principle) {
   principle.text = text;
 }
 
-module.exports = { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples };
+/**
+ * Parse spec.md to extract functional requirements.
+ * Pattern: - **FR-XXX**: description
+ *
+ * @param {string} content - Raw markdown content of spec.md
+ * @returns {Array<{id: string, text: string}>}
+ */
+function parseRequirements(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const regex = /- \*\*FR-(\d+)\*\*:\s*(.*)/g;
+  const requirements = [];
+  let match;
+
+  while ((match = regex.exec(content)) !== null) {
+    requirements.push({
+      id: `FR-${match[1]}`,
+      text: match[2].trim()
+    });
+  }
+
+  return requirements;
+}
+
+/**
+ * Parse spec.md to extract success criteria.
+ * Pattern: - **SC-XXX**: description
+ *
+ * @param {string} content - Raw markdown content of spec.md
+ * @returns {Array<{id: string, text: string}>}
+ */
+function parseSuccessCriteria(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const regex = /- \*\*SC-(\d+)\*\*:\s*(.*)/g;
+  const criteria = [];
+  let match;
+
+  while ((match = regex.exec(content)) !== null) {
+    criteria.push({
+      id: `SC-${match[1]}`,
+      text: match[2].trim()
+    });
+  }
+
+  return criteria;
+}
+
+/**
+ * Parse spec.md to extract clarification Q&A entries.
+ * Pattern: ### Session YYYY-MM-DD followed by - Q: question -> A: answer
+ *
+ * @param {string} content - Raw markdown content of spec.md
+ * @returns {Array<{session: string, question: string, answer: string}>}
+ */
+function parseClarifications(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  // Check for Clarifications section
+  if (!/^## Clarifications/m.test(content)) return [];
+
+  const clarifications = [];
+  const lines = content.split('\n');
+  let currentSession = null;
+  let inClarifications = false;
+
+  for (const line of lines) {
+    if (/^## Clarifications/.test(line)) {
+      inClarifications = true;
+      continue;
+    }
+    if (inClarifications && /^## /.test(line) && !/^## Clarifications/.test(line)) {
+      break; // Next top-level section
+    }
+    if (!inClarifications) continue;
+
+    const sessionMatch = line.match(/^### Session (\d{4}-\d{2}-\d{2})/);
+    if (sessionMatch) {
+      currentSession = sessionMatch[1];
+      continue;
+    }
+
+    const qaMatch = line.match(/^- Q:\s*(.*?)\s*->\s*A:\s*(.*)/);
+    if (qaMatch && currentSession) {
+      clarifications.push({
+        session: currentSession,
+        question: qaMatch[1].trim(),
+        answer: qaMatch[2].trim()
+      });
+    }
+  }
+
+  return clarifications;
+}
+
+/**
+ * Parse spec.md to extract edges from user stories to requirements.
+ * Scans entire story sections for FR-xxx patterns.
+ *
+ * @param {string} content - Raw markdown content of spec.md
+ * @returns {Array<{from: string, to: string}>}
+ */
+function parseStoryRequirementRefs(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const edges = [];
+  const storyRegex = /### User Story (\d+) - .+? \(Priority: P\d+\)/g;
+  const storyStarts = [];
+  let match;
+
+  while ((match = storyRegex.exec(content)) !== null) {
+    storyStarts.push({ id: `US${match[1]}`, index: match.index });
+  }
+
+  for (let i = 0; i < storyStarts.length; i++) {
+    const start = storyStarts[i].index;
+    const end = i + 1 < storyStarts.length ? storyStarts[i + 1].index : content.length;
+    const section = content.substring(start, end);
+    const storyId = storyStarts[i].id;
+
+    const frRegex = /FR-\d+/g;
+    const seen = new Set();
+    let frMatch;
+
+    while ((frMatch = frRegex.exec(section)) !== null) {
+      const frId = frMatch[0];
+      if (!seen.has(frId)) {
+        seen.add(frId);
+        edges.push({ from: storyId, to: frId });
+      }
+    }
+  }
+
+  return edges;
+}
+
+module.exports = { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs };

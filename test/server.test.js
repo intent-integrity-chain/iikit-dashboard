@@ -223,4 +223,30 @@ Description.
     const res = await httpGet(port, '/api/pipeline/999-nonexistent');
     expect(res.status).toBe(404);
   });
+
+  // TS-015: GET /api/storymap/:feature returns story map data
+  test('GET /api/storymap/:feature returns story map data', async () => {
+    const res = await httpGet(port, '/api/storymap/001-auth');
+    expect(res.status).toBe(200);
+    expect(res.data).toHaveProperty('stories');
+    expect(res.data).toHaveProperty('requirements');
+    expect(res.data).toHaveProperty('successCriteria');
+    expect(res.data).toHaveProperty('clarifications');
+    expect(res.data).toHaveProperty('edges');
+    expect(Array.isArray(res.data.stories)).toBe(true);
+    expect(res.data.stories.length).toBe(3);
+  });
+
+  // TS-016: GET /api/storymap/:feature returns 404 for missing feature
+  test('GET /api/storymap/:feature returns 404 for missing feature', async () => {
+    const res = await httpGet(port, '/api/storymap/999-nonexistent');
+    expect(res.status).toBe(404);
+  });
+
+  // TS-017: GET /api/storymap/:feature handles empty spec
+  test('GET /api/storymap/:feature handles feature with no stories', async () => {
+    const res = await httpGet(port, '/api/storymap/002-payments');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.data.stories)).toBe(true);
+  });
 });
