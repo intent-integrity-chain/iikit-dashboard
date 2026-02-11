@@ -669,6 +669,164 @@
       opacity: 1;
     }
 
+    /* ====== Pipeline Bar ====== */
+    .pipeline-bar {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      padding: 14px 28px;
+      background: var(--color-surface);
+      border-bottom: 1px solid var(--color-border);
+      overflow-x: auto;
+      position: sticky;
+      top: 58px;
+      z-index: 90;
+    }
+
+    .pipeline-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--transition-fast), transform var(--transition-fast);
+      min-width: 80px;
+      position: relative;
+      border: 2px solid transparent;
+    }
+
+    .pipeline-node:hover {
+      background: var(--color-surface-hover);
+      transform: translateY(-1px);
+    }
+
+    .pipeline-node:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    .pipeline-node.active {
+      border-color: var(--color-accent);
+      background: var(--color-surface-elevated);
+    }
+
+    .pipeline-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      transition: all var(--transition-normal);
+    }
+
+    .pipeline-dot.not_started {
+      background: var(--color-surface-elevated);
+      border: 2px solid var(--color-border);
+      color: var(--color-text-muted);
+    }
+
+    .pipeline-dot.in_progress {
+      background: rgba(245, 166, 35, 0.15);
+      border: 2px solid var(--color-inprogress);
+      color: var(--color-inprogress);
+    }
+
+    .pipeline-dot.complete {
+      background: rgba(39, 201, 63, 0.15);
+      border: 2px solid var(--color-done);
+      color: var(--color-done);
+    }
+
+    .pipeline-dot.skipped {
+      background: var(--color-surface-elevated);
+      border: 2px dashed var(--color-text-muted);
+      color: var(--color-text-muted);
+    }
+
+    .pipeline-dot.available {
+      background: rgba(108, 99, 255, 0.1);
+      border: 2px solid var(--color-accent);
+      color: var(--color-accent);
+    }
+
+    .pipeline-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .pipeline-progress {
+      font-size: 9px;
+      font-family: var(--font-mono);
+      color: var(--color-text-muted);
+      min-height: 13px;
+    }
+
+    .pipeline-connector {
+      width: 24px;
+      height: 2px;
+      background: var(--color-border);
+      flex-shrink: 0;
+      margin-top: -16px;
+    }
+
+    .pipeline-connector.complete {
+      background: var(--color-done);
+    }
+
+    .pipeline-node.optional .pipeline-label {
+      font-style: italic;
+      opacity: 0.8;
+    }
+
+    /* ====== Content Area ====== */
+    .content-area {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .placeholder-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+    }
+
+    .placeholder-view-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--color-surface-elevated);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .placeholder-view-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 6px;
+    }
+
+    .placeholder-view-text {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      max-width: 360px;
+    }
+
     /* ====== Scrollbar ====== */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -681,8 +839,8 @@
   <header class="header" role="banner">
     <div class="header-left">
       <div class="logo">
-        <div class="logo-icon" aria-hidden="true">K</div>
-        <span>IIKit Kanban</span>
+        <div class="logo-icon" aria-hidden="true">D</div>
+        <span>IIKit Dashboard</span>
       </div>
       <div class="feature-selector" role="navigation" aria-label="Feature selector">
         <select id="featureSelect" aria-label="Select feature to display" tabindex="0">
@@ -702,11 +860,19 @@
     </div>
   </header>
 
-  <!-- Board -->
-  <main class="board-container" role="main">
-    <div id="board" class="board" role="region" aria-label="Kanban board">
-      <div class="loading" id="loadingState">
-        <div class="loading-spinner" aria-label="Loading board data"></div>
+  <!-- Pipeline Bar -->
+  <nav id="pipelineBar" class="pipeline-bar" role="navigation" aria-label="IIKit workflow pipeline">
+  </nav>
+
+  <!-- Content Area -->
+  <main class="content-area" role="main">
+    <div id="contentArea">
+      <div class="board-container">
+        <div id="board" class="board" role="region" aria-label="Kanban board">
+          <div class="loading" id="loadingState">
+            <div class="loading-spinner" aria-label="Loading board data"></div>
+          </div>
+        </div>
       </div>
     </div>
   </main>
@@ -718,6 +884,8 @@
       // ====== State ======
       let currentFeature = null;
       let currentBoard = null;
+      let currentPipeline = null;
+      let activeTab = null;
       let ws = null;
       let reconnectTimer = null;
       let previousCardColumns = {}; // Track card positions for animations
@@ -728,6 +896,128 @@
       const integrityBadge = document.getElementById('integrityBadge');
       const connectionIndicator = document.getElementById('connectionIndicator');
       const loadingState = document.getElementById('loadingState');
+      const pipelineBar = document.getElementById('pipelineBar');
+      const contentArea = document.getElementById('contentArea');
+
+      // ====== Pipeline ======
+      const PHASE_ICONS = {
+        not_started: '',
+        in_progress: '&#9654;',
+        complete: '&#10003;',
+        skipped: '&#8212;',
+        available: '&#9679;'
+      };
+
+      function renderPipeline(pipeline) {
+        if (!pipeline || !pipeline.phases) return;
+        currentPipeline = pipeline;
+
+        pipelineBar.innerHTML = '';
+
+        pipeline.phases.forEach((phase, i) => {
+          // Add connector before each node (except the first)
+          if (i > 0) {
+            const connector = document.createElement('div');
+            connector.className = 'pipeline-connector';
+            // Color connector green if previous phase is complete
+            const prevPhase = pipeline.phases[i - 1];
+            if (prevPhase.status === 'complete') {
+              connector.classList.add('complete');
+            }
+            pipelineBar.appendChild(connector);
+          }
+
+          const node = document.createElement('button');
+          node.className = 'pipeline-node' + (phase.optional ? ' optional' : '');
+          if (activeTab === phase.id) node.classList.add('active');
+          node.setAttribute('tabindex', '0');
+          if (activeTab === phase.id) node.setAttribute('aria-current', 'true');
+
+          node.innerHTML = `
+            <div class="pipeline-dot ${phase.status}">${PHASE_ICONS[phase.status] || ''}</div>
+            <span class="pipeline-label">${escapeHtml(phase.name)}</span>
+            <span class="pipeline-progress">${phase.progress || ''}</span>
+          `;
+
+          node.addEventListener('click', () => switchTab(phase.id));
+          pipelineBar.appendChild(node);
+        });
+      }
+
+      function switchTab(phaseId) {
+        activeTab = phaseId;
+        // Re-render pipeline to update active state
+        if (currentPipeline) renderPipeline(currentPipeline);
+
+        if (phaseId === 'implement') {
+          renderBoardView();
+        } else {
+          renderPlaceholderView(phaseId);
+        }
+      }
+
+      function renderBoardView() {
+        contentArea.innerHTML = `
+          <div class="board-container">
+            <div id="board" class="board" role="region" aria-label="Kanban board"></div>
+          </div>`;
+        // Re-assign boardEl reference
+        const newBoardEl = document.getElementById('board');
+        if (currentBoard) {
+          renderBoardInto(newBoardEl, currentBoard);
+        }
+      }
+
+      function renderPlaceholderView(phaseId) {
+        const phaseNames = {
+          constitution: 'Constitution', spec: 'Specification', clarify: 'Clarification',
+          plan: 'Plan', checklist: 'Checklist', testify: 'Test Specs',
+          tasks: 'Tasks', analyze: 'Analysis', implement: 'Implementation'
+        };
+        const name = phaseNames[phaseId] || phaseId;
+        contentArea.innerHTML = `
+          <div class="placeholder-view">
+            <div class="placeholder-view-icon">&#128736;</div>
+            <div class="placeholder-view-title">${name} View</div>
+            <div class="placeholder-view-text">This phase visualization is coming soon. It will be available in a future update.</div>
+          </div>`;
+      }
+
+      function selectDefaultTab(pipeline) {
+        if (!pipeline || !pipeline.phases) return 'implement';
+
+        const impl = pipeline.phases.find(p => p.id === 'implement');
+        if (impl && (impl.status === 'in_progress' || impl.status === 'complete')) return 'implement';
+
+        // Walk backward through all phases to find last completed
+        const allPhases = ['constitution', 'spec', 'clarify', 'plan', 'checklist', 'testify', 'tasks', 'analyze', 'implement'];
+        for (let i = allPhases.length - 1; i >= 0; i--) {
+          const phase = pipeline.phases.find(p => p.id === allPhases[i]);
+          if (phase && phase.status === 'complete') {
+            return allPhases[i];
+          }
+        }
+
+        return 'implement';
+      }
+
+      async function loadPipeline(featureId) {
+        try {
+          const res = await fetch(`/api/pipeline/${featureId}`);
+          if (!res.ok) return;
+          const pipeline = await res.json();
+          currentPipeline = pipeline;
+
+          if (!activeTab) {
+            activeTab = selectDefaultTab(pipeline);
+          }
+
+          renderPipeline(pipeline);
+          switchTab(activeTab);
+        } catch (err) {
+          console.error('Failed to load pipeline:', err);
+        }
+      }
 
       // ====== Feature Loading ======
       async function loadFeatures() {
@@ -737,8 +1027,9 @@
           updateFeatureSelector(features);
 
           if (features.length > 0 && !currentFeature) {
-            currentFeature = features[0].id;
+            currentFeature = features[features.length - 1].id;
             featureSelect.value = currentFeature;
+            loadPipeline(currentFeature);
             loadBoard(currentFeature);
           } else if (features.length === 0) {
             showEmptyState();
@@ -767,6 +1058,8 @@
         if (val && val !== currentFeature) {
           currentFeature = val;
           previousCardColumns = {};
+          activeTab = null; // Reset tab selection for new feature
+          loadPipeline(val);
           loadBoard(val);
           // Resubscribe WebSocket
           if (ws && ws.readyState === WebSocket.OPEN) {
@@ -812,8 +1105,8 @@
       }
 
       // ====== Board Rendering ======
-      function renderBoard(board) {
-        if (!board) return;
+      function renderBoardInto(targetEl, board) {
+        if (!board || !targetEl) return;
 
         const columns = [
           { key: 'todo', label: 'Todo', cards: board.todo || [] },
@@ -838,7 +1131,7 @@
           }
         }
 
-        boardEl.innerHTML = '';
+        targetEl.innerHTML = '';
 
         for (const col of columns) {
           const colEl = document.createElement('div');
@@ -856,7 +1149,7 @@
             </div>
             <div class="column-body" id="col-${col.key}"></div>`;
 
-          boardEl.appendChild(colEl);
+          targetEl.appendChild(colEl);
 
           const bodyEl = colEl.querySelector('.column-body');
 
@@ -884,6 +1177,11 @@
         }
 
         previousCardColumns = newCardColumns;
+      }
+
+      function renderBoard(board) {
+        const targetEl = document.getElementById('board');
+        if (targetEl) renderBoardInto(targetEl, board);
       }
 
       function createCardElement(card, columnKey) {
@@ -1016,8 +1314,17 @@
           case 'board_update':
             if (msg.feature === currentFeature && msg.board) {
               currentBoard = msg.board;
-              renderBoard(msg.board);
+              if (activeTab === 'implement') {
+                renderBoard(msg.board);
+              }
               updateIntegrity(msg.board.integrity);
+            }
+            break;
+
+          case 'pipeline_update':
+            if (msg.feature === currentFeature && msg.pipeline) {
+              currentPipeline = msg.pipeline;
+              renderPipeline(msg.pipeline);
             }
             break;
 

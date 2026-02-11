@@ -1,0 +1,7 @@
+{
+  "testify": {
+    "assertion_hash": "3a11c4605fe3e1df0365a8fbe4b16bb29a8f419358eb9c2572e11bd6ebf6d477",
+    "generated_at": "2026-02-11T18:07:37Z",
+    "test_specs_file": "specs/002-intent-flow-pipeline/tests/test-specs.md"
+  }
+}

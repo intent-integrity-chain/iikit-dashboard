@@ -9,6 +9,7 @@ const chokidar = require('chokidar');
 const { parseSpecStories, parseTasks } = require('./parser');
 const { computeBoardState } = require('./board');
 const { computeAssertionHash, checkIntegrity } = require('./integrity');
+const { computePipelineState } = require('./pipeline');
 
 /**
  * List features from specs/ directory.
@@ -63,7 +64,7 @@ function getBoardState(projectPath, featureId) {
   const specPath = path.join(featureDir, 'spec.md');
   const tasksPath = path.join(featureDir, 'tasks.md');
   const testSpecsPath = path.join(featureDir, 'tests', 'test-specs.md');
-  const contextPath = path.join(projectPath, '.specify', 'context.json');
+  const contextPath = path.join(featureDir, 'context.json');
 
   const specContent = fs.existsSync(specPath) ? fs.readFileSync(specPath, 'utf-8') : '';
   const tasksContent = fs.existsSync(tasksPath) ? fs.readFileSync(tasksPath, 'utf-8') : '';
@@ -118,6 +119,20 @@ function createServer({ projectPath, port = 3000 }) {
     }
   });
 
+  // API: pipeline state for a feature
+  app.get('/api/pipeline/:feature', (req, res) => {
+    try {
+      const featureDir = path.join(projectPath, 'specs', req.params.feature);
+      if (!fs.existsSync(featureDir)) {
+        return res.status(404).json({ error: 'Feature not found' });
+      }
+      const pipeline = computePipelineState(projectPath, req.params.feature);
+      res.json(pipeline);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // API: board state for a feature
   app.get('/api/board/:feature', (req, res) => {
     try {
@@ -157,9 +172,11 @@ function createServer({ projectPath, port = 3000 }) {
 
   // File watcher with 300ms debounce
   let debounceTimer = null;
+  const constitutionPath = path.join(projectPath, 'CONSTITUTION.md');
   const watchPaths = [
     path.join(projectPath, 'specs'),
-    path.join(projectPath, '.specify')
+    path.join(projectPath, '.specify'),
+    ...(fs.existsSync(constitutionPath) ? [constitutionPath] : [])
   ].filter(p => fs.existsSync(p));
 
   let watcher = null;
@@ -182,6 +199,14 @@ function createServer({ projectPath, port = 3000 }) {
                   type: 'board_update',
                   feature: ws.currentFeature,
                   board
+                }));
+              }
+              const pipeline = computePipelineState(projectPath, ws.currentFeature);
+              if (pipeline) {
+                ws.send(JSON.stringify({
+                  type: 'pipeline_update',
+                  feature: ws.currentFeature,
+                  pipeline
                 }));
               }
             } catch {
