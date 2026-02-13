@@ -11,6 +11,7 @@ const { computeBoardState } = require('./board');
 const { computeAssertionHash, checkIntegrity } = require('./integrity');
 const { computePipelineState } = require('./pipeline');
 const { computeStoryMapState } = require('./storymap');
+const { computePlanViewState } = require('./planview');
 
 /**
  * List features from specs/ directory.
@@ -156,6 +157,16 @@ function createServer({ projectPath, port = 3000 }) {
     }
   });
 
+  // API: plan view state for a feature
+  app.get('/api/planview/:feature', async (req, res) => {
+    try {
+      const planview = await computePlanViewState(projectPath, req.params.feature);
+      res.json(planview);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // API: board state for a feature
   app.get('/api/board/:feature', (req, res) => {
     try {
@@ -208,7 +219,7 @@ function createServer({ projectPath, port = 3000 }) {
 
     watcher.on('all', () => {
       if (debounceTimer) clearTimeout(debounceTimer);
-      debounceTimer = setTimeout(() => {
+      debounceTimer = setTimeout(async () => {
         // Push updates to all connected clients
         for (const ws of wss.clients) {
           if (ws.readyState === 1 && ws.currentFeature) {
@@ -235,6 +246,14 @@ function createServer({ projectPath, port = 3000 }) {
                   type: 'storymap_update',
                   feature: ws.currentFeature,
                   storymap
+                }));
+              }
+              const planview = await computePlanViewState(projectPath, ws.currentFeature);
+              if (planview) {
+                ws.send(JSON.stringify({
+                  type: 'planview_update',
+                  feature: ws.currentFeature,
+                  planview
                 }));
               }
             } catch {

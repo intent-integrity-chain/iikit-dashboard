@@ -1,4 +1,4 @@
-const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions } = require('../src/parser');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -554,6 +554,344 @@ FR-001 is mentioned here and FR-001 again in acceptance.
 
   test('returns empty array for null', () => {
     expect(parseStoryRequirementRefs(null)).toEqual([]);
+  });
+});
+
+// TS-027: parseTechContext
+describe('parseTechContext', () => {
+  test('extracts bold-label-colon-value pairs from Technical Context section', () => {
+    const content = `## Technical Context
+
+**Language/Version**: Node.js 20+ (LTS)
+**Primary Dependencies**: Express, ws, chokidar
+**Storage**: N/A
+**Testing**: Jest (unit + integration tests)
+`;
+    const entries = parseTechContext(content);
+    expect(entries).toHaveLength(4);
+    expect(entries[0]).toEqual({ label: 'Language/Version', value: 'Node.js 20+ (LTS)' });
+    expect(entries[1]).toEqual({ label: 'Primary Dependencies', value: 'Express, ws, chokidar' });
+    expect(entries[2]).toEqual({ label: 'Storage', value: 'N/A' });
+    expect(entries[3]).toEqual({ label: 'Testing', value: 'Jest (unit + integration tests)' });
+  });
+
+  test('returns empty array when no Technical Context section', () => {
+    const content = '# Plan\n\n## Summary\n\nSome text.\n';
+    expect(parseTechContext(content)).toEqual([]);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseTechContext('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseTechContext(null)).toEqual([]);
+  });
+
+  test('stops at next section heading', () => {
+    const content = `## Technical Context
+
+**Language/Version**: Python 3.12
+
+## Constitution Check
+
+**Not a tech context**: This should not be parsed
+`;
+    const entries = parseTechContext(content);
+    expect(entries).toHaveLength(1);
+    expect(entries[0].label).toBe('Language/Version');
+  });
+});
+
+// TS-028, TS-029, TS-030, TS-031: parseFileStructure
+describe('parseFileStructure', () => {
+  test('parses tree with correct depth, name, and type', () => {
+    const content = `## File Structure
+
+\`\`\`
+iikit-kanban/
+├── package.json
+├── src/
+│   ├── server.js          # Express + WebSocket server
+│   └── parser.js
+└── test/
+    └── parser.test.js
+\`\`\`
+`;
+    const result = parseFileStructure(content);
+    expect(result.rootName).toBe('iikit-kanban');
+    expect(result.entries).toHaveLength(6);
+    expect(result.entries[0]).toMatchObject({ name: 'package.json', type: 'file', depth: 0 });
+    expect(result.entries[1]).toMatchObject({ name: 'src', type: 'directory', depth: 0 });
+    expect(result.entries[2]).toMatchObject({ name: 'server.js', type: 'file', depth: 1, comment: 'Express + WebSocket server' });
+    expect(result.entries[3]).toMatchObject({ name: 'parser.js', type: 'file', depth: 1 });
+    expect(result.entries[4]).toMatchObject({ name: 'test', type: 'directory', depth: 0 });
+    expect(result.entries[5]).toMatchObject({ name: 'parser.test.js', type: 'file', depth: 1 });
+  });
+
+  test('extracts inline comments after #', () => {
+    const content = `## File Structure
+
+\`\`\`
+myproject/
+├── server.js          # Express + WebSocket server
+└── parser.js
+\`\`\`
+`;
+    const result = parseFileStructure(content);
+    expect(result.entries[0].comment).toBe('Express + WebSocket server');
+    expect(result.entries[1].comment).toBeNull();
+  });
+
+  test('identifies directories by trailing slash or having children', () => {
+    const content = `## File Structure
+
+\`\`\`
+myproject/
+├── src/
+│   └── index.js
+└── readme.md
+\`\`\`
+`;
+    const result = parseFileStructure(content);
+    expect(result.entries[0]).toMatchObject({ name: 'src', type: 'directory' });
+    expect(result.entries[1]).toMatchObject({ name: 'index.js', type: 'file' });
+    expect(result.entries[2]).toMatchObject({ name: 'readme.md', type: 'file' });
+  });
+
+  test('returns null when no File Structure section', () => {
+    const content = '# Plan\n\n## Summary\n\nSome text.\n';
+    expect(parseFileStructure(content)).toBeNull();
+  });
+
+  test('returns null for empty string', () => {
+    expect(parseFileStructure('')).toBeNull();
+  });
+
+  test('returns null for null', () => {
+    expect(parseFileStructure(null)).toBeNull();
+  });
+
+  test('strips root directory name', () => {
+    const content = `## File Structure
+
+\`\`\`
+iikit-kanban/
+├── src/
+│   └── server.js
+\`\`\`
+`;
+    const result = parseFileStructure(content);
+    expect(result.rootName).toBe('iikit-kanban');
+    expect(result.entries[0].name).toBe('src');
+  });
+});
+
+// TS-032, TS-033, TS-034, TS-035, TS-036: parseAsciiDiagram
+describe('parseAsciiDiagram', () => {
+  test('detects boxes with box-drawing characters and extracts labels', () => {
+    const content = `## Architecture Overview
+
+\`\`\`
+┌──────────┐
+│  Browser  │
+└──────────┘
+\`\`\`
+`;
+    const result = parseAsciiDiagram(content);
+    expect(result).not.toBeNull();
+    expect(result.nodes).toHaveLength(1);
+    expect(result.nodes[0].label).toBe('Browser');
+  });
+
+  test('extracts all text content from multi-line boxes', () => {
+    const content = `## Architecture Overview
+
+\`\`\`
+┌──────────────┐
+│  Node.js      │
+│  Server       │
+│  (Express)    │
+└──────────────┘
+\`\`\`
+`;
+    const result = parseAsciiDiagram(content);
+    expect(result.nodes[0].label).toBe('Node.js');
+    expect(result.nodes[0].content).toContain('Server');
+    expect(result.nodes[0].content).toContain('(Express)');
+  });
+
+  test('detects connections between boxes', () => {
+    const content = `## Architecture Overview
+
+\`\`\`
+┌──────────┐
+│  Browser  │
+└─────┬────┘
+      │
+┌─────┴────┐
+│  Server   │
+└──────────┘
+\`\`\`
+`;
+    const result = parseAsciiDiagram(content);
+    expect(result.nodes).toHaveLength(2);
+    expect(result.edges.length).toBeGreaterThanOrEqual(1);
+  });
+
+  test('extracts edge labels', () => {
+    const content = `## Architecture Overview
+
+\`\`\`
+┌──────────┐
+│  Browser  │
+└─────┬────┘
+      │ ws://localhost:PORT
+┌─────┴────┐
+│  Server   │
+└──────────┘
+\`\`\`
+`;
+    const result = parseAsciiDiagram(content);
+    const labeledEdge = result.edges.find(e => e.label && e.label.includes('ws://'));
+    expect(labeledEdge).toBeDefined();
+  });
+
+  test('filters out container boxes, keeps only leaf nodes', () => {
+    const content = `## Architecture Overview
+
+\`\`\`
+┌─────────────────────────────────┐
+│  Browser                         │
+│  ┌─────────────────────────────┐ │
+│  │  Single HTML page           │ │
+│  └─────────────────────────────┘ │
+└─────────────────────────────────┘
+\`\`\`
+`;
+    const result = parseAsciiDiagram(content);
+    // Only the inner leaf box "Single HTML page" should remain, not the container "Browser"
+    expect(result.nodes).toHaveLength(1);
+    expect(result.nodes[0].label).toBe('Single HTML page');
+  });
+
+  test('returns null when no Architecture Overview section', () => {
+    const content = '# Plan\n\n## Summary\n\nSome text.\n';
+    expect(parseAsciiDiagram(content)).toBeNull();
+  });
+
+  test('returns null for empty string', () => {
+    expect(parseAsciiDiagram('')).toBeNull();
+  });
+
+  test('preserves raw ASCII text', () => {
+    const content = `## Architecture Overview
+
+\`\`\`
+┌──────────┐
+│  Browser  │
+└──────────┘
+\`\`\`
+`;
+    const result = parseAsciiDiagram(content);
+    expect(result.raw).toContain('Browser');
+    expect(result.raw).toContain('┌');
+  });
+});
+
+// TS-037, TS-038: parseTesslJson
+describe('parseTesslJson', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tessl-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('reads dependencies from tessl.json', () => {
+    fs.writeFileSync(path.join(tmpDir, 'tessl.json'), JSON.stringify({
+      dependencies: {
+        'tessl/npm-express': { version: '5.1.0' },
+        'tessl/npm-ws': { version: '8.18.0' }
+      }
+    }));
+    const tiles = parseTesslJson(tmpDir);
+    expect(tiles).toHaveLength(2);
+    expect(tiles[0]).toEqual({ name: 'tessl/npm-express', version: '5.1.0', eval: null });
+    expect(tiles[1]).toEqual({ name: 'tessl/npm-ws', version: '8.18.0', eval: null });
+  });
+
+  test('returns empty array when file missing', () => {
+    const tiles = parseTesslJson(tmpDir);
+    expect(tiles).toEqual([]);
+  });
+
+  test('returns empty array for malformed JSON', () => {
+    fs.writeFileSync(path.join(tmpDir, 'tessl.json'), 'not json');
+    const tiles = parseTesslJson(tmpDir);
+    expect(tiles).toEqual([]);
+  });
+
+  test('returns empty array when no dependencies key', () => {
+    fs.writeFileSync(path.join(tmpDir, 'tessl.json'), JSON.stringify({ name: 'my-project' }));
+    const tiles = parseTesslJson(tmpDir);
+    expect(tiles).toEqual([]);
+  });
+});
+
+// TS-041: parseResearchDecisions
+describe('parseResearchDecisions', () => {
+  test('extracts decision title, decision text, and rationale', () => {
+    const content = `# Research
+
+## Decisions
+
+### 1. ASCII Diagram Parsing Approach
+
+**Decision**: Build a custom parser for box-drawing characters
+**Rationale**: The ASCII diagrams use Unicode box-drawing characters consistently
+**Alternatives considered**: General ASCII libraries (rejected)
+`;
+    const decisions = parseResearchDecisions(content);
+    expect(decisions).toHaveLength(1);
+    expect(decisions[0].title).toBe('ASCII Diagram Parsing Approach');
+    expect(decisions[0].decision).toBe('Build a custom parser for box-drawing characters');
+    expect(decisions[0].rationale).toBe('The ASCII diagrams use Unicode box-drawing characters consistently');
+  });
+
+  test('extracts multiple decisions', () => {
+    const content = `## Decisions
+
+### 1. First Decision
+
+**Decision**: Choice A
+**Rationale**: Because A is better
+
+### 2. Second Decision
+
+**Decision**: Choice B
+**Rationale**: Because B is needed
+`;
+    const decisions = parseResearchDecisions(content);
+    expect(decisions).toHaveLength(2);
+    expect(decisions[0].title).toBe('First Decision');
+    expect(decisions[1].title).toBe('Second Decision');
+  });
+
+  test('returns empty array when no content', () => {
+    expect(parseResearchDecisions('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseResearchDecisions(null)).toEqual([]);
+  });
+
+  test('returns empty array when no Decisions section', () => {
+    const content = '# Research\n\n## Tessl Tiles\n\nSome tiles info.\n';
+    expect(parseResearchDecisions(content)).toEqual([]);
   });
 });
 

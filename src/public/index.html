@@ -1507,6 +1507,133 @@
       background: var(--color-border);
     }
 
+    /* ====== Plan View ====== */
+    .planview-view { padding: 24px 28px; }
+    .planview-section {
+      margin-bottom: 28px; background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); padding: 20px 24px; box-shadow: var(--shadow-column);
+    }
+    .planview-section-title {
+      font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--color-text-secondary); margin-bottom: 16px;
+    }
+    /* Badge Wall */
+    .badge-wall { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tech-badge {
+      display: inline-flex; flex-direction: column; padding: 10px 16px;
+      background: var(--color-surface-elevated); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md); transition: all var(--transition-fast);
+      position: relative; cursor: default; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      border-left: 3px solid var(--color-accent);
+    }
+    .tech-badge:hover { background: var(--color-surface-hover); border-color: var(--color-accent); box-shadow: var(--shadow-card); transform: translateY(-1px); }
+    .tech-badge-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--color-text-muted); margin-bottom: 3px; }
+    .tech-badge-value { font-size: 13px; font-weight: 600; color: var(--color-text); }
+    .tech-badge-tooltip {
+      display: none; position: absolute; bottom: calc(100% + 8px); left: 50%; transform: translateX(-50%);
+      background: var(--color-surface-elevated); border: 1px solid var(--color-border);
+      border-radius: var(--radius-sm); padding: 10px 14px; font-size: 12px; color: var(--color-text-secondary);
+      max-width: 300px; white-space: normal; z-index: 50; box-shadow: var(--shadow-card-hover);
+      pointer-events: none; line-height: 1.5;
+    }
+    .tech-badge:hover .tech-badge-tooltip { display: block; }
+    /* Tessl Tiles Panel */
+    .tessl-tiles { display: flex; flex-wrap: wrap; gap: 12px; }
+    .tessl-tile-card {
+      display: flex; flex-direction: column; padding: 14px 18px;
+      background: var(--color-surface-elevated); border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md); min-width: 200px;
+      border-left: 3px solid var(--color-done); box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      transition: all var(--transition-fast);
+    }
+    .tessl-tile-card:hover { box-shadow: var(--shadow-card); transform: translateY(-1px); }
+    .tessl-tile-name { font-size: 13px; font-weight: 600; color: var(--color-text); font-family: var(--font-mono); }
+    .tessl-tile-version { font-size: 11px; color: var(--color-text-muted); margin-top: 4px; }
+    .tessl-tile-eval { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--color-border-subtle); }
+    .tessl-eval-score { font-size: 28px; font-weight: 700; color: var(--color-done); }
+    .tessl-eval-bar { height: 4px; background: var(--color-border); border-radius: 2px; margin-top: 6px; overflow: hidden; }
+    .tessl-eval-bar-fill { height: 100%; background: var(--color-done); border-radius: 2px; }
+    .tessl-eval-multiplier {
+      display: inline-block; margin-top: 6px; padding: 2px 10px; border-radius: 12px;
+      background: rgba(39, 201, 63, 0.15); color: var(--color-done); font-size: 11px; font-weight: 600;
+    }
+    /* File Structure Tree — VS Code style */
+    .file-tree { font-family: var(--font-mono); font-size: 13px; }
+    .file-tree-entry {
+      display: flex; align-items: center; height: 26px; padding: 0 8px;
+      border-radius: var(--radius-sm); transition: background var(--transition-fast);
+      cursor: default; gap: 0; white-space: nowrap;
+    }
+    .file-tree-entry:hover { background: var(--color-surface-hover); }
+    .file-tree-indent { display: inline-flex; flex-shrink: 0; }
+    .file-tree-guide {
+      width: 18px; height: 26px; position: relative; flex-shrink: 0;
+    }
+    .file-tree-guide::before {
+      content: ''; position: absolute; left: 8px; top: 0; bottom: 0;
+      width: 1px; background: var(--color-border-subtle);
+    }
+    .file-tree-chevron {
+      width: 18px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; cursor: pointer; color: var(--color-text-muted);
+      transition: color var(--transition-fast); font-size: 11px; user-select: none;
+    }
+    .file-tree-chevron:hover { color: var(--color-accent); }
+    .file-tree-chevron-spacer { width: 18px; flex-shrink: 0; }
+    .file-tree-file-icon {
+      width: 18px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 14px;
+    }
+    .file-tree-file-icon.dir { color: var(--color-accent); }
+    .file-tree-file-icon.file { color: var(--color-text-muted); }
+    .file-tree-file-icon.file-js { color: #f0db4f; }
+    .file-tree-file-icon.file-json { color: #f0db4f; }
+    .file-tree-file-icon.file-md { color: var(--color-accent); }
+    .file-tree-file-icon.file-html { color: #e44d26; }
+    .file-tree-file-icon.file-css { color: #264de4; }
+    .file-tree-label {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .file-tree-name { color: var(--color-text); white-space: nowrap; flex-shrink: 0; }
+    .file-tree-name.planned { color: var(--color-text-muted); }
+    .file-tree-status {
+      flex-shrink: 0; font-size: 10px; padding: 1px 6px; border-radius: 3px; font-weight: 600;
+    }
+    .file-tree-status.existing { color: var(--color-done); background: rgba(39,201,63,0.1); }
+    .file-tree-status.planned-tag { color: var(--color-text-muted); background: var(--color-surface-elevated); }
+    .file-tree-comment {
+      color: var(--color-text-muted); margin-left: auto; padding-left: 16px;
+      font-size: 12px; opacity: 0.5; overflow: hidden; text-overflow: ellipsis;
+      white-space: nowrap; min-width: 0; flex: 1 1 0;
+    }
+    .file-tree-comment.truncated { cursor: help !important; }
+    .file-tree-children { overflow: hidden; }
+    .file-tree-children.collapsed { display: none; }
+    /* Architecture Diagram */
+    .diagram-container { position: relative; }
+    .diagram-svg {
+      width: 100%; background: var(--color-bg); border: 1px solid var(--color-border);
+      border-radius: var(--radius-md); padding: 8px;
+    }
+    .diagram-node { cursor: pointer; transition: all var(--transition-fast); }
+    .diagram-node:hover { filter: brightness(1.2); }
+    .diagram-node-rect { rx: 10; ry: 10; stroke-width: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+    .diagram-node-label { font-family: var(--font-sans); font-size: 13px; font-weight: 600; fill: var(--color-text); }
+    .diagram-edge-line { stroke: var(--color-border); stroke-width: 2; fill: none; stroke-dasharray: 6 3; }
+    .diagram-edge-label {
+      font-family: var(--font-mono); font-size: 10px; fill: var(--color-text-muted);
+      paint-order: stroke; stroke: var(--color-bg); stroke-width: 4px;
+    }
+    .diagram-raw { font-family: var(--font-mono); font-size: 12px; white-space: pre; overflow-x: auto; padding: 16px; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: var(--radius-md); color: var(--color-text-secondary); line-height: 1.4; }
+    /* Diagram legend */
+    .diagram-legend { display: flex; gap: 16px; margin-top: 12px; justify-content: center; }
+    .diagram-legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--color-text-muted); }
+    .diagram-legend-dot { width: 10px; height: 10px; border-radius: 3px; }
+    /* Plan empty states */
+    .planview-empty { text-align: center; padding: 48px 20px; color: var(--color-text-muted); }
+    .planview-empty-title { font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--color-text-secondary); }
+    .planview-empty-text { font-size: 14px; line-height: 1.6; }
+
     /* ====== Scrollbar ====== */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -1641,6 +1768,8 @@
           renderConstitutionView();
         } else if (phaseId === 'spec') {
           renderStoryMapView();
+        } else if (phaseId === 'plan') {
+          renderPlanView();
         } else {
           renderPlaceholderView(phaseId);
         }
@@ -2389,6 +2518,7 @@
           previousCardColumns = {};
           activeTab = null; // Reset tab selection for new feature
           currentStoryMap = null; // Reset story map cache
+          currentPlanView = null; // Reset plan view cache
           loadPipeline(val);
           loadBoard(val);
           // Resubscribe WebSocket
@@ -2592,6 +2722,325 @@
         }
       }
 
+      // ====== Plan View ======
+      let currentPlanView = null;
+
+      async function renderPlanView() {
+        if (!currentFeature) return;
+        try {
+          if (!currentPlanView) {
+            const res = await fetch(`/api/planview/${currentFeature}`);
+            currentPlanView = await res.json();
+          }
+          renderPlanViewContent(currentPlanView);
+        } catch (err) {
+          contentArea.innerHTML = `<div class="planview-empty"><div class="planview-empty-title">Error loading plan</div><div class="planview-empty-text">${escapeHtml(err.message)}</div></div>`;
+        }
+      }
+
+      function renderPlanViewContent(data) {
+        if (!data || !data.exists) {
+          contentArea.innerHTML = `<div class="planview-empty"><div class="planview-empty-title">No plan created yet</div><div class="planview-empty-text">Run /iikit-03-plan to create a technical implementation plan for this feature.</div></div>`;
+          return;
+        }
+
+        let html = '<div class="planview-view">';
+
+        // Badge Wall
+        html += '<div class="planview-section">';
+        html += '<div class="planview-section-title">Tech Stack</div>';
+        if (data.techContext && data.techContext.length > 0) {
+          html += '<div class="badge-wall">';
+          for (const entry of data.techContext) {
+            const tooltip = findResearchTooltip(entry.value, data.researchDecisions);
+            html += `<div class="tech-badge" role="listitem">`;
+            html += `<span class="tech-badge-label">${escapeHtml(entry.label)}</span>`;
+            html += `<span class="tech-badge-value">${escapeHtml(entry.value)}</span>`;
+            if (tooltip) {
+              html += `<div class="tech-badge-tooltip" role="tooltip">${escapeHtml(tooltip)}</div>`;
+            }
+            html += `</div>`;
+          }
+          html += '</div>';
+        } else {
+          html += '<div class="planview-empty"><div class="planview-empty-text">No tech stack defined in plan</div></div>';
+        }
+        html += '</div>';
+
+        // Tessl Tiles Panel
+        if (data.tesslTiles && data.tesslTiles.length > 0) {
+          html += '<div class="planview-section">';
+          html += '<div class="planview-section-title">Tessl Tiles</div>';
+          html += '<div class="tessl-tiles">';
+          for (const tile of data.tesslTiles) {
+            html += `<div class="tessl-tile-card">`;
+            html += `<span class="tessl-tile-name">${escapeHtml(tile.name)}</span>`;
+            html += `<span class="tessl-tile-version">v${escapeHtml(tile.version)}</span>`;
+            if (tile.eval) {
+              html += `<div class="tessl-tile-eval">`;
+              html += `<span class="tessl-eval-score">${tile.eval.score}%</span>`;
+              html += `<div class="tessl-eval-bar"><div class="tessl-eval-bar-fill" style="width:${tile.eval.score}%"></div></div>`;
+              if (tile.eval.multiplier) {
+                html += `<span class="tessl-eval-multiplier">\u2191 ${tile.eval.multiplier}x</span>`;
+              }
+              html += `</div>`;
+            }
+            html += `</div>`;
+          }
+          html += '</div></div>';
+        }
+
+        // File Structure Tree
+        if (data.fileStructure && data.fileStructure.entries && data.fileStructure.entries.length > 0) {
+          html += '<div class="planview-section">';
+          html += '<div class="planview-section-title">Project Structure</div>';
+          html += '<div class="file-tree" role="tree" aria-label="Project file structure">';
+          html += renderFileTree(data.fileStructure.entries, 0);
+          html += '</div></div>';
+        }
+
+        // Architecture Diagram
+        if (data.diagram && data.diagram.nodes && data.diagram.nodes.length > 0) {
+          html += '<div class="planview-section">';
+          html += '<div class="planview-section-title">Architecture</div>';
+          html += '<div class="diagram-container">';
+          html += renderDiagramSVG(data.diagram);
+          html += '</div>';
+          html += renderDiagramLegend(data.diagram);
+          html += '<div id="diagram-detail" class="detail-panel-slot"></div>';
+          html += '</div>';
+        } else if (data.diagram && data.diagram.raw) {
+          // Fallback: raw ASCII
+          html += '<div class="planview-section">';
+          html += '<div class="planview-section-title">Architecture</div>';
+          html += `<pre class="diagram-raw">${escapeHtml(data.diagram.raw)}</pre>`;
+          html += '</div>';
+        }
+
+        html += '</div>';
+        contentArea.innerHTML = html;
+
+        // Attach event handlers
+        attachTreeHandlers();
+        attachDiagramHandlers(data.diagram);
+      }
+
+      function findResearchTooltip(badgeValue, decisions) {
+        if (!decisions || decisions.length === 0) return null;
+        const valueLower = badgeValue.toLowerCase();
+        for (const d of decisions) {
+          if (d.title && valueLower.includes(d.title.toLowerCase().split(' ')[0])) {
+            return d.rationale || d.decision;
+          }
+          // Also check if decision title words appear in badge value
+          if (d.title) {
+            const words = d.title.toLowerCase().split(/\s+/);
+            for (const word of words) {
+              if (word.length > 3 && valueLower.includes(word)) {
+                return d.rationale || d.decision;
+              }
+            }
+          }
+        }
+        return null;
+      }
+
+      function getFileIconInfo(name, isDir) {
+        if (isDir) return { cls: 'dir', ch: '\uD83D\uDCC2' };
+        const ext = name.split('.').pop();
+        if (['js', 'mjs'].includes(ext)) return { cls: 'file-js', ch: 'JS' };
+        if (ext === 'json') return { cls: 'file-json', ch: '{}' };
+        if (ext === 'md') return { cls: 'file-md', ch: 'M\u2193' };
+        if (ext === 'html') return { cls: 'file-html', ch: '</>' };
+        return { cls: 'file', ch: '\u25CB' };
+      }
+
+      function renderFileTree(entries) {
+        let html = '';
+        let i = 0;
+        while (i < entries.length) {
+          const entry = entries[i];
+          const isDir = entry.type === 'directory';
+          const expanded = entry.depth < 2;
+
+          // Indent guides
+          let indent = '';
+          for (let d = 0; d < entry.depth; d++) {
+            indent += '<span class="file-tree-guide"></span>';
+          }
+
+          const { cls, ch } = getFileIconInfo(entry.name, isDir);
+
+          if (isDir) {
+            const children = [];
+            let j = i + 1;
+            while (j < entries.length && entries[j].depth > entry.depth) {
+              children.push(entries[j]);
+              j++;
+            }
+            const childId = `tree-${entry.depth}-${entry.name}`.replace(/[^a-zA-Z0-9-]/g, '_');
+
+            html += `<div class="file-tree-entry">`;
+            html += `<span class="file-tree-indent">${indent}</span>`;
+            html += `<span class="file-tree-chevron" data-target="${childId}">${expanded ? '\u25BE' : '\u25B8'}</span>`;
+            html += `<span class="file-tree-file-icon ${cls}">${ch}</span>`;
+            html += `<span class="file-tree-label"><span class="file-tree-name">${escapeHtml(entry.name)}</span></span>`;
+            if (entry.comment) html += `<span class="file-tree-comment" data-full="${escapeHtml(entry.comment)}">${escapeHtml(entry.comment)}</span>`;
+            html += `</div>`;
+            html += `<div id="${childId}" class="file-tree-children${expanded ? '' : ' collapsed'}">`;
+            html += renderFileTree(children);
+            html += `</div>`;
+            i = j;
+          } else {
+            const isPlanned = entry.exists === false;
+            const nameClass = isPlanned ? ' planned' : '';
+
+            html += `<div class="file-tree-entry">`;
+            html += `<span class="file-tree-indent">${indent}</span>`;
+            html += `<span class="file-tree-chevron-spacer"></span>`;
+            html += `<span class="file-tree-file-icon ${cls}">${ch}</span>`;
+            html += `<span class="file-tree-label">`;
+            html += `<span class="file-tree-name${nameClass}">${escapeHtml(entry.name)}</span>`;
+            if (isPlanned) html += `<span class="file-tree-status planned-tag">planned</span>`;
+            html += `</span>`;
+            if (entry.comment) html += `<span class="file-tree-comment" data-full="${escapeHtml(entry.comment)}">${escapeHtml(entry.comment)}</span>`;
+            html += `</div>`;
+            i++;
+          }
+        }
+        return html;
+      }
+
+      function renderDiagramLegend(diagram) {
+        if (!diagram || !diagram.nodes) return '';
+        const types = new Set(diagram.nodes.map(n => n.type).filter(t => t !== 'default'));
+        if (types.size === 0) return '';
+        const colors = { client: 'var(--color-accent)', server: 'var(--color-p2)', storage: 'var(--color-done)', external: 'var(--color-p1)' };
+        let html = '<div class="diagram-legend">';
+        for (const type of types) {
+          html += `<div class="diagram-legend-item"><span class="diagram-legend-dot" style="background:${colors[type] || 'var(--color-text-muted)'}"></span>${type}</div>`;
+        }
+        html += '</div>';
+        return html;
+      }
+
+      function attachTreeHandlers() {
+        document.querySelectorAll('.file-tree-chevron').forEach(chevron => {
+          chevron.addEventListener('click', () => {
+            const targetId = chevron.dataset.target;
+            const children = document.getElementById(targetId);
+            if (!children) return;
+            const isCollapsed = children.classList.contains('collapsed');
+            children.classList.toggle('collapsed', !isCollapsed);
+            chevron.textContent = isCollapsed ? '\u25BE' : '\u25B8';
+          });
+        });
+        // Add title tooltip only on comments that are actually truncated
+        document.querySelectorAll('.file-tree-comment').forEach(comment => {
+          if (comment.scrollWidth > comment.clientWidth) {
+            comment.classList.add('truncated');
+            comment.title = comment.dataset.full || comment.textContent;
+          }
+        });
+      }
+
+      function renderDiagramSVG(diagram) {
+        if (!diagram || !diagram.nodes || diagram.nodes.length === 0) return '';
+
+        // Calculate SVG dimensions from node positions
+        let maxX = 0, maxY = 0;
+        for (const n of diagram.nodes) {
+          const right = n.x + n.width;
+          const bottom = n.y + n.height;
+          if (right > maxX) maxX = right;
+          if (bottom > maxY) maxY = bottom;
+        }
+
+        // Scale to SVG viewport
+        const padding = 40;
+        const svgWidth = 800;
+        const scaleX = (svgWidth - padding * 2) / (maxX || 1);
+        const scaleY = scaleX; // maintain aspect ratio
+        const svgHeight = maxY * scaleY + padding * 2;
+
+        const nodeTypeColors = {
+          client: 'var(--color-accent)',
+          server: 'var(--color-p2)',
+          storage: 'var(--color-done)',
+          external: 'var(--color-p1)',
+          default: 'var(--color-text-muted)'
+        };
+
+        let svg = `<svg class="diagram-svg" viewBox="0 0 ${svgWidth} ${svgHeight}" role="figure" aria-label="Architecture diagram">`;
+
+        // Draw edges first (behind nodes)
+        for (const edge of diagram.edges) {
+          const fromNode = diagram.nodes.find(n => n.id === edge.from);
+          const toNode = diagram.nodes.find(n => n.id === edge.to);
+          if (!fromNode || !toNode) continue;
+
+          const x1 = (fromNode.x + fromNode.width / 2) * scaleX + padding;
+          const y1 = (fromNode.y + fromNode.height) * scaleY + padding;
+          const x2 = (toNode.x + toNode.width / 2) * scaleX + padding;
+          const y2 = toNode.y * scaleY + padding;
+
+          svg += `<line class="diagram-edge-line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" aria-hidden="true"/>`;
+          if (edge.label) {
+            const midX = (x1 + x2) / 2 + 8;
+            const midY = (y1 + y2) / 2;
+            svg += `<text class="diagram-edge-label" x="${midX}" y="${midY}">${escapeHtml(edge.label)}</text>`;
+          }
+        }
+
+        // Draw nodes
+        for (const node of diagram.nodes) {
+          const x = node.x * scaleX + padding;
+          const y = node.y * scaleY + padding;
+          const w = node.width * scaleX;
+          const h = node.height * scaleY;
+          const color = nodeTypeColors[node.type] || nodeTypeColors.default;
+
+          svg += `<g class="diagram-node" data-node-id="${node.id}" tabindex="0" role="img" aria-label="${escapeHtml(node.label)} (${node.type})">`;
+          svg += `<rect class="diagram-node-rect" x="${x}" y="${y}" width="${w}" height="${h}" fill="var(--color-surface)" stroke="${color}"/>`;
+          svg += `<text class="diagram-node-label" x="${x + w/2}" y="${y + h/2 + 5}" text-anchor="middle">${escapeHtml(node.label)}</text>`;
+          svg += `</g>`;
+        }
+
+        svg += '</svg>';
+        return svg;
+      }
+
+      function attachDiagramHandlers(diagram) {
+        if (!diagram) return;
+        document.querySelectorAll('.diagram-node').forEach(nodeEl => {
+          const handler = () => {
+            const nodeId = nodeEl.dataset.nodeId;
+            const node = diagram.nodes.find(n => n.id === nodeId);
+            if (!node) return;
+            showPlanDetailPanel(node);
+          };
+          nodeEl.addEventListener('click', handler);
+          nodeEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+          });
+        });
+      }
+
+      function showPlanDetailPanel(node) {
+        const slot = document.getElementById('diagram-detail');
+        if (!slot) return;
+        const typeLabel = node.type !== 'default' ? ` (${node.type})` : '';
+        slot.innerHTML = `
+          <div class="detail-panel">
+            <div class="detail-panel-header">
+              <span class="detail-panel-id">${escapeHtml(node.label)}${typeLabel}</span>
+              <button class="detail-panel-close" aria-label="Close detail panel">\u00d7</button>
+            </div>
+            <div class="detail-panel-body"><pre style="white-space:pre-wrap;font-family:var(--font-mono);font-size:13px;color:var(--color-text-secondary)">${escapeHtml(node.content)}</pre></div>
+          </div>`;
+        slot.querySelector('.detail-panel-close').addEventListener('click', () => { slot.innerHTML = ''; });
+      }
+
       // ====== WebSocket ======
       function connectWebSocket() {
         const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -2686,6 +3135,15 @@
               currentStoryMap = msg.storymap;
               if (activeTab === 'spec') {
                 renderStoryMapContent(msg.storymap);
+              }
+            }
+            break;
+
+          case 'planview_update':
+            if (msg.feature === currentFeature && msg.planview) {
+              currentPlanView = msg.planview;
+              if (activeTab === 'plan') {
+                renderPlanViewContent(msg.planview);
               }
             }
             break;
