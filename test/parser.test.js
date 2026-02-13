@@ -468,7 +468,7 @@ describe('parseSuccessCriteria', () => {
 
 // TS-021, TS-025: parseClarifications
 describe('parseClarifications', () => {
-  test('extracts Q&A pairs with session date', () => {
+  test('extracts Q&A pairs with session date and empty refs', () => {
     const content = `## Clarifications
 
 ### Session 2026-02-11
@@ -481,13 +481,60 @@ describe('parseClarifications', () => {
     expect(clarifications[0]).toEqual({
       session: '2026-02-11',
       question: 'How should cross-linking work?',
-      answer: 'Only draw US to FR edges'
+      answer: 'Only draw US to FR edges',
+      refs: []
     });
     expect(clarifications[1]).toEqual({
       session: '2026-02-11',
       question: 'Should nodes show coverage?',
-      answer: 'No, coverage belongs to Tasks phase'
+      answer: 'No, coverage belongs to Tasks phase',
+      refs: []
     });
+  });
+
+  test('extracts spec item references from Q&A entries', () => {
+    const content = `## Clarifications
+
+### Session 2026-02-13
+
+- Q: How do story cards map to columns? -> A: Columns are Todo / In Progress / Done [FR-001, US-2]
+- Q: When does the dashboard launch? -> A: Only during implementation phase [FR-005, SC-001]
+- Q: Should errors show inline? -> A: Yes, inline within the component [FR-010]
+`;
+    const clarifications = parseClarifications(content);
+    expect(clarifications).toHaveLength(3);
+    expect(clarifications[0]).toEqual({
+      session: '2026-02-13',
+      question: 'How do story cards map to columns?',
+      answer: 'Columns are Todo / In Progress / Done',
+      refs: ['FR-001', 'US-2']
+    });
+    expect(clarifications[1]).toEqual({
+      session: '2026-02-13',
+      question: 'When does the dashboard launch?',
+      answer: 'Only during implementation phase',
+      refs: ['FR-005', 'SC-001']
+    });
+    expect(clarifications[2]).toEqual({
+      session: '2026-02-13',
+      question: 'Should errors show inline?',
+      answer: 'Yes, inline within the component',
+      refs: ['FR-010']
+    });
+  });
+
+  test('handles mix of entries with and without refs', () => {
+    const content = `## Clarifications
+
+### Session 2026-02-10
+
+- Q: Old question? -> A: Old answer
+- Q: New question? -> A: New answer [FR-003, US-1]
+`;
+    const clarifications = parseClarifications(content);
+    expect(clarifications).toHaveLength(2);
+    expect(clarifications[0].refs).toEqual([]);
+    expect(clarifications[1].refs).toEqual(['FR-003', 'US-1']);
   });
 
   test('returns empty array for spec with no Clarifications section', () => {

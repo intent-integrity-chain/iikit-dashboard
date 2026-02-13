@@ -1215,6 +1215,45 @@
       color: white;
     }
 
+    .clarify-refs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--color-border-subtle);
+    }
+
+    .clarify-ref {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--color-surface-hover);
+      color: var(--color-accent);
+      letter-spacing: 0.3px;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background var(--transition-fast), color var(--transition-fast);
+    }
+
+    .clarify-ref:hover {
+      background: var(--color-accent);
+      color: white;
+    }
+
+    .story-card.highlighted {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+      animation: cardPulse 0.6s ease-out;
+    }
+
+    @keyframes cardPulse {
+      0% { outline-color: transparent; }
+      50% { outline-color: var(--color-accent); }
+      100% { outline-color: var(--color-accent); }
+    }
+
     /* Detail Panel — floating left sidebar */
     .detail-panel {
       position: fixed;
@@ -2213,9 +2252,13 @@
             <div class="clarify-session-label">Session ${escapeHtml(session)}</div>
             <div class="clarify-entries">`;
           for (const c of entries) {
+            const refsHtml = (c.refs && c.refs.length)
+              ? `<div class="clarify-refs">${c.refs.map(r => `<a class="clarify-ref" href="#" data-ref-id="${escapeHtml(r)}">${escapeHtml(r)}</a>`).join('')}</div>`
+              : '';
             html += `<div class="clarify-entry">
               <div class="clarify-question"><span class="clarify-q-label">Q</span> ${escapeHtml(c.question)}</div>
               <div class="clarify-answer"><span class="clarify-a-label">A</span> ${escapeHtml(c.answer)}</div>
+              ${refsHtml}
             </div>`;
           }
           html += '</div></div>';
@@ -2223,6 +2266,40 @@
 
         html += '</div></div>';
         contentArea.innerHTML = html;
+
+        // Wire up ref links to navigate to Spec tab and highlight the item
+        contentArea.querySelectorAll('.clarify-ref').forEach(link => {
+          link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const refId = link.dataset.refId;
+            navigateToSpecItem(refId);
+          });
+        });
+      }
+
+      async function navigateToSpecItem(refId) {
+        // Switch to Spec tab
+        switchTab('spec');
+        // Wait for the story map to render, then highlight and show detail
+        await new Promise(r => setTimeout(r, 100));
+        const nodeEl = contentArea.querySelector(`.graph-node[data-id="${refId}"]`);
+        if (nodeEl) {
+          highlightGraphNode(refId);
+          nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Show detail panel for the node
+          const labelEl = nodeEl.querySelector('.graph-node-label');
+          const type = refId.startsWith('US') ? 'us' : refId.startsWith('FR') ? 'fr' : 'sc';
+          if (labelEl) {
+            showDetailPanel(refId, type, labelEl.textContent, '');
+          }
+        }
+        // For US refs, also highlight the story card
+        const card = contentArea.querySelector(`.story-card[data-story-id="${refId}"]`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('highlighted');
+          setTimeout(() => card.classList.remove('highlighted'), 2000);
+        }
       }
 
       // ====== Constitution View ======

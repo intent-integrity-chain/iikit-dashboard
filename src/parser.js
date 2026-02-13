@@ -283,10 +283,10 @@ function parseSuccessCriteria(content) {
 
 /**
  * Parse spec.md to extract clarification Q&A entries.
- * Pattern: ### Session YYYY-MM-DD followed by - Q: question -> A: answer
+ * Pattern: ### Session YYYY-MM-DD followed by - Q: question -> A: answer [FR-001, US-2]
  *
  * @param {string} content - Raw markdown content of spec.md
- * @returns {Array<{session: string, question: string, answer: string}>}
+ * @returns {Array<{session: string, question: string, answer: string, refs: string[]}>}
  */
 function parseClarifications(content) {
   if (!content || typeof content !== 'string') return [];
@@ -317,10 +317,21 @@ function parseClarifications(content) {
 
     const qaMatch = line.match(/^- Q:\s*(.*?)\s*->\s*A:\s*(.*)/);
     if (qaMatch && currentSession) {
+      let answer = qaMatch[2].trim();
+      let refs = [];
+
+      // Extract trailing [FR-001, US-2, SC-003] references
+      const refsMatch = answer.match(/\[((?:(?:FR|US|SC)-\w+(?:,\s*)?)+)\]\s*$/);
+      if (refsMatch) {
+        refs = refsMatch[1].split(/,\s*/).map(r => r.trim());
+        answer = answer.substring(0, answer.lastIndexOf('[')).trim();
+      }
+
       clarifications.push({
         session: currentSession,
         question: qaMatch[1].trim(),
-        answer: qaMatch[2].trim()
+        answer,
+        refs
       });
     }
   }

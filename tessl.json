@@ -2,9 +2,6 @@
   "name": "my-project",
   "mode": "vendored",
   "dependencies": {
-    "tessl-labs/intent-integrity-kit": {
-      "version": "1.1.0"
-    },
     "tessl/npm-express": {
       "version": "5.1.0"
     },
@@ -13,6 +10,25 @@
     },
     "tessl/npm-jest": {
       "version": "30.1.0"
+    },
+    "intent-integrity-chain/kit": {
+      "version": "ea1d0c8e76be551e6ff1c5f2730de7538f5309d4",
+      "source": "https://github.com/intent-integrity-chain/kit",
+      "include": {
+        "skills": [
+          "iikit-00-constitution",
+          "iikit-01-specify",
+          "iikit-02-clarify",
+          "iikit-03-plan",
+          "iikit-04-checklist",
+          "iikit-05-testify",
+          "iikit-06-tasks",
+          "iikit-07-analyze",
+          "iikit-08-implement",
+          "iikit-09-taskstoissues",
+          "iikit-core"
+        ]
+      }
     }
   }
 }

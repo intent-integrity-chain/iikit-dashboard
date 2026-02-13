@@ -103,6 +103,7 @@ While the developer views the Plan Architecture Viewer, changes to plan.md on di
 - What happens when the plan references files in its structure but the project directory doesn't exist yet? (All files are marked as "planned")
 - What happens when `tessl.json` has no dependencies listed? (Show an empty Tessl panel with a message indicating no tiles are installed)
 - What happens when `tessl.json` is malformed? (Skip the Tessl panel gracefully; other sections render normally)
+- What happens when the Tessl API call for eval scores fails (network error, timeout, 500)? (Treat as "data unavailable" per FR-015 — omit eval score silently, same as when no eval data exists)
 
 ## Requirements *(mandatory)*
 
@@ -156,13 +157,17 @@ While the developer views the Plan Architecture Viewer, changes to plan.md on di
 
 ### Session 2026-02-11
 
-- Q: Should Key Design Decisions, Constitution Check, and API Contract sections from plan.md be visible in the Plan tab? -> A: No. The Plan tab only shows the three specified sub-views (Tech Stack, Structure, Architecture). Other sections are text-heavy and better read in the raw markdown. Keeping scope tight aligns with Constitution V (Simplicity)
-- Q: How should the system determine a diagram node's component type for color coding? -> A: Use LLM classification — pass node labels to an LLM and ask what architectural category each belongs to (client, server, storage, external). More flexible than keyword matching and handles edge cases
-- Q: When checking file existence on disk (FR-007), what path should the tree's root directory map to? -> A: Repository root, stripping the tree's named root directory. E.g., `iikit-kanban/src/server.js` checks `<repo-root>/src/server.js`
-- Q: Should the three sub-views use tab navigation or a single scrollable layout? -> A: Single vertically scrollable layout — all sub-views visible at once, no tabs. Simpler (Constitution V) and sufficient screen real estate. Overflows vertically on smaller screens
-- Q: Should the Plan view show matched Tessl tiles for tech stack dependencies? -> A: Yes. Show a Tessl panel below the badge wall. Read installed tiles from `tessl.json` (no registry search needed — tiles are already installed). Show tile cards with name/version. Show eval scores when the Tessl API makes them available; omit the score section (not a placeholder) when unavailable
-- Q: How should the system find which Tessl tiles match the tech stack? -> A: Don't search the registry. Just read `tessl.json` from the project root — it already lists all installed tiles with their workspace/name and version
-- Q: Should badge visual design be specified in the spec? -> A: No. Defer to implementation using the existing dashboard CSS design system (custom properties, same typography/colors). Spec defines WHAT to show, not pixel-level styling
-- Q: What should the default expand/collapse state of the file tree be on initial load? -> A: Depth-based — expand the first 2 levels, collapse deeper nesting. Balances overview visibility with manageable tree size
-- Q: Should the architecture diagram support zoom/pan? -> A: No. Fixed-size SVG that scales to container width. Simpler (Constitution V) and sufficient for diagrams with up to 10 nodes
-- Q: Should there be a timeout for the LLM classification call? -> A: Yes, 5 seconds. Matches the live update SLA. On timeout, fall back to uniform "default" node type coloring
+- Q: Should Key Design Decisions, Constitution Check, and API Contract sections from plan.md be visible in the Plan tab? -> A: No. The Plan tab only shows the three specified sub-views (Tech Stack, Structure, Architecture). Other sections are text-heavy and better read in the raw markdown. Keeping scope tight aligns with Constitution V (Simplicity) [FR-017, SC-007]
+- Q: How should the system determine a diagram node's component type for color coding? -> A: Use LLM classification — pass node labels to an LLM and ask what architectural category each belongs to (client, server, storage, external). More flexible than keyword matching and handles edge cases [FR-009, US-3]
+- Q: When checking file existence on disk (FR-007), what path should the tree's root directory map to? -> A: Repository root, stripping the tree's named root directory. E.g., `iikit-kanban/src/server.js` checks `<repo-root>/src/server.js` [FR-007, US-2]
+- Q: Should the three sub-views use tab navigation or a single scrollable layout? -> A: Single vertically scrollable layout — all sub-views visible at once, no tabs. Simpler (Constitution V) and sufficient screen real estate. Overflows vertically on smaller screens [FR-017, SC-007]
+- Q: Should the Plan view show matched Tessl tiles for tech stack dependencies? -> A: Yes. Show a Tessl panel below the badge wall. Read installed tiles from `tessl.json` (no registry search needed — tiles are already installed). Show tile cards with name/version. Show eval scores when the Tessl API makes them available; omit the score section (not a placeholder) when unavailable [FR-012, FR-013, FR-014, FR-015, US-4]
+- Q: How should the system find which Tessl tiles match the tech stack? -> A: Don't search the registry. Just read `tessl.json` from the project root — it already lists all installed tiles with their workspace/name and version [FR-012, US-4]
+- Q: Should badge visual design be specified in the spec? -> A: No. Defer to implementation using the existing dashboard CSS design system (custom properties, same typography/colors). Spec defines WHAT to show, not pixel-level styling [FR-001, FR-002]
+- Q: What should the default expand/collapse state of the file tree be on initial load? -> A: Depth-based — expand the first 2 levels, collapse deeper nesting. Balances overview visibility with manageable tree size [FR-004, US-2]
+- Q: Should the architecture diagram support zoom/pan? -> A: No. Fixed-size SVG that scales to container width. Simpler (Constitution V) and sufficient for diagrams with up to 10 nodes [FR-008, US-3]
+- Q: Should there be a timeout for the LLM classification call? -> A: Yes, 5 seconds. Matches the live update SLA. On timeout, fall back to uniform "default" node type coloring [FR-009, US-3]
+
+### Session 2026-02-13
+
+- Q: How should the system handle Tessl API errors when fetching eval scores? -> A: Treat API errors same as "data unavailable" — omit eval score silently [FR-014, FR-015, US-4]
