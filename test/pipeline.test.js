@@ -99,7 +99,8 @@ describe('computePipelineState', () => {
   test('Checklist is in_progress with percentage when partially complete', () => {
     createFeature(projectPath, '001-test', {
       'spec.md': '# Spec',
-      'checklists/requirements.md': '# Checklist\n- [x] CHK001 Item 1\n- [x] CHK002 Item 2\n- [ ] CHK003 Item 3\n- [ ] CHK004 Item 4\n'
+      'checklists/requirements.md': '# Checklist\n- [x] CHK001 Item 1\n',
+      'checklists/domain.md': '# Domain\n- [x] CHK002 Item 2\n- [ ] CHK003 Item 3\n- [ ] CHK004 Item 4\n'
     });
 
     const result = computePipelineState(projectPath, '001-test');
@@ -113,7 +114,8 @@ describe('computePipelineState', () => {
   test('Checklist is complete when all items checked', () => {
     createFeature(projectPath, '001-test', {
       'spec.md': '# Spec',
-      'checklists/requirements.md': '# Checklist\n- [x] CHK001 Item 1\n- [x] CHK002 Item 2\n'
+      'checklists/requirements.md': '# Checklist\n- [x] CHK001 Item 1\n',
+      'checklists/domain.md': '# Domain\n- [x] CHK002 Item 2\n'
     });
 
     const result = computePipelineState(projectPath, '001-test');
