@@ -3246,39 +3246,53 @@
       const themeIcon = document.getElementById('themeIcon');
       const html = document.documentElement;
 
-      function getPreferredTheme() {
-        const stored = localStorage.getItem('iikit-theme');
-        if (stored) return stored;
+      // Three-state cycle: system -> light -> dark -> system
+      let themeMode = localStorage.getItem('iikit-theme') || 'system';
+
+      function getSystemTheme() {
         return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
       }
 
-      function applyTheme(theme) {
-        if (theme === 'light') {
+      function applyTheme(mode) {
+        themeMode = mode;
+        if (mode === 'system') {
+          localStorage.removeItem('iikit-theme');
+          const resolved = getSystemTheme();
+          if (resolved === 'light') {
+            html.setAttribute('data-theme', 'light');
+          } else {
+            html.removeAttribute('data-theme');
+          }
+          themeIcon.textContent = '\uD83D\uDDA5'; // monitor
+          themeToggle.setAttribute('aria-label', 'Theme: System (click for Light)');
+          themeToggle.title = 'Theme: System';
+        } else if (mode === 'light') {
+          localStorage.setItem('iikit-theme', 'light');
           html.setAttribute('data-theme', 'light');
           themeIcon.textContent = '\u2600'; // sun
-          themeToggle.setAttribute('aria-label', 'Switch to dark theme');
+          themeToggle.setAttribute('aria-label', 'Theme: Light (click for Dark)');
+          themeToggle.title = 'Theme: Light';
         } else {
+          localStorage.setItem('iikit-theme', 'dark');
           html.removeAttribute('data-theme');
           themeIcon.textContent = '\u263E'; // moon
-          themeToggle.setAttribute('aria-label', 'Switch to light theme');
+          themeToggle.setAttribute('aria-label', 'Theme: Dark (click for System)');
+          themeToggle.title = 'Theme: Dark';
         }
-        localStorage.setItem('iikit-theme', theme);
       }
 
       themeToggle.addEventListener('click', () => {
-        const current = html.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
-        applyTheme(current === 'light' ? 'dark' : 'light');
+        const next = themeMode === 'system' ? 'light' : themeMode === 'light' ? 'dark' : 'system';
+        applyTheme(next);
       });
 
-      // Listen for OS theme changes
-      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', (e) => {
-        if (!localStorage.getItem('iikit-theme')) {
-          applyTheme(e.matches ? 'light' : 'dark');
-        }
+      // Listen for OS theme changes — only react in system mode
+      window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+        if (themeMode === 'system') applyTheme('system');
       });
 
       // Apply on load
-      applyTheme(getPreferredTheme());
+      applyTheme(themeMode);
 
       // ====== Init ======
       loadFeatures();
