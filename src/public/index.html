@@ -1036,7 +1036,7 @@
     }
 
     .graph-edge.highlighted {
-      stroke: var(--color-accent);
+      stroke: var(--color-text);
       stroke-width: 2.5;
     }
 
@@ -1050,8 +1050,9 @@
     }
 
     .graph-node.highlighted circle {
-      stroke: var(--color-accent);
+      stroke: var(--color-text);
       stroke-width: 3;
+      filter: drop-shadow(0 0 4px var(--color-text));
     }
 
     .graph-node-us circle { fill: var(--color-accent); }
@@ -2278,27 +2279,39 @@
       }
 
       async function navigateToSpecItem(refId) {
-        // Switch to Spec tab
+        // Normalize: clarification refs use US-2 but parser creates US2
+        const nodeId = refId.replace(/^US-/, 'US');
+
+        // Switch to Spec tab and wait for async render to complete
         switchTab('spec');
-        // Wait for the story map to render, then highlight and show detail
-        await new Promise(r => setTimeout(r, 100));
-        const nodeEl = contentArea.querySelector(`.graph-node[data-id="${refId}"]`);
-        if (nodeEl) {
-          highlightGraphNode(refId);
-          nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Show detail panel for the node
-          const labelEl = nodeEl.querySelector('.graph-node-label');
-          const type = refId.startsWith('US') ? 'us' : refId.startsWith('FR') ? 'fr' : 'sc';
-          if (labelEl) {
-            showDetailPanel(refId, type, labelEl.textContent, '');
-          }
+        // Poll until the graph SVG has rendered (async fetch may take time)
+        for (let i = 0; i < 20; i++) {
+          if (contentArea.querySelector('.graph-node')) break;
+          await new Promise(r => setTimeout(r, 50));
         }
-        // For US refs, also highlight the story card
-        const card = contentArea.querySelector(`.story-card[data-story-id="${refId}"]`);
+
+        // Highlight the node in the graph
+        highlightGraphNode(nodeId);
+
+        // For US refs, scroll to and highlight the story card
+        const card = contentArea.querySelector(`.story-card[data-story-id="${nodeId}"]`);
         if (card) {
           card.scrollIntoView({ behavior: 'smooth', block: 'center' });
           card.classList.add('highlighted');
           setTimeout(() => card.classList.remove('highlighted'), 2000);
+          // Show detail for the story
+          const story = currentStoryMap?.stories?.find(s => s.id === nodeId);
+          if (story) showDetailPanel(nodeId, 'us', story.title, story.body || '');
+          return;
+        }
+
+        // For FR/SC refs, scroll to the graph node
+        const nodeEl = contentArea.querySelector(`.graph-node[data-id="${nodeId}"]`);
+        if (nodeEl) {
+          nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const type = nodeId.startsWith('FR') ? 'fr' : 'sc';
+          const desc = nodeEl.dataset.desc || '';
+          showDetailPanel(nodeId, type, nodeId, desc);
         }
       }
 
