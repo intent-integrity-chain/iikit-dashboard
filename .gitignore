@@ -1,1 +1,8 @@
 node_modules/
+
+# Tessl installed tiles (recreated by `tessl install`)
+.tessl/tiles/
+
+# Agent skill symlinks (recreated by `tessl install`)
+.claude/skills/tessl:*
+.codex/skills/tessl:*

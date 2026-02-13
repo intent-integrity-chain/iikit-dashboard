@@ -1,7 +1,0 @@
-{
-  "name": "tessl/npm-express",
-  "version": "5.1.0",
-  "docs": "docs/index.md",
-  "describes": "pkg:npm/express@5.1.0",
-  "summary": "Fast, unopinionated, minimalist web framework for Node.js"
-}
