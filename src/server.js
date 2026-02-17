@@ -51,7 +51,7 @@ function listFeatures(projectPath) {
     });
   }
 
-  return features;
+  return features.reverse();
 }
 
 /**

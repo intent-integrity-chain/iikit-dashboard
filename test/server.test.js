@@ -130,6 +130,13 @@ Description.
     expect(auth.progress).toBe('2/5');
   });
 
+  // Features should be sorted newest-first (highest prefix number first)
+  test('GET /api/features returns features sorted newest first', async () => {
+    const res = await httpGet(port, '/api/features');
+    const ids = res.data.map(f => f.id);
+    expect(ids).toEqual(['002-payments', '001-auth']);
+  });
+
   // TS-012: GET /api/board/:feature returns board state
   test('GET /api/board/:feature returns board state with columns', async () => {
     const res = await httpGet(port, '/api/board/001-auth');

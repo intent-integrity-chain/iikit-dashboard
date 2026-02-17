@@ -2549,7 +2549,7 @@
           updateFeatureSelector(features);
 
           if (features.length > 0 && !currentFeature) {
-            currentFeature = features[features.length - 1].id;
+            currentFeature = features[0].id;
             featureSelect.value = currentFeature;
             loadPipeline(currentFeature);
             loadBoard(currentFeature);
