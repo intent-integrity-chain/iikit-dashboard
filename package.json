@@ -1,31 +1,32 @@
 {
-  "name": "iikit-kanban",
+  "name": "iikit-dashboard",
   "version": "1.0.0",
-  "description": "IIKit Kanban Board — live-updating dashboard for specification-driven development",
+  "description": "Real-time dashboard for Intent Integrity Kit (IIKit) — visualizes every phase of specification-driven AI development",
   "main": "src/server.js",
   "bin": {
-    "iikit-kanban": "bin/iikit-kanban.js"
+    "iikit-dashboard": "bin/iikit-dashboard.js"
   },
   "files": [
     "bin/",
     "src/"
   ],
   "scripts": {
-    "start": "node bin/iikit-kanban.js",
+    "start": "node bin/iikit-dashboard.js",
     "test": "jest --forceExit"
   },
   "keywords": [
-    "kanban",
     "iikit",
     "intent-integrity",
     "dashboard",
-    "tdd",
     "specification",
+    "kanban",
+    "pipeline",
+    "tdd",
     "live-updates"
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/intent-integrity-chain/iikit-kanban"
+    "url": "https://github.com/intent-integrity-chain/iikit-dashboard"
   },
   "author": "Baruch Sadogursky",
   "license": "MIT",

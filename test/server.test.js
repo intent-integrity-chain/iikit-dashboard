@@ -29,7 +29,7 @@ describe('Server', () => {
 
   beforeAll(async () => {
     // Create a temporary project directory with test fixtures
-    testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iikit-kanban-test-'));
+    testDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iikit-dashboard-test-'));
 
     // Create specs directory structure for two features
     const feature1Dir = path.join(testDir, 'specs', '001-auth');

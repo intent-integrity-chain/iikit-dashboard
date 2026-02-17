@@ -23,15 +23,15 @@ for (let i = 0; i < args.length; i++) {
 }
 
 async function main() {
-  console.log(`\n  IIKit Kanban Board`);
-  console.log(`  ==================\n`);
+  console.log(`\n  IIKit Dashboard`);
+  console.log(`  ===============\n`);
   console.log(`  Project: ${projectPath}`);
 
   try {
     const result = await createServer({ projectPath, port });
     const url = `http://localhost:${result.port}`;
     console.log(`  Server:  ${url}`);
-    console.log(`\n  Open your browser to view the kanban board.\n`);
+    console.log(`\n  Open your browser to view the dashboard.\n`);
 
     // Try to open browser (best effort, don't fail if it doesn't work)
     try {
