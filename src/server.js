@@ -13,6 +13,7 @@ const { computePipelineState } = require('./pipeline');
 const { computeStoryMapState } = require('./storymap');
 const { computePlanViewState } = require('./planview');
 const { computeChecklistViewState } = require('./checklist');
+const { computeTestifyState } = require('./testify');
 
 /**
  * List features from specs/ directory.
@@ -182,6 +183,20 @@ function createServer({ projectPath, port = 3000 }) {
     }
   });
 
+  // API: testify traceability state for a feature
+  app.get('/api/testify/:feature', (req, res) => {
+    try {
+      const featureDir = path.join(projectPath, 'specs', req.params.feature);
+      if (!fs.existsSync(featureDir)) {
+        return res.status(404).json({ error: 'Feature not found' });
+      }
+      const testify = computeTestifyState(projectPath, req.params.feature);
+      res.json(testify);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // API: board state for a feature
   app.get('/api/board/:feature', (req, res) => {
     try {
@@ -277,6 +292,14 @@ function createServer({ projectPath, port = 3000 }) {
                   type: 'checklist_update',
                   feature: ws.currentFeature,
                   checklist
+                }));
+              }
+              const testify = computeTestifyState(projectPath, ws.currentFeature);
+              if (testify) {
+                ws.send(JSON.stringify({
+                  type: 'testify_update',
+                  feature: ws.currentFeature,
+                  testify
                 }));
               }
             } catch {

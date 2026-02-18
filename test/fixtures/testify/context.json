@@ -1,0 +1,7 @@
+{
+  "testify": {
+    "assertion_hash": "3e2b91db8b93a2d5424b7b1fc5d130a6e149914a021d8ee4477b30a0c48bc04c",
+    "generated_at": "2026-02-17T00:00:00Z",
+    "test_specs_file": "tests/test-specs.md"
+  }
+}

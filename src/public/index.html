@@ -1082,6 +1082,193 @@
       max-width: 360px;
     }
 
+    /* ====== Testify Traceability Tab ====== */
+    .testify-view {
+      padding: 24px 28px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .testify-seal {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      margin-bottom: 20px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .testify-seal-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .testify-seal-dot.valid { background: var(--color-verified); }
+    .testify-seal-dot.tampered { background: var(--color-tampered); animation: pulse-warning 2s ease-in-out infinite; }
+    .testify-seal-dot.missing { background: var(--color-text-muted); }
+
+    .testify-seal-label.valid { color: var(--color-verified); }
+    .testify-seal-label.tampered { color: var(--color-tampered); }
+    .testify-seal-label.missing { color: var(--color-text-muted); }
+
+    .testify-seal-hash {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--color-text-muted);
+      margin-left: auto;
+    }
+
+    .testify-sankey-container {
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    .testify-sankey-svg {
+      display: block;
+      width: 100%;
+    }
+
+    .testify-sankey-svg .sankey-node {
+      cursor: pointer;
+      transition: opacity var(--transition-fast);
+    }
+
+    .testify-sankey-svg .sankey-node:focus {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    .testify-sankey-svg .sankey-node-rect {
+      rx: 4;
+      ry: 4;
+      stroke-width: 1.5;
+      transition: stroke var(--transition-fast), fill var(--transition-fast);
+    }
+
+    .testify-sankey-svg .sankey-node-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 600;
+      fill: var(--color-text);
+      pointer-events: none;
+    }
+
+    .testify-sankey-svg .sankey-node-desc {
+      font-family: var(--font-sans);
+      font-size: 9px;
+      fill: var(--color-text-secondary);
+      pointer-events: none;
+    }
+
+    .testify-sankey-svg .sankey-flow {
+      fill-opacity: 0.25;
+      stroke-opacity: 0.4;
+      stroke-width: 1;
+      transition: fill-opacity var(--transition-fast), stroke-opacity var(--transition-fast), opacity var(--transition-fast);
+    }
+
+    .testify-sankey-svg .sankey-flow:hover {
+      fill-opacity: 0.45;
+      stroke-opacity: 0.7;
+    }
+
+    .testify-sankey-svg .sankey-group-bg {
+      rx: 6;
+      ry: 6;
+    }
+
+    .testify-sankey-svg .sankey-group-label {
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 600;
+      fill: var(--color-text-secondary);
+    }
+
+    .testify-sankey-svg .sankey-col-label {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 700;
+      fill: var(--color-text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .testify-sankey-svg .dimmed {
+      opacity: 0.12;
+    }
+
+    .testify-sankey-svg .highlighted .sankey-flow {
+      fill-opacity: 0.5;
+      stroke-opacity: 0.8;
+    }
+
+    .testify-sankey-svg .gap-node .sankey-node-rect {
+      stroke: var(--color-tampered);
+      stroke-width: 2;
+      stroke-dasharray: 4 2;
+    }
+
+    .testify-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+    }
+
+    .testify-empty-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--color-surface-elevated);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .testify-empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 6px;
+    }
+
+    .testify-empty-text {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      max-width: 400px;
+    }
+
+    .testify-empty-text code {
+      background: var(--color-surface-elevated);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    @keyframes testify-fade-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .testify-sankey-svg .sankey-col-left .sankey-node { animation: testify-fade-in 0.4s ease both; }
+    .testify-sankey-svg .sankey-col-mid .sankey-node { animation: testify-fade-in 0.4s ease 0.15s both; }
+    .testify-sankey-svg .sankey-col-right .sankey-node { animation: testify-fade-in 0.4s ease 0.3s both; }
+    .testify-sankey-svg .sankey-flow { animation: testify-fade-in 0.4s ease 0.45s both; }
+
     /* ====== Spec Story Map Tab ====== */
     .storymap-view {
       padding: 24px 28px;
@@ -1937,6 +2124,7 @@
       let currentPipeline = null;
       let currentChecklist = null;
       let expandedChecklist = null;
+      let currentTestify = null;
       let activeTab = null;
       let ws = null;
       let reconnectTimer = null;
@@ -2015,6 +2203,8 @@
           renderClarifyView();
         } else if (phaseId === 'checklist') {
           renderChecklistView();
+        } else if (phaseId === 'testify') {
+          renderTestifyView();
         } else {
           renderPlaceholderView(phaseId);
         }
@@ -2188,6 +2378,409 @@
           expandedChecklist = filename;
         }
         renderChecklistContent(data);
+      }
+
+      // ====== Testify Traceability View ======
+
+      async function renderTestifyView() {
+        if (!currentFeature) return;
+
+        try {
+          const res = await fetch(`/api/testify/${currentFeature}`);
+          if (!res.ok) throw new Error('Failed to load');
+          currentTestify = await res.json();
+          renderTestifyContent(currentTestify);
+        } catch {
+          contentArea.innerHTML = '<div class="testify-empty"><div class="testify-empty-title">Failed to load testify data.</div></div>';
+        }
+      }
+
+      function renderTestifyContent(data) {
+        if (!data) return;
+
+        // Empty state
+        if (!data.exists) {
+          contentArea.innerHTML = `
+            <div class="testify-empty">
+              <div class="testify-empty-icon">&#128269;</div>
+              <div class="testify-empty-title">No test specifications generated for this feature</div>
+              <div class="testify-empty-text">Run <code>/iikit-05-testify</code> to generate test specifications with traceability links to requirements and tasks.</div>
+            </div>`;
+          return;
+        }
+
+        let html = '<div class="testify-view">';
+
+        // Integrity seal
+        html += renderIntegritySeal(data.integrity);
+
+        // Sankey diagram
+        html += renderSankeyDiagram(data);
+
+        html += '</div>';
+        contentArea.innerHTML = html;
+
+        // Attach hover and keyboard handlers after DOM insert
+        attachSankeyInteractions(data);
+      }
+
+      function renderIntegritySeal(integrity) {
+        const labels = { valid: 'Verified', tampered: 'Tampered', missing: 'Missing' };
+        const label = labels[integrity.status] || 'Unknown';
+        const hashDisplay = integrity.currentHash ? integrity.currentHash.substring(0, 12) + '...' : '';
+
+        return `<div class="testify-seal" role="status" aria-live="polite" aria-label="Assertion integrity: ${label}">
+          <div class="testify-seal-dot ${escapeHtml(integrity.status)}"></div>
+          <span class="testify-seal-label ${escapeHtml(integrity.status)}">${escapeHtml(label)}</span>
+          <span style="color: var(--color-text-muted); font-weight: 400;">Assertion Integrity</span>
+          ${hashDisplay ? `<span class="testify-seal-hash">${escapeHtml(hashDisplay)}</span>` : ''}
+        </div>`;
+      }
+
+      function renderSankeyDiagram(data) {
+        const { requirements, testSpecs, tasks, edges, gaps, pyramid } = data;
+
+        // Layout constants
+        const PAD = 20;
+        const COL_LEFT = 40;
+        const COL_MID = 440;
+        const COL_RIGHT = 840;
+        const NODE_W = 180;
+        const NODE_H = 32;
+        const NODE_GAP = 6;
+        const GROUP_PAD = 8;
+        const GROUP_GAP = 16;
+        const LABEL_Y = 20;
+        const COL_LABEL_Y = LABEL_Y;
+
+        // Compute positions for each column
+        const reqNodes = requirements.map((r, i) => ({
+          ...r, x: COL_LEFT, y: PAD + 30 + i * (NODE_H + NODE_GAP),
+          col: 'left', isGap: gaps.untestedRequirements.includes(r.id)
+        }));
+
+        // Middle column: group by pyramid type
+        const typeOrder = ['acceptance', 'contract', 'validation'];
+        const typeLabels = { acceptance: 'Acceptance', contract: 'Contract', validation: 'Validation' };
+        const typeColors = { acceptance: '#3B82F6', contract: '#22C55E', validation: '#8B5CF6' };
+        const midNodes = [];
+        const groupMeta = [];
+        let midY = PAD + 30;
+
+        for (const type of typeOrder) {
+          const ids = pyramid[type].ids;
+          const count = pyramid[type].count;
+          const groupStartY = midY;
+          const specs = ids.map(id => testSpecs.find(ts => ts.id === id)).filter(Boolean);
+
+          // Cluster width scales with count — narrower at top (acceptance), wider at bottom (validation)
+          const widthScale = type === 'acceptance' ? 0.7 : type === 'contract' ? 0.85 : 1.0;
+          const effectiveW = Math.round(NODE_W * widthScale);
+          const xOffset = COL_MID + Math.round((NODE_W - effectiveW) / 2);
+
+          for (let j = 0; j < specs.length; j++) {
+            midNodes.push({
+              ...specs[j], x: xOffset, y: midY + GROUP_PAD + j * (NODE_H + NODE_GAP),
+              w: effectiveW, col: 'mid', type,
+              isGap: gaps.unimplementedTests.includes(specs[j].id)
+            });
+          }
+
+          const groupH = count > 0
+            ? GROUP_PAD * 2 + count * NODE_H + (count - 1) * NODE_GAP
+            : GROUP_PAD * 2 + NODE_H; // min height for empty groups
+
+          groupMeta.push({
+            type, label: `${typeLabels[type]}: ${count}`,
+            x: xOffset - GROUP_PAD, y: groupStartY,
+            w: effectiveW + GROUP_PAD * 2, h: groupH,
+            color: typeColors[type]
+          });
+
+          midY += groupH + GROUP_GAP;
+        }
+
+        // Right column: tasks
+        const taskNodes = tasks.map((t, i) => ({
+          ...t, x: COL_RIGHT, y: PAD + 30 + i * (NODE_H + NODE_GAP),
+          col: 'right', isGap: false
+        }));
+
+        // SVG height
+        const maxLeft = reqNodes.length > 0 ? reqNodes[reqNodes.length - 1].y + NODE_H + PAD : 100;
+        const maxMid = midY + PAD;
+        const maxRight = taskNodes.length > 0 ? taskNodes[taskNodes.length - 1].y + NODE_H + PAD : 100;
+        const svgH = Math.max(maxLeft, maxMid, maxRight, 200);
+        const svgW = COL_RIGHT + NODE_W + PAD + 40;
+
+        // Build node lookup for edge drawing
+        const nodeMap = {};
+        for (const n of reqNodes) nodeMap[n.id] = n;
+        for (const n of midNodes) nodeMap[n.id] = n;
+        for (const n of taskNodes) nodeMap[n.id] = n;
+
+        // Build directed edge indices for chain computation
+        // reqToTest: requirement ID -> [test spec IDs]
+        // testToReq: test spec ID -> [requirement IDs]
+        // testToTask: test spec ID -> [task IDs]
+        // taskToTest: task ID -> [test spec IDs]
+        const reqToTest = {};
+        const testToReq = {};
+        const testToTask = {};
+        const taskToTest = {};
+        for (const e of edges) {
+          if (e.type === 'requirement-to-test') {
+            if (!reqToTest[e.from]) reqToTest[e.from] = [];
+            reqToTest[e.from].push(e.to);
+            if (!testToReq[e.to]) testToReq[e.to] = [];
+            testToReq[e.to].push(e.from);
+          } else if (e.type === 'test-to-task') {
+            if (!testToTask[e.from]) testToTask[e.from] = [];
+            testToTask[e.from].push(e.to);
+            if (!taskToTest[e.to]) taskToTest[e.to] = [];
+            taskToTest[e.to].push(e.from);
+          }
+        }
+
+        const reqIdSet = new Set(requirements.map(r => r.id));
+        const tsIdSet = new Set(testSpecs.map(t => t.id));
+
+        // Compute directed chain: follows flow direction, not transitive BFS
+        function getDirectedChain(startId) {
+          const chain = new Set([startId]);
+
+          if (reqIdSet.has(startId)) {
+            // Requirement: go right → test specs → tasks
+            const linkedTests = reqToTest[startId] || [];
+            for (const tsId of linkedTests) {
+              chain.add(tsId);
+              for (const taskId of (testToTask[tsId] || [])) chain.add(taskId);
+            }
+          } else if (tsIdSet.has(startId)) {
+            // Test spec: go left → requirements, go right → tasks
+            for (const reqId of (testToReq[startId] || [])) chain.add(reqId);
+            for (const taskId of (testToTask[startId] || [])) chain.add(taskId);
+          } else {
+            // Task: go left → test specs → requirements
+            const linkedTests = taskToTest[startId] || [];
+            for (const tsId of linkedTests) {
+              chain.add(tsId);
+              for (const reqId of (testToReq[tsId] || [])) chain.add(reqId);
+            }
+          }
+
+          return chain;
+        }
+
+        let svg = `<svg class="testify-sankey-svg" viewBox="0 0 ${svgW} ${svgH}" role="img"
+          aria-label="Traceability Sankey diagram: ${requirements.length} requirements, ${testSpecs.length} test specifications, ${tasks.length} tasks">`;
+
+        // Column labels
+        svg += `<text class="sankey-col-label" x="${COL_LEFT + NODE_W / 2}" y="${COL_LABEL_Y}" text-anchor="middle">Requirements</text>`;
+        svg += `<text class="sankey-col-label" x="${COL_MID + NODE_W / 2}" y="${COL_LABEL_Y}" text-anchor="middle">Test Specs</text>`;
+        svg += `<text class="sankey-col-label" x="${COL_RIGHT + NODE_W / 2}" y="${COL_LABEL_Y}" text-anchor="middle">Tasks</text>`;
+
+        // Pyramid group backgrounds
+        for (const g of groupMeta) {
+          svg += `<rect class="sankey-group-bg" x="${g.x}" y="${g.y}" width="${g.w}" height="${g.h}" fill="${g.color}" fill-opacity="0.06" stroke="${g.color}" stroke-opacity="0.15" stroke-width="1"/>`;
+          svg += `<text class="sankey-group-label" x="${g.x + g.w / 2}" y="${g.y - 4}" text-anchor="middle" fill="${g.color}">${escapeHtml(g.label)}</text>`;
+        }
+
+        // Flow bands (edges)
+        svg += '<g class="sankey-flows">';
+        for (const e of edges) {
+          const src = nodeMap[e.from];
+          const tgt = nodeMap[e.to];
+          if (!src || !tgt) continue;
+
+          const srcW = src.w || NODE_W;
+          const tgtW = tgt.w || NODE_W;
+          const x1 = src.x + srcW;
+          const y1 = src.y + NODE_H / 2;
+          const x2 = tgt.x;
+          const y2 = tgt.y + NODE_H / 2;
+          const cx = (x1 + x2) / 2;
+
+          // Color by test type
+          let color = '#3B82F6';
+          if (e.type === 'requirement-to-test') {
+            const ts = testSpecs.find(t => t.id === e.to);
+            if (ts) color = typeColors[ts.type] || color;
+          } else if (e.type === 'test-to-task') {
+            const ts = testSpecs.find(t => t.id === e.from);
+            if (ts) color = typeColors[ts.type] || color;
+          }
+
+          const chainIds = [e.from, e.to].join(' ');
+          svg += `<path class="sankey-flow" d="M${x1},${y1} C${cx},${y1} ${cx},${y2} ${x2},${y2}"
+            fill="none" stroke="${color}" data-chain-ids="${escapeHtml(chainIds)}" data-from="${escapeHtml(e.from)}" data-to="${escapeHtml(e.to)}"/>`;
+        }
+        svg += '</g>';
+
+        // Render nodes
+        function renderNodeGroup(nodes, colClass) {
+          let s = `<g class="${colClass}">`;
+          for (const n of nodes) {
+            const w = n.w || NODE_W;
+            const chain = Array.from(getDirectedChain(n.id)).join(' ');
+            const gapClass = n.isGap ? ' gap-node' : '';
+            const isUntestedReq = gaps.untestedRequirements.includes(n.id);
+            const isUnimplTest = gaps.unimplementedTests.includes(n.id);
+            let ariaDesc = n.id;
+            if (n.traceability && n.traceability.length > 0) {
+              ariaDesc += ', linked from ' + n.traceability.join(', ');
+            }
+            // Find connections
+            const outgoing = edges.filter(e => e.from === n.id).map(e => e.to);
+            const incoming = edges.filter(e => e.to === n.id).map(e => e.from);
+            if (incoming.length > 0) ariaDesc += ', linked from ' + incoming.join(', ');
+            if (outgoing.length > 0) ariaDesc += ', linked to ' + outgoing.join(', ');
+            if (isUntestedReq) ariaDesc += ' (untested)';
+            if (isUnimplTest) ariaDesc += ' (unimplemented)';
+
+            const fillColor = n.isGap ? 'var(--color-surface-elevated)' : 'var(--color-surface-elevated)';
+            const strokeColor = n.isGap ? 'var(--color-tampered)' : 'var(--color-border)';
+            const label = n.id;
+            const desc = n.text || n.title || n.description || '';
+            const truncDesc = desc.length > 22 ? desc.substring(0, 22) + '...' : desc;
+
+            s += `<g class="sankey-node${gapClass}" tabindex="0" role="button"
+              data-node-id="${escapeHtml(n.id)}" data-chain="${escapeHtml(chain)}"
+              aria-describedby="desc-${escapeHtml(n.id)}">
+              <title>${escapeHtml(n.id)}: ${escapeHtml(desc)}${isUntestedReq ? ' (untested)' : ''}${isUnimplTest ? ' (unimplemented)' : ''}</title>
+              <desc id="desc-${escapeHtml(n.id)}">${escapeHtml(ariaDesc)}</desc>
+              <rect class="sankey-node-rect" x="${n.x}" y="${n.y}" width="${w}" height="${NODE_H}"
+                fill="${fillColor}" stroke="${strokeColor}"/>
+              <text class="sankey-node-label" x="${n.x + 8}" y="${n.y + 13}">${escapeHtml(label)}</text>
+              <text class="sankey-node-desc" x="${n.x + 8}" y="${n.y + 25}">${escapeHtml(truncDesc)}</text>
+            </g>`;
+          }
+          s += '</g>';
+          return s;
+        }
+
+        svg += renderNodeGroup(reqNodes, 'sankey-col-left');
+        svg += renderNodeGroup(midNodes, 'sankey-col-mid');
+        svg += renderNodeGroup(taskNodes, 'sankey-col-right');
+
+        // Empty column messages
+        if (requirements.length === 0) {
+          svg += `<text x="${COL_LEFT + NODE_W / 2}" y="${PAD + 60}" text-anchor="middle" fill="var(--color-text-muted)" font-size="11">No requirements found in spec.md</text>`;
+        }
+        if (tasks.length === 0) {
+          svg += `<text x="${COL_RIGHT + NODE_W / 2}" y="${PAD + 60}" text-anchor="middle" fill="var(--color-text-muted)" font-size="11">No tasks generated \u2014 run /iikit-06-tasks</text>`;
+        }
+
+        svg += '</svg>';
+
+        return `<div class="testify-sankey-container">${svg}</div>`;
+      }
+
+      function attachSankeyInteractions(data) {
+        const svgEl = contentArea.querySelector('.testify-sankey-svg');
+        if (!svgEl) return;
+
+        // Clear fade-in animations after they complete so .dimmed opacity can take effect
+        // (CSS animation fill-mode: both overrides normal opacity rules)
+        setTimeout(() => {
+          svgEl.querySelectorAll('.sankey-node, .sankey-flow').forEach(el => {
+            el.style.animation = 'none';
+          });
+        }, 1000);
+
+        const allNodes = svgEl.querySelectorAll('.sankey-node');
+        const allFlows = svgEl.querySelectorAll('.sankey-flow');
+        const allElements = [...allNodes, ...allFlows];
+        let lockedChain = null; // Click locks the highlight
+
+        function highlightChain(nodeId) {
+          // Get full chain from data-chain attribute
+          const nodeEl = svgEl.querySelector(`[data-node-id="${nodeId}"]`);
+          if (!nodeEl) return;
+          const chainStr = nodeEl.getAttribute('data-chain') || '';
+          const chainIds = new Set(chainStr.split(' ').filter(Boolean));
+
+          // Dim everything, highlight chain members
+          for (const el of allNodes) {
+            const elId = el.getAttribute('data-node-id');
+            if (chainIds.has(elId)) {
+              el.classList.add('highlighted');
+              el.classList.remove('dimmed');
+            } else {
+              el.classList.add('dimmed');
+              el.classList.remove('highlighted');
+            }
+          }
+          for (const flow of allFlows) {
+            const from = flow.getAttribute('data-from');
+            const to = flow.getAttribute('data-to');
+            if (chainIds.has(from) && chainIds.has(to)) {
+              flow.classList.add('highlighted');
+              flow.classList.remove('dimmed');
+            } else {
+              flow.classList.add('dimmed');
+              flow.classList.remove('highlighted');
+            }
+          }
+        }
+
+        function clearHighlight() {
+          if (lockedChain) return; // Don't clear if a chain is click-locked
+          for (const el of allElements) {
+            el.classList.remove('dimmed', 'highlighted');
+          }
+        }
+
+        // Hover handlers on nodes
+        for (const node of allNodes) {
+          const nodeId = node.getAttribute('data-node-id');
+          node.addEventListener('mouseenter', () => {
+            if (!lockedChain) highlightChain(nodeId);
+          });
+          node.addEventListener('mouseleave', clearHighlight);
+          // Click: lock/unlock chain highlight
+          node.addEventListener('click', () => {
+            if (lockedChain === nodeId) {
+              lockedChain = null;
+              clearHighlight();
+            } else {
+              lockedChain = nodeId;
+              highlightChain(nodeId);
+            }
+          });
+          // Keyboard: Enter/Space triggers chain highlight
+          node.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              if (lockedChain === nodeId) {
+                lockedChain = null;
+                clearHighlight();
+              } else {
+                lockedChain = nodeId;
+                highlightChain(nodeId);
+              }
+            }
+          });
+        }
+
+        // Hover handlers on flows
+        for (const flow of allFlows) {
+          const from = flow.getAttribute('data-from');
+          flow.addEventListener('mouseenter', () => {
+            if (!lockedChain) highlightChain(from);
+          });
+          flow.addEventListener('mouseleave', clearHighlight);
+        }
+
+        // Click on empty SVG area clears locked chain
+        svgEl.addEventListener('click', (e) => {
+          if (e.target === svgEl || e.target.tagName === 'svg') {
+            lockedChain = null;
+            for (const el of allElements) {
+              el.classList.remove('dimmed', 'highlighted');
+            }
+          }
+        });
       }
 
       // ====== Spec Story Map View ======
@@ -2959,6 +3552,7 @@
           activeTab = null; // Reset tab selection for new feature
           currentStoryMap = null; // Reset story map cache
           currentPlanView = null; // Reset plan view cache
+          currentTestify = null; // Reset testify cache
           loadPipeline(val);
           loadBoard(val);
           // Resubscribe WebSocket
@@ -3593,6 +4187,15 @@
               currentChecklist = msg.checklist;
               if (activeTab === 'checklist') {
                 renderChecklistContent(msg.checklist);
+              }
+            }
+            break;
+
+          case 'testify_update':
+            if (msg.feature === currentFeature && msg.testify) {
+              currentTestify = msg.testify;
+              if (activeTab === 'testify') {
+                renderTestifyContent(msg.testify);
               }
             }
             break;

@@ -1,4 +1,4 @@
-const { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs } = require('../src/parser');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -1104,5 +1104,111 @@ describe('parseChecklistsDetailed', () => {
   test('missing directory returns empty array', () => {
     const result = parseChecklistsDetailed('/nonexistent/path/to/checklists');
     expect(result).toEqual([]);
+  });
+});
+
+// T002: Tests for parseTestSpecs — TS-024, TS-025, TS-026
+describe('parseTestSpecs', () => {
+  const fixtureContent = fs.readFileSync(
+    path.join(__dirname, 'fixtures/testify/tests/test-specs.md'), 'utf-8'
+  );
+
+  // TS-024: extracts id and title from heading pattern
+  test('extracts id and title from heading pattern', () => {
+    const content = '### TS-001: Login with valid credentials\n\n**Type**: acceptance\n**Priority**: P1\n\n**Traceability**: FR-001\n';
+    const specs = parseTestSpecs(content);
+    expect(specs).toHaveLength(1);
+    expect(specs[0].id).toBe('TS-001');
+    expect(specs[0].title).toBe('Login with valid credentials');
+  });
+
+  // TS-025: extracts type as acceptance, contract, or validation
+  test('extracts type as acceptance, contract, or validation', () => {
+    const specs = parseTestSpecs(fixtureContent);
+    const acceptance = specs.filter(s => s.type === 'acceptance');
+    const contract = specs.filter(s => s.type === 'contract');
+    const validation = specs.filter(s => s.type === 'validation');
+
+    expect(acceptance.length).toBe(3);
+    expect(contract.length).toBe(2);
+    expect(validation.length).toBe(3);
+  });
+
+  // TS-026: traceability links filtered to FR-/SC- patterns only
+  test('filters traceability to FR- and SC- patterns only', () => {
+    const content = '### TS-001: Test\n\n**Type**: acceptance\n**Priority**: P1\n\n**Traceability**: FR-001, SC-002, US-001-scenario-1\n';
+    const specs = parseTestSpecs(content);
+    expect(specs[0].traceability).toEqual(['FR-001', 'SC-002']);
+  });
+
+  test('extracts priority field', () => {
+    const specs = parseTestSpecs(fixtureContent);
+    expect(specs[0].priority).toBe('P1');
+    expect(specs[1].priority).toBe('P2');
+  });
+
+  test('extracts all 8 test specs from fixture', () => {
+    const specs = parseTestSpecs(fixtureContent);
+    expect(specs).toHaveLength(8);
+    expect(specs.map(s => s.id)).toEqual([
+      'TS-001', 'TS-002', 'TS-003', 'TS-004',
+      'TS-005', 'TS-006', 'TS-007', 'TS-008'
+    ]);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseTestSpecs('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseTestSpecs(null)).toEqual([]);
+  });
+
+  test('handles test spec with no traceability line', () => {
+    const content = '### TS-001: Test\n\n**Type**: validation\n**Priority**: P2\n';
+    const specs = parseTestSpecs(content);
+    expect(specs).toHaveLength(1);
+    expect(specs[0].traceability).toEqual([]);
+  });
+});
+
+// T003: Tests for parseTaskTestRefs — TS-027
+describe('parseTaskTestRefs', () => {
+  test('extracts "must pass TS-xxx" references from task descriptions', () => {
+    const tasks = [
+      { id: 'T002', description: 'Implement dashboard component; must pass TS-001' },
+      { id: 'T003', description: 'Implement data loading; must pass TS-001, TS-004' },
+      { id: 'T008', description: 'Add validation' }
+    ];
+    const refs = parseTaskTestRefs(tasks);
+    expect(refs.T002).toEqual(['TS-001']);
+    expect(refs.T003).toEqual(['TS-001', 'TS-004']);
+    expect(refs.T008).toEqual([]);
+  });
+
+  test('handles tasks with multiple test spec refs', () => {
+    const tasks = [
+      { id: 'T007', description: 'Handle edge cases; must pass TS-007, TS-008' }
+    ];
+    const refs = parseTaskTestRefs(tasks);
+    expect(refs.T007).toEqual(['TS-007', 'TS-008']);
+  });
+
+  test('returns empty map for empty tasks array', () => {
+    const refs = parseTaskTestRefs([]);
+    expect(refs).toEqual({});
+  });
+
+  test('returns empty arrays for tasks without "must pass"', () => {
+    const tasks = [
+      { id: 'T001', description: 'Create project scaffolding' }
+    ];
+    const refs = parseTaskTestRefs(tasks);
+    expect(refs.T001).toEqual([]);
+  });
+
+  test('handles null or undefined input', () => {
+    expect(parseTaskTestRefs(null)).toEqual({});
+    expect(parseTaskTestRefs(undefined)).toEqual({});
   });
 });
