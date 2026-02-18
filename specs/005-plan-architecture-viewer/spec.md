@@ -51,7 +51,7 @@ The developer sees a proper rendered diagram derived from the ASCII architecture
 **Acceptance Scenarios**:
 
 1. **Given** a plan.md with an ASCII diagram containing 3 boxes and 2 arrows, **When** the diagram renders, **Then** 3 styled nodes and 2 labeled edges appear matching the ASCII content
-2. **Given** the rendered diagram has nodes for "Browser", "Node.js Server", and "Project Directory", **When** the developer views the diagram, **Then** each node has a distinct color based on its type (client, server, filesystem)
+2. **Given** the rendered diagram has nodes for "Browser", "Node.js Server", and "Project Directory", **When** the developer views the diagram, **Then** each node has a distinct color based on its type (client, server, storage)
 3. **Given** the developer clicks a node labeled "Node.js Server", **When** the click registers, **Then** a detail panel shows the text content inside that box from the original ASCII diagram
 4. **Given** an ASCII diagram with labeled connectors (e.g., `ws://localhost:PORT` or `fs.watch`), **When** the diagram renders, **Then** the connector labels appear on or near the corresponding edges
 
@@ -70,7 +70,7 @@ Below the Tech Stack badge wall, the developer sees a Tessl integration panel. T
 1. **Given** a project with `tessl.json` listing 4 installed tiles, **When** the Tessl panel loads, **Then** 4 tile cards render showing tile name and version
 2. **Given** `tessl.json` lists `tessl/npm-express` at version 5.1.0, **When** the card renders, **Then** it shows "tessl/npm-express" and "v5.1.0"
 3. **Given** no `tessl.json` exists in the project root, **When** the Plan view loads, **Then** the Tessl panel is not shown
-4. **Given** evaluation data is available for a tile, **When** the card renders, **Then** it shows the eval score as a percentage with a bar chart visualization and multiplier badge
+4. **Given** evaluation data is available for a tile, **When** the card renders, **Then** it shows the eval score as a percentage, a horizontal bar chart showing pass/fail distribution, and a multiplier badge
 5. **Given** evaluation data is not yet available for a tile, **When** the card renders, **Then** it shows the tile info without a score section (no placeholder or "coming soon" — just absent)
 
 ---
@@ -101,8 +101,8 @@ While the developer views the Plan Architecture Viewer, changes to plan.md on di
 - What happens when research.md does not exist? (Badge tooltips simply don't show rationale — the badges still render normally)
 - How does the system handle a File Structure with 30+ files? (The tree must remain performant and usable — first 2 levels expanded, deeper nesting collapsed by default)
 - What happens when the plan references files in its structure but the project directory doesn't exist yet? (All files are marked as "planned")
-- What happens when `tessl.json` has no dependencies listed? (Show an empty Tessl panel with a message indicating no tiles are installed)
-- What happens when `tessl.json` is malformed? (Skip the Tessl panel gracefully; other sections render normally)
+- What happens when `tessl.json` has no dependencies listed? (Show the Tessl panel with a message indicating no tiles are installed — the file exists so the panel is relevant)
+- What happens when `tessl.json` is malformed? (Hide the Tessl panel entirely — cannot trust the data; other sections render normally)
 - What happens when the Tessl API call for eval scores fails (network error, timeout, 500)? (Treat as "data unavailable" per FR-015 — omit eval score silently, same as when no eval data exists)
 
 ## Requirements *(mandatory)*
@@ -117,19 +117,19 @@ While the developer views the Plan Architecture Viewer, changes to plan.md on di
 - **FR-006**: System MUST show inline comments from plan.md as annotations next to file names in the tree
 - **FR-007**: System MUST visually distinguish files that exist on disk from files that are only planned. File paths are resolved relative to the repository root, stripping the tree's named root directory (e.g., `iikit-kanban/src/server.js` checks `<repo-root>/src/server.js`)
 - **FR-008**: System MUST parse ASCII architecture diagrams from plan.md and render them as styled, interactive node-and-edge diagrams
-- **FR-009**: System MUST color-code diagram nodes by component type (client, server, storage, external), using LLM classification of node labels to determine type
+- **FR-009**: System MUST color-code diagram nodes by component type (client, server, storage, external), determining type from node labels
 - **FR-010**: System MUST display edge labels from the ASCII diagram on the corresponding rendered edges
 - **FR-011**: System MUST show a detail panel when a diagram node is clicked, displaying the node's content from the original ASCII text
 - **FR-012**: System MUST read installed tiles from `tessl.json` in the project root and display them in a panel below the badge wall
 - **FR-013**: System MUST display each installed tile as a card showing tile name (workspace/tile) and version
-- **FR-014**: System MUST show an eval score visualization (percentage, bar chart, multiplier) on tile cards when evaluation data is available from the Tessl API
+- **FR-014**: System MUST show an eval score visualization (percentage, horizontal bar chart showing pass/fail distribution, multiplier badge) on tile cards when evaluation data is available from the Tessl API
 - **FR-015**: System MUST gracefully omit the eval score section when evaluation data is not available (no placeholder text)
 - **FR-016**: System MUST not show the Tessl panel when no `tessl.json` exists
 - **FR-017**: System MUST display all sub-views in a single vertically scrollable layout: Tech Stack badge wall, then Tessl tiles panel, then Structure tree, then Architecture diagram (if present). Overflows vertically on smaller screens
 - **FR-018**: System MUST update all visible sub-views in real time when plan.md changes on disk (including showing/hiding the Architecture section if a diagram is added or removed)
-- **FR-019**: System MUST handle missing or incomplete plan artifacts gracefully, showing appropriate empty states with guidance
-- **FR-020**: System MUST support plan.md files with up to 15 tech stack entries, 30 files in the structure, and diagrams with 10 nodes without visual degradation
-- **FR-021**: System MUST use accessible markup with appropriate labels for all interactive elements
+- **FR-019**: System MUST handle missing or incomplete plan artifacts gracefully, showing empty states with guidance per edge cases (no plan.md → suggest `/iikit-03-plan`; no Technical Context → "no tech stack defined"; no File Structure → "no structure defined"; no tessl.json → hide panel; malformed tessl.json → skip panel gracefully)
+- **FR-020**: System MUST support plan.md files with up to 15 tech stack entries, 30 files in the structure, and diagrams with 10 nodes — rendering within 3 seconds, no horizontal overflow, all entries visible via scrolling
+- **FR-021**: System MUST use accessible markup with ARIA labels for all interactive elements, targeting WCAG 2.1 AA compliance
 
 ### Key Entities
 
@@ -144,12 +144,12 @@ While the developer views the Plan Architecture Viewer, changes to plan.md on di
 
 ### Measurable Outcomes
 
-- **SC-001**: Developers can identify the complete tech stack of a feature within 5 seconds of opening the Plan tab
-- **SC-002**: Developers can understand the project file organization by expanding the structure tree in under 3 clicks
+- **SC-001**: Developers can identify the complete tech stack of a feature within 5 seconds of clicking the Plan tab (total time including data load and render)
+- **SC-002**: Developers can understand the project file organization by expanding the structure tree in under 3 clicks from the default expand state (first 2 levels expanded)
 - **SC-003**: The architecture diagram correctly renders all boxes, arrows, and labels from ASCII diagrams with up to 10 nodes
 - **SC-004**: Files marked as "existing" in the structure tree accurately reflect what is on disk
 - **SC-005**: Artifact changes to plan.md are reflected in the view within 5 seconds without page refresh
-- **SC-006**: The visualization is visually consistent with the dashboard's existing design language — same typography, color palette, and quality level
+- **SC-006**: The visualization uses the dashboard's existing CSS custom properties, font stack, and spacing system — same typography, color palette, and quality level
 - **SC-007**: All sub-views are visible in a single scrollable layout (Architecture section appears only when an ASCII diagram exists)
 - **SC-008**: ASCII diagram parsing succeeds for the standard patterns used in existing plan.md files (box-drawing characters, labeled arrows)
 

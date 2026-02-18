@@ -2069,6 +2069,207 @@
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
     ::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+    /* ====== Analyze View ====== */
+    .analyze-view { padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+    .analyze-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 80px 40px; text-align: center;
+    }
+    .analyze-empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .analyze-empty-title { font-size: 18px; font-weight: 600; margin-bottom: 8px; }
+    .analyze-empty-text { color: var(--color-text-secondary); max-width: 420px; }
+    .analyze-empty-text code { background: var(--color-surface-elevated); padding: 2px 8px; border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: 13px; }
+
+    .analyze-section {
+      background: var(--color-surface); border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg); overflow: hidden;
+    }
+    .analyze-section-header {
+      padding: 16px 20px; font-size: 14px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    /* Health Gauge */
+    .gauge-container {
+      display: flex; align-items: center; justify-content: center;
+      padding: 32px 20px; gap: 32px; flex-wrap: wrap;
+    }
+    .gauge-svg { width: 200px; height: 120px; }
+    .gauge-arc { fill: none; stroke-width: 18; stroke-linecap: round; }
+    .gauge-zone-red { stroke: #ff4757; }
+    .gauge-zone-yellow { stroke: #ffa502; }
+    .gauge-zone-green { stroke: #27c93f; }
+    .gauge-needle {
+      fill: var(--color-text); transition: transform 1s ease-out;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .gauge-needle { transition: none; }
+    }
+    .gauge-score {
+      font-size: 36px; font-weight: 700; text-anchor: middle;
+      fill: var(--color-text);
+    }
+    .gauge-label {
+      font-size: 12px; text-anchor: middle; fill: var(--color-text-secondary);
+    }
+    .gauge-breakdown {
+      display: flex; flex-direction: column; gap: 8px; min-width: 200px;
+    }
+    .gauge-factor {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 13px; padding: 6px 12px;
+      background: var(--color-surface-elevated); border-radius: var(--radius-sm);
+    }
+    .gauge-factor-label { color: var(--color-text-secondary); display: flex; flex-direction: column; gap: 2px; }
+    .gauge-factor-value { font-weight: 600; font-family: var(--font-mono); white-space: nowrap; }
+    .gauge-factor-context { font-size: 11px; color: var(--color-text-muted); font-weight: 400; }
+    .gauge-factor-green { border-left: 3px solid #27c93f; }
+    .gauge-factor-yellow { border-left: 3px solid #ffa502; }
+    .gauge-factor-red { border-left: 3px solid #ff4757; }
+    .gauge-trend {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 14px; font-weight: 600; margin-left: 8px;
+    }
+    .gauge-trend-up { color: #27c93f; }
+    .gauge-trend-down { color: #ff4757; }
+    .gauge-na { font-size: 24px; color: var(--color-text-muted); text-align: center; padding: 40px; }
+
+    /* Heatmap */
+    .heatmap-wrapper { overflow-x: auto; padding: 16px 20px; }
+    .heatmap-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .heatmap-table th {
+      padding: 10px 16px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.05em; font-size: 11px; color: var(--color-text-secondary);
+      border-bottom: 2px solid var(--color-border); text-align: center;
+    }
+    .heatmap-table th[scope="row"] {
+      text-align: left; font-size: 13px; text-transform: none; letter-spacing: normal;
+      color: var(--color-text); max-width: 300px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .heatmap-table td {
+      padding: 8px 16px; text-align: center; border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .heatmap-cell {
+      display: inline-block; width: 28px; height: 28px; border-radius: 6px;
+      cursor: pointer; transition: transform var(--transition-fast);
+    }
+    .heatmap-cell:hover { transform: scale(1.15); }
+    .heatmap-cell:focus { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+    .coverage-covered { background: #27c93f; }
+    .coverage-partial { background: #ffa502; }
+    .coverage-missing { background: #ff4757; }
+    .coverage-na { background: var(--color-text-muted); opacity: 0.4; }
+    .heatmap-refs {
+      display: none; font-size: 11px; color: var(--color-text-secondary);
+      padding: 4px 0; font-family: var(--font-mono);
+    }
+    .heatmap-refs.expanded { display: block; }
+    .heatmap-row { animation: fadeIn 0.3s ease forwards; opacity: 0; }
+    @keyframes fadeIn { to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) {
+      .heatmap-row { animation: none; opacity: 1; }
+    }
+    .heatmap-empty {
+      padding: 40px; text-align: center; color: var(--color-text-muted); font-size: 14px;
+    }
+    .heatmap-desc {
+      font-size: 12px; color: var(--color-text-secondary); max-width: 400px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .heatmap-refs-inline { display: none; }
+    .heatmap-scroll { max-height: 500px; overflow-y: auto; }
+    .coverage-summary {
+      display: flex; gap: 16px; margin-bottom: 20px;
+    }
+    .cov-stat { flex: 1; }
+    .cov-stat-header {
+      display: flex; justify-content: space-between; align-items: baseline;
+      margin-bottom: 6px; font-size: 13px;
+    }
+    .cov-stat-label { font-weight: 600; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+    .cov-stat-value { font-weight: 700; font-family: var(--font-mono); font-size: 14px; }
+    .cov-bar {
+      height: 6px; background: var(--color-surface-elevated); border-radius: 3px; overflow: hidden;
+    }
+    .cov-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease-out; }
+    .cov-bar-green { background: #27c93f; }
+    .cov-bar-yellow { background: #ffa502; }
+    .cov-bar-red { background: #ff4757; }
+    .coverage-success {
+      text-align: center; padding: 24px; color: #27c93f; font-weight: 500; font-size: 14px;
+    }
+    .coverage-gaps-label {
+      font-size: 13px; font-weight: 600; color: var(--color-text-secondary);
+      margin-bottom: 12px;
+    }
+
+    /* Severity Table */
+    .severity-wrapper { padding: 0; }
+    .severity-controls {
+      display: flex; gap: 12px; padding: 12px 20px; align-items: center;
+      border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .severity-filter {
+      background: var(--color-surface-elevated); color: var(--color-text);
+      border: 1px solid var(--color-border); border-radius: var(--radius-sm);
+      padding: 6px 12px; font-size: 13px; font-family: var(--font-sans);
+      cursor: pointer;
+    }
+    .severity-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .severity-table th {
+      padding: 10px 16px; font-weight: 600; text-align: left;
+      border-bottom: 2px solid var(--color-border); cursor: pointer;
+      user-select: none; font-size: 12px; text-transform: uppercase;
+      letter-spacing: 0.05em; color: var(--color-text-secondary);
+    }
+    .severity-table th:hover { color: var(--color-text); }
+    .severity-table th:focus { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+    .severity-table td {
+      padding: 10px 16px; border-bottom: 1px solid var(--color-border-subtle);
+      vertical-align: top;
+    }
+    .severity-table tr[data-severity] { cursor: pointer; transition: background var(--transition-fast); }
+    .severity-table tr[data-severity]:hover { background: var(--color-surface-hover); }
+    .severity-table tr[data-severity]:focus { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+    .severity-badge {
+      display: inline-block; padding: 2px 10px; border-radius: 12px;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .severity-critical { background: rgba(255,71,87,0.15); color: #ff4757; }
+    .severity-high { background: rgba(255,165,2,0.15); color: #ffa502; }
+    .severity-medium { background: rgba(255,193,7,0.15); color: #e0a800; }
+    .severity-low { background: rgba(52,152,219,0.15); color: #3498db; }
+    .severity-recommendation {
+      display: none; padding: 12px 16px; background: var(--color-surface-elevated);
+      font-size: 12px; color: var(--color-text-secondary); border-bottom: 1px solid var(--color-border-subtle);
+    }
+    .severity-recommendation.expanded { display: table-row; }
+    .severity-resolved td { text-decoration: line-through; opacity: 0.5; }
+    .severity-empty {
+      padding: 40px; text-align: center; color: #27c93f; font-size: 14px; font-weight: 500;
+    }
+    .severity-table-scroll { max-height: 500px; overflow-y: auto; }
+
+    /* Animations */
+    .analyze-section.slide-in {
+      animation: slideInUp 0.4s var(--transition-slow) forwards; opacity: 0;
+      transform: translateY(16px);
+    }
+    @keyframes slideInUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .analyze-section.slide-in { animation: none; opacity: 1; transform: none; }
+    }
+
   </style>
 </head>
 <body>
@@ -2125,6 +2326,7 @@
       let currentChecklist = null;
       let expandedChecklist = null;
       let currentTestify = null;
+      let currentAnalyze = null;
       let activeTab = null;
       let ws = null;
       let reconnectTimer = null;
@@ -2205,6 +2407,8 @@
           renderChecklistView();
         } else if (phaseId === 'testify') {
           renderTestifyView();
+        } else if (phaseId === 'analyze') {
+          renderAnalyzeView();
         } else {
           renderPlaceholderView(phaseId);
         }
@@ -3474,6 +3678,406 @@
           </div>`;
       }
 
+      // ====== Analyze Consistency View ======
+
+      async function renderAnalyzeView() {
+        if (!currentFeature) return;
+        try {
+          const res = await fetch(`/api/analyze/${currentFeature}`);
+          if (!res.ok) throw new Error('Failed to load');
+          currentAnalyze = await res.json();
+          renderAnalyzeContent(currentAnalyze);
+        } catch {
+          contentArea.innerHTML = '<div class="analyze-empty"><div class="analyze-empty-title">Failed to load analyze data.</div></div>';
+        }
+      }
+
+      function renderAnalyzeContent(data) {
+        if (!data) return;
+
+        if (!data.exists) {
+          contentArea.innerHTML = `
+            <div class="analyze-empty">
+              <div class="analyze-empty-icon">&#128270;</div>
+              <div class="analyze-empty-title">No analysis data for this feature</div>
+              <div class="analyze-empty-text">Run <code>/iikit-07-analyze</code> to generate a cross-artifact consistency analysis report.</div>
+            </div>`;
+          return;
+        }
+
+        let html = '<div class="analyze-view">';
+
+        // Health Gauge Section
+        html += '<div class="analyze-section">';
+        html += '<div class="analyze-section-header">Health Score</div>';
+        html += renderHealthGauge(data.healthScore, data);
+        html += '</div>';
+
+        // Coverage Heatmap Section
+        html += '<div class="analyze-section" style="animation-delay: 0.1s">';
+        html += '<div class="analyze-section-header">Coverage Heatmap</div>';
+        html += renderHeatmap(data.heatmap);
+        html += '</div>';
+
+        // Severity Table Section
+        html += '<div class="analyze-section slide-in" style="animation-delay: 0.2s">';
+        html += '<div class="analyze-section-header">Issues</div>';
+        html += renderSeverityTable(data.issues);
+        html += '</div>';
+
+        html += '</div>';
+        contentArea.innerHTML = html;
+
+        // Attach event listeners after rendering
+        attachHeatmapListeners();
+        attachSeverityListeners();
+
+        // Trigger gauge animation after a frame
+        requestAnimationFrame(() => {
+          const needle = contentArea.querySelector('.gauge-needle');
+          if (needle && data.healthScore) {
+            const angle = (data.healthScore.score / 100) * 180;
+            needle.style.transform = `rotate(${angle}deg)`;
+          }
+        });
+      }
+
+      function renderHealthGauge(healthScore, analyzeData) {
+        if (!healthScore) {
+          return '<div class="gauge-na">N/A</div>';
+        }
+
+        const { score, zone, factors, trend } = healthScore;
+
+        // SVG semicircular gauge
+        // Arc center at (100, 90), radius 70
+        const cx = 100, cy = 90, r = 70;
+        const startAngle = Math.PI;
+        const endAngle = 0;
+
+        function arcPath(startPct, endPct) {
+          const a1 = Math.PI - (startPct / 100) * Math.PI;
+          const a2 = Math.PI - (endPct / 100) * Math.PI;
+          const x1 = cx + r * Math.cos(a1);
+          const y1 = cy - r * Math.sin(a1);
+          const x2 = cx + r * Math.cos(a2);
+          const y2 = cy - r * Math.sin(a2);
+          const large = (endPct - startPct) > 50 ? 1 : 0;
+          return `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+        }
+
+        let trendHtml = '';
+        if (trend === 'improving') {
+          trendHtml = '<span class="gauge-trend gauge-trend-up">&#9650; improving</span>';
+        } else if (trend === 'declining') {
+          trendHtml = '<span class="gauge-trend gauge-trend-down">&#9660; declining</span>';
+        }
+
+        let gaugeHtml = '<div class="gauge-container">';
+        gaugeHtml += `<svg class="gauge-svg" viewBox="0 0 200 110" role="meter" aria-valuenow="${score}" aria-valuemin="0" aria-valuemax="100" aria-label="Health score: ${score} out of 100">`;
+
+        // Zone arcs
+        gaugeHtml += `<path class="gauge-arc gauge-zone-red" d="${arcPath(0, 40)}" />`;
+        gaugeHtml += `<path class="gauge-arc gauge-zone-yellow" d="${arcPath(40, 70)}" />`;
+        gaugeHtml += `<path class="gauge-arc gauge-zone-green" d="${arcPath(70, 100)}" />`;
+
+        // Needle (starts at 0, animated via CSS transform)
+        gaugeHtml += `<line class="gauge-needle" x1="${cx}" y1="${cy}" x2="${cx - r + 10}" y2="${cy}" stroke-width="3" stroke="var(--color-text)" style="transform-origin: ${cx}px ${cy}px; transform: rotate(0deg);" />`;
+
+        // Score text
+        gaugeHtml += `<text class="gauge-score" x="${cx}" y="${cy - 15}">${score}</text>`;
+        gaugeHtml += `<text class="gauge-label" x="${cx}" y="${cy + 5}">/ 100</text>`;
+
+        gaugeHtml += '</svg>';
+
+        // Breakdown with context
+        gaugeHtml += '<div class="gauge-breakdown">';
+        if (factors) {
+          const metrics = analyzeData?.metrics;
+          const issues = analyzeData?.issues || [];
+          const alignment = analyzeData?.constitutionAlignment || [];
+
+          for (const [key, factor] of Object.entries(factors)) {
+            const isOk = factor.value === 100;
+            const colorClass = factor.value >= 71 ? 'gauge-factor-green' : factor.value >= 41 ? 'gauge-factor-yellow' : 'gauge-factor-red';
+            let context = '';
+
+            if (key === 'requirementsCoverage' && metrics) {
+              context = metrics.requirementCoverage || '';
+            } else if (key === 'constitutionCompliance') {
+              const violations = alignment.filter(a => a.status === 'VIOLATION');
+              context = violations.length ? violations.map(v => v.principle).join(', ') : 'All aligned';
+            } else if (key === 'phaseSeparation') {
+              const resolved = issues.filter(i => i.category && /phase/i.test(i.category) && i.resolved);
+              const unresolved = issues.filter(i => i.category && /phase/i.test(i.category) && !i.resolved);
+              if (unresolved.length) context = `${unresolved.length} violation${unresolved.length > 1 ? 's' : ''} open`;
+              else if (resolved.length) context = `${resolved.length} resolved`;
+              else if (factor.value < 100) context = 'See issues below';
+              else context = 'No violations';
+            } else if (key === 'testCoverage' && metrics) {
+              context = metrics.totalTestSpecs ? `${metrics.totalTestSpecs} test specs` : '';
+            }
+
+            gaugeHtml += `<div class="gauge-factor ${colorClass}">`;
+            gaugeHtml += `<span class="gauge-factor-label">${escapeHtml(factor.label)}`;
+            if (context) gaugeHtml += `<span class="gauge-factor-context">${escapeHtml(context)}</span>`;
+            gaugeHtml += `</span>`;
+            gaugeHtml += `<span class="gauge-factor-value">${factor.value}%</span>`;
+            gaugeHtml += `</div>`;
+          }
+        }
+        if (trendHtml) gaugeHtml += `<div style="text-align: center; margin-top: 4px;">${trendHtml}</div>`;
+        gaugeHtml += '</div>';
+        gaugeHtml += '</div>';
+
+        return gaugeHtml;
+      }
+
+      function renderHeatmap(heatmap) {
+        if (!heatmap || !heatmap.rows || heatmap.rows.length === 0) {
+          return '<div class="heatmap-empty">No coverage data</div>';
+        }
+
+        // Only look at columns with real data (skip 'plan' if ALL plan cells are N/A)
+        const activeCols = (heatmap.columns || []).filter(c => {
+          if (c !== 'plan') return true;
+          return heatmap.rows.some(r => r.cells.plan?.status !== 'na');
+        });
+        const total = heatmap.rows.length;
+
+        // Find rows with gaps (missing or partial in any active column)
+        const gaps = heatmap.rows.filter(row =>
+          activeCols.some(col => {
+            const cell = row.cells[col];
+            return cell && (cell.status === 'missing' || cell.status === 'partial');
+          })
+        );
+
+        // Coverage stats per column
+        const colStats = {};
+        for (const col of activeCols) {
+          const covered = heatmap.rows.filter(r => r.cells[col]?.status === 'covered').length;
+          colStats[col] = { covered, total, pct: total > 0 ? Math.round((covered / total) * 100) : 0 };
+        }
+
+        let html = '<div style="padding: 20px;">';
+
+        // Summary bar
+        html += '<div class="coverage-summary">';
+        for (const col of activeCols) {
+          const s = colStats[col];
+          const colorClass = s.pct === 100 ? 'cov-bar-green' : s.pct >= 70 ? 'cov-bar-yellow' : 'cov-bar-red';
+          html += `<div class="cov-stat">`;
+          html += `<div class="cov-stat-header"><span class="cov-stat-label">${escapeHtml(col.charAt(0).toUpperCase() + col.slice(1))}</span><span class="cov-stat-value">${s.covered}/${s.total}</span></div>`;
+          html += `<div class="cov-bar"><div class="cov-bar-fill ${colorClass}" style="width: ${s.pct}%"></div></div>`;
+          html += `</div>`;
+        }
+        html += '</div>';
+
+        if (gaps.length === 0) {
+          // All covered — compact success
+          html += `<div class="coverage-success">All ${total} requirements are covered by tasks and tests</div>`;
+        } else {
+          // Show only the gaps
+          html += `<div class="coverage-gaps-label">${gaps.length} requirement${gaps.length > 1 ? 's' : ''} with gaps:</div>`;
+          html += '<table class="heatmap-table" role="grid">';
+          html += '<thead><tr><th scope="col">Requirement</th><th scope="col">Description</th>';
+          for (const col of activeCols) {
+            html += `<th scope="col">${escapeHtml(col.charAt(0).toUpperCase() + col.slice(1))}</th>`;
+          }
+          html += '</tr></thead><tbody>';
+
+          gaps.forEach((row, i) => {
+            html += `<tr class="heatmap-row" style="animation-delay: ${i * 0.04}s">`;
+            html += `<th scope="row"><code>${escapeHtml(row.id)}</code></th>`;
+            html += `<td class="heatmap-desc">${escapeHtml(row.text)}</td>`;
+
+            for (const col of activeCols) {
+              const cell = row.cells[col] || { status: 'na', refs: [] };
+              const statusClass = 'coverage-' + cell.status;
+              const statusLabel = cell.status === 'covered' ? 'Covered' : cell.status === 'partial' ? 'Partial' : cell.status === 'missing' ? 'Missing' : 'N/A';
+              const refs = (cell.refs && cell.refs.length > 0) ? cell.refs.join(', ') : '';
+              html += `<td>`;
+              html += `<span class="heatmap-cell ${statusClass}" tabindex="0" role="button" aria-label="${escapeHtml(row.id)} ${col}: ${statusLabel}" data-req="${escapeHtml(row.id)}" data-col="${escapeHtml(col)}"></span>`;
+              if (refs) {
+                html += `<span class="heatmap-refs-inline">${refs}</span>`;
+                html += `<div class="heatmap-refs" data-req="${escapeHtml(row.id)}" data-col="${escapeHtml(col)}">${refs}</div>`;
+              }
+              html += `</td>`;
+            }
+            html += '</tr>';
+          });
+
+          html += '</tbody></table>';
+        }
+
+        html += '</div>';
+        return html;
+      }
+
+      function renderSeverityTable(issues) {
+        if (!issues || issues.length === 0) {
+          return '<div class="severity-empty">No issues found &mdash; all artifacts are consistent</div>';
+        }
+
+        // Collect unique categories and severities
+        const categories = [...new Set(issues.map(i => i.category))].sort();
+        const severities = ['critical', 'high', 'medium', 'low'];
+
+        let html = '<div class="severity-wrapper">';
+
+        // Filters
+        html += '<div class="severity-controls">';
+        html += '<select class="severity-filter" id="analyzeCategoryFilter"><option value="">All Categories</option>';
+        for (const cat of categories) {
+          html += `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`;
+        }
+        html += '</select>';
+        html += '<select class="severity-filter" id="analyzeSeverityFilter"><option value="">All Severities</option>';
+        for (const sev of severities) {
+          html += `<option value="${sev}">${sev.charAt(0).toUpperCase() + sev.slice(1)}</option>`;
+        }
+        html += '</select>';
+        html += '</div>';
+
+        // Table
+        html += '<div class="severity-table-scroll"><table class="severity-table">';
+        html += '<thead><tr>';
+        html += '<th tabindex="0" data-sort="id">ID</th>';
+        html += '<th tabindex="0" data-sort="category">Category</th>';
+        html += '<th tabindex="0" data-sort="severity">Severity</th>';
+        html += '<th tabindex="0" data-sort="location">Location</th>';
+        html += '<th tabindex="0" data-sort="summary">Summary</th>';
+        html += '</tr></thead><tbody>';
+
+        // Sort by severity by default
+        const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+        const sorted = [...issues].sort((a, b) => (severityOrder[a.severity] || 4) - (severityOrder[b.severity] || 4));
+
+        for (const issue of sorted) {
+          const resolvedClass = issue.resolved ? ' severity-resolved' : '';
+          html += `<tr data-severity="${escapeHtml(issue.severity)}" data-category="${escapeHtml(issue.category)}" tabindex="0" class="${resolvedClass}">`;
+          html += `<td>${escapeHtml(issue.id)}</td>`;
+          html += `<td>${escapeHtml(issue.category)}</td>`;
+          html += `<td><span class="severity-badge severity-${escapeHtml(issue.severity)}">${escapeHtml(issue.severity)}</span></td>`;
+          html += `<td><code>${escapeHtml(issue.location)}</code></td>`;
+          html += `<td>${escapeHtml(issue.summary)}</td>`;
+          html += '</tr>';
+          html += `<tr class="severity-recommendation" data-expand-for="${escapeHtml(issue.id)}"><td colspan="5">${escapeHtml(issue.recommendation)}</td></tr>`;
+        }
+
+        html += '</tbody></table></div></div>';
+        return html;
+      }
+
+      function attachHeatmapListeners() {
+        const cells = contentArea.querySelectorAll('.heatmap-cell');
+        cells.forEach(cell => {
+          const handler = () => {
+            const req = cell.dataset.req;
+            const col = cell.dataset.col;
+            const ref = contentArea.querySelector(`.heatmap-refs[data-req="${req}"][data-col="${col}"]`);
+            if (ref) ref.classList.toggle('expanded');
+          };
+          cell.addEventListener('click', handler);
+          cell.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+          });
+        });
+      }
+
+      function attachSeverityListeners() {
+        // Row expansion
+        const rows = contentArea.querySelectorAll('.severity-table tr[data-severity]');
+        rows.forEach(row => {
+          const handler = () => {
+            const nextRow = row.nextElementSibling;
+            if (nextRow && nextRow.classList.contains('severity-recommendation')) {
+              nextRow.classList.toggle('expanded');
+            }
+          };
+          row.addEventListener('click', handler);
+          row.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+          });
+        });
+
+        // Column sorting
+        const headers = contentArea.querySelectorAll('.severity-table th[data-sort]');
+        headers.forEach(th => {
+          const handler = () => {
+            const sortKey = th.dataset.sort;
+            const tbody = contentArea.querySelector('.severity-table tbody');
+            if (!tbody) return;
+
+            const dataRows = Array.from(tbody.querySelectorAll('tr[data-severity]'));
+            const severityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+
+            dataRows.sort((a, b) => {
+              let aVal, bVal;
+              if (sortKey === 'severity') {
+                aVal = severityOrder[a.dataset.severity] || 4;
+                bVal = severityOrder[b.dataset.severity] || 4;
+                return aVal - bVal;
+              }
+              const aIdx = Array.from(th.parentElement.children).indexOf(th);
+              aVal = a.children[aIdx]?.textContent || '';
+              bVal = b.children[aIdx]?.textContent || '';
+              return aVal.localeCompare(bVal);
+            });
+
+            // Rebuild tbody preserving recommendation rows
+            const fragment = document.createDocumentFragment();
+            for (const row of dataRows) {
+              fragment.appendChild(row);
+              const expandId = row.querySelector('td')?.textContent;
+              const recRow = tbody.querySelector(`tr[data-expand-for="${expandId}"]`);
+              if (recRow) fragment.appendChild(recRow);
+            }
+            tbody.innerHTML = '';
+            tbody.appendChild(fragment);
+          };
+          th.addEventListener('click', handler);
+          th.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(); }
+          });
+        });
+
+        // Filters
+        const catFilter = document.getElementById('analyzeCategoryFilter');
+        const sevFilter = document.getElementById('analyzeSeverityFilter');
+
+        function applyFilters() {
+          const catVal = catFilter?.value || '';
+          const sevVal = sevFilter?.value || '';
+          const allRows = contentArea.querySelectorAll('.severity-table tbody tr');
+
+          allRows.forEach(row => {
+            if (row.classList.contains('severity-recommendation')) {
+              // Hide recommendations when parent is hidden
+              const expandFor = row.dataset.expandFor;
+              const parent = contentArea.querySelector(`.severity-table tr[data-severity] td:first-child`);
+              row.style.display = row.classList.contains('expanded') ? '' : 'none';
+              return;
+            }
+            if (!row.dataset.severity) return;
+
+            const matchCat = !catVal || row.dataset.category === catVal;
+            const matchSev = !sevVal || row.dataset.severity === sevVal;
+            row.style.display = (matchCat && matchSev) ? '' : 'none';
+
+            // Also hide its recommendation row
+            const nextRow = row.nextElementSibling;
+            if (nextRow && nextRow.classList.contains('severity-recommendation')) {
+              nextRow.style.display = (matchCat && matchSev) ? (nextRow.classList.contains('expanded') ? '' : 'none') : 'none';
+            }
+          });
+        }
+
+        if (catFilter) catFilter.addEventListener('change', applyFilters);
+        if (sevFilter) sevFilter.addEventListener('change', applyFilters);
+      }
+
       function selectDefaultTab(pipeline) {
         if (!pipeline || !pipeline.phases) return 'implement';
 
@@ -3553,6 +4157,7 @@
           currentStoryMap = null; // Reset story map cache
           currentPlanView = null; // Reset plan view cache
           currentTestify = null; // Reset testify cache
+          currentAnalyze = null; // Reset analyze cache
           loadPipeline(val);
           loadBoard(val);
           // Resubscribe WebSocket
@@ -4196,6 +4801,15 @@
               currentTestify = msg.testify;
               if (activeTab === 'testify') {
                 renderTestifyContent(msg.testify);
+              }
+            }
+            break;
+
+          case 'analyze_update':
+            if (msg.feature === currentFeature && msg.analyze) {
+              currentAnalyze = msg.analyze;
+              if (activeTab === 'analyze') {
+                renderAnalyzeContent(msg.analyze);
               }
             }
             break;

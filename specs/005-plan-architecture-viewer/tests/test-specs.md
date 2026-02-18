@@ -146,7 +146,7 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 
 **Given**: the rendered diagram has nodes for "Browser", "Node.js Server", and "Project Directory"
 **When**: the developer views the diagram
-**Then**: each node has a distinct color based on its type (client, server, filesystem)
+**Then**: each node has a distinct color based on its type (client, server, storage)
 
 **Traceability**: FR-009, US-003-scenario-2
 
@@ -222,31 +222,33 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 
 ---
 
-### TS-015: Eval score visualization when available
+### TS-015: Eval score rendering contract when data present
 
 **Source**: spec.md:User Story 4:scenario-4
 **Type**: acceptance
 **Priority**: P2
 
-**Given**: evaluation data is available for a tile
+**Given**: a tile object has eval data `{score: 94, multiplier: 1.21, chartData: {pass: 47, fail: 3}}`
 **When**: the card renders
-**Then**: it shows the eval score as a percentage with a bar chart visualization and multiplier badge
+**Then**: it shows the eval score as a percentage (94%), a horizontal bar chart showing pass/fail distribution, and a multiplier badge (1.21x)
 
 **Traceability**: FR-014, US-004-scenario-4
+**Note**: Tests the client rendering contract. See TS-042 for the MCP data pipeline test.
 
 ---
 
-### TS-016: Eval score absent when unavailable
+### TS-016: Eval score rendering absent when eval is null
 
 **Source**: spec.md:User Story 4:scenario-5
 **Type**: acceptance
 **Priority**: P2
 
-**Given**: evaluation data is not yet available for a tile
+**Given**: a tile object has eval set to null
 **When**: the card renders
 **Then**: it shows the tile info without a score section (no placeholder or "coming soon" — just absent)
 
 **Traceability**: FR-015, US-004-scenario-5
+**Note**: Tests the client rendering contract for null eval. See TS-043 for the MCP null-data pipeline test.
 
 ---
 
@@ -604,6 +606,122 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 
 ---
 
+## Gap Coverage Tests
+
+### TS-044: File-type icons render next to tree entries
+
+**Source**: spec.md:FR-005
+**Type**: acceptance
+**Priority**: P1
+
+**Given**: a file structure tree with files (.js, .md, .json) and directories
+**When**: the tree renders
+**Then**: each entry has a file-type icon appropriate to its type (file icon for files, folder icon for directories)
+
+**Traceability**: FR-005, US-002
+
+---
+
+### TS-045: Section ordering in scrollable layout
+
+**Source**: spec.md:FR-017
+**Type**: acceptance
+**Priority**: P1
+
+**Given**: a feature with plan.md containing tech context, file structure, and ASCII diagram, and a project with tessl.json
+**When**: the Plan view renders
+**Then**: sections appear in order: Tech Stack badge wall, Tessl tiles panel, Project Structure tree, Architecture diagram
+
+**Traceability**: FR-017, SC-007
+
+---
+
+### TS-046: Empty state rendering for missing plan.md
+
+**Source**: spec.md:FR-019, edge case 1
+**Type**: acceptance
+**Priority**: P2
+
+**Given**: a feature with no plan.md
+**When**: the Plan view loads
+**Then**: an empty state message is shown suggesting to run `/iikit-03-plan`
+
+**Traceability**: FR-019, US-001
+
+---
+
+### TS-047: Empty state rendering for missing tech context
+
+**Source**: spec.md:FR-019, edge case 2
+**Type**: acceptance
+**Priority**: P2
+
+**Given**: a plan.md with no Technical Context section
+**When**: the Plan view loads
+**Then**: the badge wall section shows a message indicating no tech stack is defined
+
+**Traceability**: FR-019
+
+---
+
+### TS-048: Scale limit — 15 tech entries, 30 files, 10 nodes
+
+**Source**: spec.md:FR-020
+**Type**: validation
+**Priority**: P2
+
+**Given**: a plan.md with 15 tech stack entries, 30 files in the structure, and an ASCII diagram with 10 nodes
+**When**: the Plan view renders
+**Then**: all entries render within 3 seconds, no horizontal overflow occurs, all entries are visible via scrolling
+
+**Traceability**: FR-020, SC-003
+
+---
+
+### TS-049: Accessible ARIA labels on interactive elements
+
+**Source**: spec.md:FR-021
+**Type**: acceptance
+**Priority**: P2
+
+**Given**: the Plan view is fully rendered with tree, diagram, and tile cards
+**When**: an accessibility audit is performed
+**Then**: all interactive elements (expand/collapse buttons, diagram nodes, tile cards) have ARIA labels
+
+**Traceability**: FR-021
+
+---
+
+## Bug Fix Tests
+
+### TS-042: Eval scores displayed when Tessl API returns eval data
+
+**Source**: BUG-001 (GitHub #13)
+**Type**: acceptance
+**Priority**: P2
+
+**Given**: a project with tessl.json listing tiles and the Tessl MCP `search` tool returns eval data (overall score, pass/fail distribution, multiplier) for a tile
+**When**: the Tessl panel renders the tile card
+**Then**: the card displays the overall score as a percentage, a horizontal bar chart showing pass/fail distribution, and a multiplier badge — matching the existing `.tessl-eval-score`, `.tessl-eval-bar`, `.tessl-eval-multiplier` CSS classes
+
+**Traceability**: FR-014, FR-015, TS-015, TS-016, BUG-001
+
+---
+
+### TS-043: Eval scores absent when Tessl API returns no eval data
+
+**Source**: BUG-001 (GitHub #13)
+**Type**: acceptance
+**Priority**: P2
+
+**Given**: a project with tessl.json listing tiles and the Tessl MCP `search` tool returns no eval data (eval is null) for a tile
+**When**: the Tessl panel renders the tile card
+**Then**: the card shows tile name and version without any eval score section (no placeholder or "coming soon")
+
+**Traceability**: FR-015, TS-016, BUG-001
+
+---
+
 ## Summary
 
 | Source | Count | Types |
@@ -611,4 +729,6 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 | spec.md | 19 | acceptance |
 | plan.md | 7 | contract |
 | data-model.md | 15 | validation |
-| **Total** | **41** | |
+| gap coverage | 6 | acceptance, validation |
+| bug fixes | 2 | acceptance |
+| **Total** | **49** | |

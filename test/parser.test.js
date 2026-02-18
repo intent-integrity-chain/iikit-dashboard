@@ -1,4 +1,4 @@
-const { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation } = require('../src/parser');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -1174,15 +1174,17 @@ describe('parseTestSpecs', () => {
 
 // T003: Tests for parseTaskTestRefs — TS-027
 describe('parseTaskTestRefs', () => {
-  test('extracts "must pass TS-xxx" references from task descriptions', () => {
+  test('extracts TS-xxx references from task descriptions regardless of phrasing', () => {
     const tasks = [
       { id: 'T002', description: 'Implement dashboard component; must pass TS-001' },
-      { id: 'T003', description: 'Implement data loading; must pass TS-001, TS-004' },
+      { id: 'T003', description: 'Implement data loading to satisfy TS-001, TS-004' },
+      { id: 'T004', description: 'Implement filtering — to pass TS-002, TS-003' },
       { id: 'T008', description: 'Add validation' }
     ];
     const refs = parseTaskTestRefs(tasks);
     expect(refs.T002).toEqual(['TS-001']);
     expect(refs.T003).toEqual(['TS-001', 'TS-004']);
+    expect(refs.T004).toEqual(['TS-002', 'TS-003']);
     expect(refs.T008).toEqual([]);
   });
 
@@ -1194,12 +1196,20 @@ describe('parseTaskTestRefs', () => {
     expect(refs.T007).toEqual(['TS-007', 'TS-008']);
   });
 
+  test('deduplicates repeated TS-xxx references', () => {
+    const tasks = [
+      { id: 'T005', description: 'Implement feature for TS-001 and also TS-001, TS-002' }
+    ];
+    const refs = parseTaskTestRefs(tasks);
+    expect(refs.T005).toEqual(['TS-001', 'TS-002']);
+  });
+
   test('returns empty map for empty tasks array', () => {
     const refs = parseTaskTestRefs([]);
     expect(refs).toEqual({});
   });
 
-  test('returns empty arrays for tasks without "must pass"', () => {
+  test('returns empty arrays for tasks without TS-xxx references', () => {
     const tasks = [
       { id: 'T001', description: 'Create project scaffolding' }
     ];
@@ -1210,5 +1220,388 @@ describe('parseTaskTestRefs', () => {
   test('handles null or undefined input', () => {
     expect(parseTaskTestRefs(null)).toEqual({});
     expect(parseTaskTestRefs(undefined)).toEqual({});
+  });
+});
+
+// === 008-analyze-consistency: New parser tests ===
+
+const analysisFixture = `## Findings
+
+| ID | Category | Severity | Location(s) | Summary | Recommendation |
+|----|----------|----------|-------------|---------|----------------|
+| A1 | Inconsistency | ~~HIGH~~ RESOLVED | plan.md:85, data-model.md:106 | Context.json path mismatch | Updated plan.md |
+| A2 | Coverage Gap | MEDIUM | spec.md:FR-013, SC-003 | FR-013 and SC-003 have no dedicated test spec | Accept as-is |
+| A3 | Coverage Gap | MEDIUM | tasks.md:T015-T025 | Client-side tasks lack test-writing tasks | Accept as-is |
+
+## Coverage Summary
+
+| Requirement | Has Task? | Task IDs | Has Test? | Test IDs | Status |
+|-------------|-----------|----------|-----------|----------|--------|
+| FR-001 | Yes | T015 | Yes | TS-001, TS-037 | Full |
+| FR-002 | Yes | T012 | Yes | TS-005 | Full |
+| FR-003 | No | — | No | — | Partial |
+
+## Constitution Alignment
+
+| Principle | Status | Evidence |
+|-----------|--------|----------|
+| I. Test-First (NON-NEGOTIABLE) | ALIGNED | TDD mandatory in tasks.md |
+| II. Real-Time Accuracy | ALIGNED | FR-012, SC-006 require <5s updates |
+| IV. Professional Kanban UI | VIOLATION | Missing visual spec |
+
+## Phase Separation Violations
+
+| Artifact | Status | Severity |
+|----------|--------|----------|
+| spec.md | Minor: implementation terms used | MEDIUM |
+| plan.md | Clean | — |
+
+## Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total Requirements (FR + SC) | 28 |
+| Total Tasks | 25 |
+| Total Test Specifications | 32 |
+| Requirement Coverage | 28/28 (100%) |
+| Test Coverage | 85% |
+| Critical Issues | 0 |
+| High Issues | 0 |
+| Medium Issues | 2 |
+| Low Issues | 1 |
+`;
+
+const simpleCoverageFixture = `## Coverage Summary
+
+| Requirement | Has Task? | Notes |
+|-------------|-----------|-------|
+| FR-001 | Yes | Covered by T015 |
+| FR-002 | No | Missing task |
+`;
+
+const bulletMetricsFixture = `## Metrics
+
+- Total Requirements (FR + SC): 28
+- Total Tasks: 25
+- Total Test Specifications: 32
+- Requirement Coverage: 28/28 (100%)
+- Test Coverage: 85%
+- Critical Issues: 0
+- High Issues: 0
+- Medium Issues: 2
+- Low Issues: 1
+`;
+
+// TS-039: parseAnalysisFindings extracts findings from markdown table
+describe('parseAnalysisFindings', () => {
+  test('extracts findings from markdown table with correct fields', () => {
+    const findings = parseAnalysisFindings(analysisFixture);
+    expect(findings).toHaveLength(3);
+    expect(findings[0]).toMatchObject({
+      id: 'A1',
+      category: 'Inconsistency',
+      severity: 'HIGH',
+      resolved: true,
+      location: 'plan.md:85, data-model.md:106',
+      summary: 'Context.json path mismatch',
+      recommendation: 'Updated plan.md'
+    });
+    expect(findings[1]).toMatchObject({
+      id: 'A2',
+      category: 'Coverage Gap',
+      severity: 'MEDIUM',
+      resolved: false,
+      location: 'spec.md:FR-013, SC-003',
+      summary: 'FR-013 and SC-003 have no dedicated test spec',
+      recommendation: 'Accept as-is'
+    });
+    expect(findings[2]).toMatchObject({
+      id: 'A3',
+      category: 'Coverage Gap',
+      severity: 'MEDIUM',
+      resolved: false,
+      location: 'tasks.md:T015-T025',
+      summary: 'Client-side tasks lack test-writing tasks',
+      recommendation: 'Accept as-is'
+    });
+  });
+
+  // TS-040: parseAnalysisFindings detects resolved findings via strikethrough
+  test('detects resolved findings via strikethrough in severity', () => {
+    const findings = parseAnalysisFindings(analysisFixture);
+    const resolved = findings.find(f => f.id === 'A1');
+    expect(resolved.resolved).toBe(true);
+    expect(resolved.severity).toBe('HIGH');
+  });
+
+  // TS-041: parseAnalysisFindings returns empty array for no-findings state
+  test('returns empty array when no findings table present', () => {
+    const content = `## Findings
+
+No CRITICAL issues found. The specification artifacts are well-aligned.
+`;
+    const findings = parseAnalysisFindings(content);
+    expect(findings).toEqual([]);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseAnalysisFindings('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseAnalysisFindings(null)).toEqual([]);
+  });
+});
+
+// TS-042, TS-043: parseAnalysisCoverage
+describe('parseAnalysisCoverage', () => {
+  // TS-042: handles simple table format
+  test('handles simple table format with Has Task and Notes columns', () => {
+    const coverage = parseAnalysisCoverage(simpleCoverageFixture);
+    expect(coverage).toHaveLength(2);
+    expect(coverage[0]).toMatchObject({
+      id: 'FR-001',
+      hasTask: true,
+      taskIds: [],
+      hasTest: false,
+      testIds: [],
+      status: null,
+      notes: 'Covered by T015'
+    });
+    expect(coverage[1]).toMatchObject({
+      id: 'FR-002',
+      hasTask: false,
+      taskIds: [],
+      hasTest: false,
+      testIds: [],
+      status: null,
+      notes: 'Missing task'
+    });
+  });
+
+  // TS-043: handles detailed table format
+  test('handles detailed table format with Task IDs, Test IDs, and Status', () => {
+    const coverage = parseAnalysisCoverage(analysisFixture);
+    expect(coverage).toHaveLength(3);
+    expect(coverage[0]).toMatchObject({
+      id: 'FR-001',
+      hasTask: true,
+      taskIds: ['T015'],
+      hasTest: true,
+      testIds: ['TS-001', 'TS-037'],
+      status: 'Full'
+    });
+    expect(coverage[1]).toMatchObject({
+      id: 'FR-002',
+      hasTask: true,
+      taskIds: ['T012'],
+      hasTest: true,
+      testIds: ['TS-005'],
+      status: 'Full'
+    });
+    expect(coverage[2]).toMatchObject({
+      id: 'FR-003',
+      hasTask: false,
+      taskIds: [],
+      hasTest: false,
+      testIds: [],
+      status: 'Partial'
+    });
+  });
+
+  test('handles 8-column format with Has Plan? and Plan Refs columns', () => {
+    const content = `## Coverage Summary
+
+| Requirement | Has Task? | Task IDs | Has Test? | Test IDs | Has Plan? | Plan Refs | Status |
+|-------------|-----------|----------|-----------|----------|-----------|-----------|--------|
+| FR-001 | Yes | T015 | Yes | TS-001, TS-037 | Yes | KDD-4, KDD-7 | Full |
+| FR-002 | Yes | T012 | Yes | TS-005 | No | — | Partial |
+| FR-003 | No | — | No | — | Yes | KDD-1 | Partial |
+`;
+    const coverage = parseAnalysisCoverage(content);
+    expect(coverage).toHaveLength(3);
+    expect(coverage[0]).toMatchObject({
+      id: 'FR-001',
+      hasTask: true,
+      taskIds: ['T015'],
+      hasTest: true,
+      testIds: ['TS-001', 'TS-037'],
+      hasPlan: true,
+      planRefs: ['KDD-4', 'KDD-7'],
+      status: 'Full'
+    });
+    expect(coverage[1]).toMatchObject({
+      id: 'FR-002',
+      hasPlan: false,
+      planRefs: [],
+      status: 'Partial'
+    });
+    expect(coverage[2]).toMatchObject({
+      id: 'FR-003',
+      hasTask: false,
+      hasPlan: true,
+      planRefs: ['KDD-1'],
+      status: 'Partial'
+    });
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseAnalysisCoverage('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseAnalysisCoverage(null)).toEqual([]);
+  });
+});
+
+// TS-044 through TS-047: parseAnalysisMetrics
+describe('parseAnalysisMetrics', () => {
+  // TS-044: extracts metrics from table format
+  test('extracts metrics from table format', () => {
+    const metrics = parseAnalysisMetrics(analysisFixture);
+    expect(metrics.totalRequirements).toBe(28);
+    expect(metrics.totalTasks).toBe(25);
+    expect(metrics.totalTestSpecs).toBe(32);
+    expect(metrics.requirementCoverage).toBe('28/28 (100%)');
+    expect(metrics.criticalIssues).toBe(0);
+    expect(metrics.highIssues).toBe(0);
+    expect(metrics.mediumIssues).toBe(2);
+    expect(metrics.lowIssues).toBe(1);
+  });
+
+  // TS-045: extracts metrics from bullet list format
+  test('extracts metrics from bullet list format', () => {
+    const metrics = parseAnalysisMetrics(bulletMetricsFixture);
+    expect(metrics.totalRequirements).toBe(28);
+    expect(metrics.totalTasks).toBe(25);
+    expect(metrics.totalTestSpecs).toBe(32);
+    expect(metrics.requirementCoverage).toBe('28/28 (100%)');
+    expect(metrics.criticalIssues).toBe(0);
+    expect(metrics.highIssues).toBe(0);
+    expect(metrics.mediumIssues).toBe(2);
+    expect(metrics.lowIssues).toBe(1);
+  });
+
+  // TS-046: extracts percentage from coverage strings
+  test('extracts percentage from coverage strings', () => {
+    const metrics = parseAnalysisMetrics(analysisFixture);
+    expect(metrics.requirementCoveragePct).toBe(100);
+    expect(metrics.testCoveragePct).toBe(85);
+  });
+
+  // TS-047: defaults testCoveragePct to 100 when absent
+  test('defaults testCoveragePct to 100 when no test coverage entry', () => {
+    const content = `## Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total Requirements (FR + SC) | 10 |
+| Total Tasks | 8 |
+| Total Test Specifications | 12 |
+| Requirement Coverage | 10/10 (100%) |
+| Critical Issues | 0 |
+| High Issues | 0 |
+| Medium Issues | 0 |
+| Low Issues | 0 |
+`;
+    const metrics = parseAnalysisMetrics(content);
+    expect(metrics.testCoveragePct).toBe(100);
+  });
+
+  test('returns empty/default object for empty string', () => {
+    const metrics = parseAnalysisMetrics('');
+    expect(metrics.totalRequirements).toBe(0);
+    expect(metrics.totalTasks).toBe(0);
+  });
+
+  test('returns empty/default object for null', () => {
+    const metrics = parseAnalysisMetrics(null);
+    expect(metrics.totalRequirements).toBe(0);
+  });
+});
+
+// TS-048, TS-049: parseConstitutionAlignment
+describe('parseConstitutionAlignment', () => {
+  // TS-048: extracts alignment table
+  test('extracts alignment entries with principle, status, and evidence', () => {
+    const alignment = parseConstitutionAlignment(analysisFixture);
+    expect(alignment).toHaveLength(3);
+    expect(alignment[0]).toMatchObject({
+      principle: 'I. Test-First (NON-NEGOTIABLE)',
+      status: 'ALIGNED',
+      evidence: 'TDD mandatory in tasks.md'
+    });
+    expect(alignment[1]).toMatchObject({
+      principle: 'II. Real-Time Accuracy',
+      status: 'ALIGNED',
+      evidence: 'FR-012, SC-006 require <5s updates'
+    });
+    expect(alignment[2]).toMatchObject({
+      principle: 'IV. Professional Kanban UI',
+      status: 'VIOLATION',
+      evidence: 'Missing visual spec'
+    });
+  });
+
+  // TS-049: returns empty array for absent section
+  test('returns empty array when no Constitution Alignment section', () => {
+    const content = '# Analysis\n\n## Findings\n\nSome findings.\n';
+    expect(parseConstitutionAlignment(content)).toEqual([]);
+  });
+
+  test('returns empty array for "None detected" text', () => {
+    const content = `## Constitution Alignment
+
+None detected
+`;
+    expect(parseConstitutionAlignment(content)).toEqual([]);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parseConstitutionAlignment('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parseConstitutionAlignment(null)).toEqual([]);
+  });
+});
+
+// TS-050, TS-051: parsePhaseSeparation
+describe('parsePhaseSeparation', () => {
+  // TS-050: extracts violation entries
+  test('extracts phase separation violation entries', () => {
+    const violations = parsePhaseSeparation(analysisFixture);
+    expect(violations).toHaveLength(2);
+    expect(violations[0]).toMatchObject({
+      artifact: 'spec.md',
+      status: 'Minor: implementation terms used',
+      severity: 'MEDIUM'
+    });
+    expect(violations[1]).toMatchObject({
+      artifact: 'plan.md',
+      status: 'Clean'
+    });
+  });
+
+  // TS-051: returns empty for "None detected"
+  test('returns empty array for "None detected"', () => {
+    const content = `## Phase Separation Violations
+
+None detected
+`;
+    expect(parsePhaseSeparation(content)).toEqual([]);
+  });
+
+  test('returns empty array when no Phase Separation section', () => {
+    const content = '# Analysis\n\n## Findings\n\nSome findings.\n';
+    expect(parsePhaseSeparation(content)).toEqual([]);
+  });
+
+  test('returns empty array for empty string', () => {
+    expect(parsePhaseSeparation('')).toEqual([]);
+  });
+
+  test('returns empty array for null', () => {
+    expect(parsePhaseSeparation(null)).toEqual([]);
   });
 });

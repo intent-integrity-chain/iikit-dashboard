@@ -1,7 +1,7 @@
 {
   "testify": {
-    "assertion_hash": "d91dc4a5291199f96c30d349cec23c4cefe2d4b6df38b8909abacbc329bc9591",
-    "generated_at": "2026-02-13T15:49:36Z",
+    "assertion_hash": "ec27dd247a1cc3228509c81ec1786d8c2bc72fee77d310fc9f928be6215ea76c",
+    "generated_at": "2026-02-18T17:17:50Z",
     "test_specs_file": "specs/005-plan-architecture-viewer/tests/test-specs.md"
   }
 }

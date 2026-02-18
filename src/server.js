@@ -14,6 +14,7 @@ const { computeStoryMapState } = require('./storymap');
 const { computePlanViewState } = require('./planview');
 const { computeChecklistViewState } = require('./checklist');
 const { computeTestifyState } = require('./testify');
+const { computeAnalyzeState } = require('./analyze');
 
 /**
  * List features from specs/ directory.
@@ -197,6 +198,20 @@ function createServer({ projectPath, port = 3000 }) {
     }
   });
 
+  // API: analyze state for a feature
+  app.get('/api/analyze/:feature', (req, res) => {
+    try {
+      const featureDir = path.join(projectPath, 'specs', req.params.feature);
+      if (!fs.existsSync(featureDir)) {
+        return res.status(404).json({ error: 'Feature not found' });
+      }
+      const analyze = computeAnalyzeState(projectPath, req.params.feature);
+      res.json(analyze);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // API: board state for a feature
   app.get('/api/board/:feature', (req, res) => {
     try {
@@ -300,6 +315,14 @@ function createServer({ projectPath, port = 3000 }) {
                   type: 'testify_update',
                   feature: ws.currentFeature,
                   testify
+                }));
+              }
+              const analyze = computeAnalyzeState(projectPath, ws.currentFeature);
+              if (analyze) {
+                ws.send(JSON.stringify({
+                  type: 'analyze_update',
+                  feature: ws.currentFeature,
+                  analyze
                 }));
               }
             } catch {
