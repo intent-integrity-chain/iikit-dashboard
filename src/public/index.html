@@ -854,6 +854,234 @@
       max-width: 360px;
     }
 
+    /* ====== Checklist Quality Gates Tab ====== */
+    .checklist-view {
+      padding: 24px 28px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .gate-indicator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-elevated);
+      border: 1px solid var(--color-border);
+      margin-bottom: 28px;
+    }
+
+    .gate-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      transition: background-color 0.4s ease;
+    }
+
+    .gate-dot.green { background-color: var(--color-green, #22c55e); }
+    .gate-dot.yellow { background-color: var(--color-yellow, #eab308); }
+    .gate-dot.red { background-color: var(--color-red, #ef4444); }
+
+    .gate-label {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .gate-label.open { color: var(--color-green, #22c55e); }
+    .gate-label.blocked-yellow { color: var(--color-yellow, #eab308); }
+    .gate-label.blocked-red { color: var(--color-red, #ef4444); }
+
+    .checklist-rings {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+      margin-bottom: 24px;
+    }
+
+    .checklist-ring-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      padding: 12px;
+      border-radius: var(--radius-lg);
+      transition: background-color 0.15s ease;
+      border: 2px solid transparent;
+    }
+
+    .checklist-ring-wrapper:hover {
+      background: var(--color-surface-elevated);
+    }
+
+    .checklist-ring-wrapper:focus-visible {
+      outline: 2px solid var(--color-primary);
+      outline-offset: 2px;
+    }
+
+    .checklist-ring-wrapper.expanded {
+      border-color: var(--color-primary);
+      background: var(--color-surface-elevated);
+    }
+
+    .checklist-ring-svg {
+      width: 100px;
+      height: 100px;
+    }
+
+    .checklist-ring-track {
+      fill: none;
+      stroke: var(--color-border);
+      stroke-width: 8;
+    }
+
+    .checklist-ring-fill {
+      fill: none;
+      stroke-width: 8;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1), stroke 0.4s ease;
+      transform: rotate(-90deg);
+      transform-origin: 50% 50%;
+    }
+
+    .checklist-ring-fill.red { stroke: var(--color-red, #ef4444); }
+    .checklist-ring-fill.yellow { stroke: var(--color-yellow, #eab308); }
+    .checklist-ring-fill.green { stroke: var(--color-green, #22c55e); }
+
+    .checklist-ring-pct {
+      font-size: 18px;
+      font-weight: 700;
+      fill: var(--color-text);
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .checklist-ring-name {
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text);
+      text-align: center;
+    }
+
+    .checklist-ring-fraction {
+      font-size: 12px;
+      color: var(--color-text-muted);
+    }
+
+    .checklist-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.15s ease, opacity 0.15s ease;
+      border-radius: var(--radius-lg);
+      background: var(--color-surface-elevated);
+      border: 1px solid transparent;
+      margin-bottom: 0;
+      opacity: 0;
+    }
+
+    .checklist-detail.open {
+      max-height: 2000px;
+      border-color: var(--color-border);
+      margin-bottom: 16px;
+      opacity: 1;
+    }
+
+    .checklist-detail-inner {
+      padding: 16px 20px;
+    }
+
+    .checklist-category {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-text-muted);
+      margin: 16px 0 8px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    .checklist-category:first-child {
+      margin-top: 0;
+    }
+
+    .checklist-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 6px 0;
+      font-size: 13px;
+      color: var(--color-text);
+      line-height: 1.4;
+    }
+
+    .checklist-item-icon {
+      flex-shrink: 0;
+      width: 18px;
+      font-size: 14px;
+    }
+
+    .checklist-item-icon.checked { color: var(--color-green, #22c55e); }
+    .checklist-item-icon.unchecked { color: var(--color-text-muted); }
+
+    .checklist-item-id {
+      font-family: var(--font-mono, monospace);
+      font-size: 11px;
+      color: var(--color-text-muted);
+      background: var(--color-surface);
+      padding: 1px 5px;
+      border-radius: var(--radius-sm, 4px);
+      flex-shrink: 0;
+    }
+
+    .checklist-item-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 9999px;
+      background: var(--color-primary-muted, rgba(99, 102, 241, 0.15));
+      color: var(--color-primary, #6366f1);
+      flex-shrink: 0;
+    }
+
+    .checklist-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+    }
+
+    .checklist-empty-icon {
+      width: 56px;
+      height: 56px;
+      background: var(--color-surface-elevated);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+
+    .checklist-empty-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--color-text);
+      margin-bottom: 6px;
+    }
+
+    .checklist-empty-text {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      max-width: 360px;
+    }
+
     /* ====== Spec Story Map Tab ====== */
     .storymap-view {
       padding: 24px 28px;
@@ -1707,6 +1935,8 @@
       let currentFeature = null;
       let currentBoard = null;
       let currentPipeline = null;
+      let currentChecklist = null;
+      let expandedChecklist = null;
       let activeTab = null;
       let ws = null;
       let reconnectTimer = null;
@@ -1783,6 +2013,8 @@
           renderPlanView();
         } else if (phaseId === 'clarify') {
           renderClarifyView();
+        } else if (phaseId === 'checklist') {
+          renderChecklistView();
         } else {
           renderPlaceholderView(phaseId);
         }
@@ -1812,6 +2044,150 @@
             <div class="placeholder-view-title">${name} View</div>
             <div class="placeholder-view-text">This phase visualization is coming soon. It will be available in a future update.</div>
           </div>`;
+      }
+
+      // ====== Checklist Quality Gates View ======
+
+      async function renderChecklistView() {
+        if (!currentFeature) return;
+
+        try {
+          const res = await fetch(`/api/checklist/${currentFeature}`);
+          if (!res.ok) throw new Error('Failed to load');
+          currentChecklist = await res.json();
+          expandedChecklist = null;
+          renderChecklistContent(currentChecklist);
+        } catch {
+          contentArea.innerHTML = '<div class="checklist-empty"><div class="checklist-empty-title">Failed to load checklist data.</div></div>';
+        }
+      }
+
+      function renderChecklistContent(data) {
+        if (!data) return;
+
+        // Empty state
+        if (!data.files || data.files.length === 0) {
+          contentArea.innerHTML = `
+            <div class="checklist-empty">
+              <div class="checklist-empty-icon">&#9744;</div>
+              <div class="checklist-empty-title">No checklists generated for this feature</div>
+              <div class="checklist-empty-text">Run <code>/iikit-04-checklist</code> to generate domain-specific quality checklists for requirements validation.</div>
+            </div>`;
+          return;
+        }
+
+        const CIRCUMFERENCE = 2 * Math.PI * 42; // radius=42 for viewBox 100x100
+
+        let html = '<div class="checklist-view">';
+
+        // Gate indicator
+        html += renderGateIndicator(data.gate);
+
+        // Progress rings
+        html += '<div class="checklist-rings">';
+        data.files.forEach((file) => {
+          const isExpanded = expandedChecklist === file.filename;
+          const offset = CIRCUMFERENCE - (file.percentage / 100) * CIRCUMFERENCE;
+
+          html += `<div class="checklist-ring-wrapper${isExpanded ? ' expanded' : ''}"
+            tabindex="0" role="button"
+            aria-expanded="${isExpanded}"
+            aria-controls="checklist-detail-${escapeHtml(file.filename)}"
+            aria-label="${escapeHtml(file.name)}: ${file.checked} of ${file.total} items complete, ${file.percentage}%"
+            data-filename="${escapeHtml(file.filename)}">
+            <svg class="checklist-ring-svg" viewBox="0 0 100 100" role="img"
+              aria-label="${escapeHtml(file.name)}: ${file.checked} of ${file.total} items complete, ${file.percentage}%">
+              <circle class="checklist-ring-track" cx="50" cy="50" r="42" />
+              <circle class="checklist-ring-fill ${file.color}" cx="50" cy="50" r="42"
+                stroke-dasharray="${CIRCUMFERENCE}"
+                stroke-dashoffset="${offset}" />
+              <text class="checklist-ring-pct" x="50" y="50">${file.percentage}%</text>
+            </svg>
+            <div class="checklist-ring-name">${escapeHtml(file.name)}</div>
+            <div class="checklist-ring-fraction">${file.checked}/${file.total}</div>
+          </div>`;
+        });
+        html += '</div>';
+
+        // Accordion detail panels
+        data.files.forEach((file) => {
+          const isExpanded = expandedChecklist === file.filename;
+          html += `<div id="checklist-detail-${escapeHtml(file.filename)}" class="checklist-detail${isExpanded ? ' open' : ''}">`;
+          html += '<div class="checklist-detail-inner">';
+          html += renderChecklistDetail(file);
+          html += '</div></div>';
+        });
+
+        html += '</div>';
+        contentArea.innerHTML = html;
+
+        // Attach click and keyboard handlers to rings
+        document.querySelectorAll('.checklist-ring-wrapper').forEach(wrapper => {
+          const filename = wrapper.getAttribute('data-filename');
+          wrapper.addEventListener('click', () => toggleChecklistExpand(filename, data));
+          wrapper.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              toggleChecklistExpand(filename, data);
+            }
+          });
+        });
+      }
+
+      function renderGateIndicator(gate) {
+        if (!gate) return '';
+        const levelClass = gate.level === 'yellow' ? 'blocked-yellow' : (gate.level === 'red' ? 'blocked-red' : 'open');
+        return `<div class="gate-indicator" role="status" aria-live="polite">
+          <div class="gate-dot ${gate.level}"></div>
+          <span class="gate-label ${levelClass}">${escapeHtml(gate.label)}</span>
+        </div>`;
+      }
+
+      function renderChecklistDetail(file) {
+        if (!file || !file.items || file.items.length === 0) {
+          return '<div style="color:var(--color-text-muted);font-size:13px;">No items detected in this checklist.</div>';
+        }
+
+        let html = '';
+        let currentCategory = null;
+
+        file.items.forEach(item => {
+          if (item.category !== currentCategory) {
+            currentCategory = item.category;
+            if (currentCategory) {
+              html += `<h4 class="checklist-category">${escapeHtml(currentCategory)}</h4>`;
+            }
+          }
+
+          const icon = item.checked
+            ? '<span class="checklist-item-icon checked">&#10003;</span>'
+            : '<span class="checklist-item-icon unchecked">&#9744;</span>';
+
+          const chkId = item.chkId
+            ? `<span class="checklist-item-id">${escapeHtml(item.chkId)}</span>`
+            : '';
+
+          const tags = (item.tags || []).map(t =>
+            `<span class="checklist-item-tag">${escapeHtml(t)}</span>`
+          ).join('');
+
+          html += `<div class="checklist-item">
+            ${icon}${chkId}
+            <span style="flex:1">${escapeHtml(item.text)}</span>
+            ${tags}
+          </div>`;
+        });
+
+        return html;
+      }
+
+      function toggleChecklistExpand(filename, data) {
+        if (expandedChecklist === filename) {
+          expandedChecklist = null;
+        } else {
+          expandedChecklist = filename;
+        }
+        renderChecklistContent(data);
       }
 
       // ====== Spec Story Map View ======
@@ -3208,6 +3584,15 @@
               currentPlanView = msg.planview;
               if (activeTab === 'plan') {
                 renderPlanViewContent(msg.planview);
+              }
+            }
+            break;
+
+          case 'checklist_update':
+            if (msg.feature === currentFeature && msg.checklist) {
+              currentChecklist = msg.checklist;
+              if (activeTab === 'checklist') {
+                renderChecklistContent(msg.checklist);
               }
             }
             break;

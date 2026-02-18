@@ -116,6 +116,96 @@ function parseChecklists(checklistDir) {
 }
 
 /**
+ * Parse all checklist files in a directory and return detailed per-file data
+ * with individual items, categories, CHK IDs, and tags.
+ *
+ * Applies same requirements.md-only filter as parseChecklists:
+ * if requirements.md is the only file, returns empty array.
+ *
+ * @param {string} checklistDir - Path to checklists/ directory
+ * @returns {Array<{name: string, filename: string, total: number, checked: number, items: Array}>}
+ */
+function parseChecklistsDetailed(checklistDir) {
+  if (!fs.existsSync(checklistDir)) return [];
+
+  const files = fs.readdirSync(checklistDir).filter(f => f.endsWith('.md'));
+
+  // Same filter as parseChecklists: skip if requirements.md is the only file
+  const hasDomainChecklists = files.some(f => f !== 'requirements.md');
+  if (!hasDomainChecklists) return [];
+
+  const result = [];
+
+  for (const file of files) {
+    const content = fs.readFileSync(path.join(checklistDir, file), 'utf-8');
+    const lines = content.split('\n');
+
+    // Derive human-readable name from filename
+    const baseName = file.replace(/\.md$/, '');
+    const name = baseName.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+
+    const items = [];
+    let currentCategory = null;
+    let totalCount = 0;
+    let checkedCount = 0;
+
+    for (const line of lines) {
+      // Track category headings (## or ###)
+      const headingMatch = line.match(/^#{2,3}\s+(.+)/);
+      if (headingMatch) {
+        currentCategory = headingMatch[1].trim();
+        continue;
+      }
+
+      // Parse checkbox items
+      const checkboxMatch = line.match(/^- \[([ x])\]\s+(.*)/i);
+      if (!checkboxMatch) continue;
+
+      const isChecked = checkboxMatch[1].toLowerCase() === 'x';
+      let itemText = checkboxMatch[2].trim();
+      totalCount++;
+      if (isChecked) checkedCount++;
+
+      // Extract CHK-xxx ID
+      let chkId = null;
+      const chkMatch = itemText.match(/^(CHK-\d{3})\s+/);
+      if (chkMatch) {
+        chkId = chkMatch[1];
+        itemText = itemText.substring(chkMatch[0].length);
+      }
+
+      // Extract trailing tags [tag1] [tag2] — but not the checkbox itself
+      const tags = [];
+      const tagRegex = /\[([^\]]+)\]\s*$/;
+      let tagMatch;
+      while ((tagMatch = itemText.match(tagRegex))) {
+        // Don't treat spec references like [Completeness, FR-004] as simple tags
+        tags.unshift(tagMatch[1]);
+        itemText = itemText.substring(0, tagMatch.index).trim();
+      }
+
+      items.push({
+        text: itemText,
+        checked: isChecked,
+        chkId,
+        category: currentCategory,
+        tags
+      });
+    }
+
+    result.push({
+      name,
+      filename: file,
+      total: totalCount,
+      checked: checkedCount,
+      items
+    });
+  }
+
+  return result;
+}
+
+/**
  * Parse CONSTITUTION.md to determine if TDD is required.
  * Looks for strong TDD indicators combined with MUST/NON-NEGOTIABLE.
  *
@@ -765,4 +855,4 @@ function parseResearchDecisions(content) {
   return decisions;
 }
 
-module.exports = { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions };
+module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions };
