@@ -2,9 +2,11 @@
 
 const fs = require('fs');
 const path = require('path');
+const childProcess = require('child_process');
+const { promisify } = require('util');
 const { parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions } = require('./parser');
 
-module.exports = { computePlanViewState, classifyNodeTypes };
+module.exports = { computePlanViewState, classifyNodeTypes, fetchTesslEvalData };
 
 // In-memory cache for LLM classification results per feature
 const classificationCache = new Map();
@@ -15,9 +17,12 @@ const classificationCache = new Map();
  *
  * @param {string} projectPath - Path to project root
  * @param {string} featureId - Feature directory name
+ * @param {Object} [options] - Optional configuration
+ * @param {Function} [options.fetchEvalData] - Custom eval data fetcher (for testing)
  * @returns {Promise<Object>} Plan view state
  */
-async function computePlanViewState(projectPath, featureId) {
+async function computePlanViewState(projectPath, featureId, options = {}) {
+  const evalFetcher = options.fetchEvalData || fetchTesslEvalData;
   const featureDir = path.join(projectPath, 'specs', featureId);
   const planPath = path.join(featureDir, 'plan.md');
 
@@ -77,8 +82,14 @@ async function computePlanViewState(projectPath, featureId) {
     }
   }
 
-  // Parse tessl.json
+  // Parse tessl.json and enrich with eval data
   const tesslTiles = parseTesslJson(projectPath);
+  const evalResults = await Promise.all(
+    tesslTiles.map(tile => evalFetcher(tile.name).catch(() => null))
+  );
+  tesslTiles.forEach((tile, i) => {
+    tile.eval = evalResults[i];
+  });
 
   return {
     techContext,
@@ -180,6 +191,108 @@ No explanation, just the JSON.`
 
   return result;
 }
+
+// In-memory cache for eval data per tile name
+const evalCache = new Map();
+
+/**
+ * Fetch eval data for a Tessl tile using the tessl CLI.
+ * Returns structured eval data or null if unavailable.
+ *
+ * @param {string} tileName - Tile name (e.g., "tessl/npm-express")
+ * @returns {Promise<{score: number, multiplier: number, chartData: {pass: number, fail: number}}|null>}
+ */
+async function fetchTesslEvalData(tileName) {
+  if (evalCache.has(tileName)) return evalCache.get(tileName);
+
+  try {
+    const execAsync = promisify(childProcess.exec);
+
+    // List eval runs for the tile
+    const { stdout: listOut } = await execAsync(
+      `tessl eval list --json --tile "${tileName}" --limit 1`,
+      { timeout: 10000 }
+    );
+    const listJson = JSON.parse(listOut.substring(listOut.indexOf('{')));
+
+    if (!listJson.data || listJson.data.length === 0) {
+      evalCache.set(tileName, null);
+      return null;
+    }
+
+    // Find the most recent completed eval run
+    const completedRun = listJson.data.find(r => r.attributes && r.attributes.status === 'completed');
+    if (!completedRun) {
+      evalCache.set(tileName, null);
+      return null;
+    }
+
+    // Fetch detailed eval results
+    const { stdout: viewOut } = await execAsync(
+      `tessl eval view --json ${completedRun.id}`,
+      { timeout: 15000 }
+    );
+    const viewJson = JSON.parse(viewOut.substring(viewOut.indexOf('{')));
+
+    const evalData = computeEvalSummary(viewJson.data);
+    evalCache.set(tileName, evalData);
+    return evalData;
+  } catch {
+    evalCache.set(tileName, null);
+    return null;
+  }
+}
+
+/**
+ * Compute eval summary from a detailed eval run response.
+ * Extracts score, multiplier, and pass/fail chart data from scenarios.
+ */
+function computeEvalSummary(evalRun) {
+  if (!evalRun || !evalRun.attributes || !evalRun.attributes.scenarios) return null;
+
+  let usageTotal = 0, usageMax = 0, baselineTotal = 0;
+  let pass = 0, fail = 0;
+
+  for (const scenario of evalRun.attributes.scenarios) {
+    if (!scenario.solutions) continue;
+
+    const usageSpec = scenario.solutions.find(s => s.variant === 'usage-spec');
+    const baseline = scenario.solutions.find(s => s.variant === 'baseline');
+
+    if (usageSpec && usageSpec.assessmentResults) {
+      for (const r of usageSpec.assessmentResults) {
+        usageTotal += r.score;
+        usageMax += r.max_score;
+        if (r.score === r.max_score) pass++;
+        else fail++;
+      }
+    }
+
+    if (baseline && baseline.assessmentResults) {
+      for (const r of baseline.assessmentResults) {
+        baselineTotal += r.score;
+      }
+    }
+  }
+
+  if (usageMax === 0) return null;
+
+  const score = Math.round(usageTotal / usageMax * 100);
+  const multiplier = baselineTotal > 0
+    ? Math.round(usageTotal / baselineTotal * 100) / 100
+    : null;
+
+  return { score, multiplier, chartData: { pass, fail } };
+}
+
+/**
+ * Invalidate eval cache (e.g., when tessl.json changes).
+ */
+function invalidateEvalCache() {
+  evalCache.clear();
+}
+
+module.exports.invalidateEvalCache = invalidateEvalCache;
 
 /**
  * Invalidate classification cache for a feature.

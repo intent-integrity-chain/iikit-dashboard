@@ -69,7 +69,7 @@
 - [x] T035 [US4] Extend computePlanViewState in src/planview.js — call parseTesslJson, return tesslTiles array
 - [x] T036 [US4] Add renderTesslPanel() in src/public/index.html — renders tile cards with name and version (TS-012, TS-013)
 - [x] T037 [US4] Add Tessl panel CSS styles in src/public/index.html — tile card layout, eval score placeholder structure
-- [x] T038 [US4] Implement conditional panel display — hide when no tessl.json or empty dependencies (TS-014, TS-016)
+- [x] T038 [US4] Implement conditional panel display — hide when no tessl.json (FR-016); show message when dependencies empty (edge case 9) (TS-014, TS-016)
 
 ---
 
@@ -128,6 +128,14 @@ T004,T005,T006,T007,T008 (parallel, after T003)
 T001 → T002 → T003 → T006 → T011 → T015 → T016 → T028 → T029 → T040 → T046
 
 **11 tasks on critical path** (ASCII diagram parser + LLM classification is the longest chain)
+
+---
+
+## Bug Fix Tasks
+
+- [x] T-B001 [BUG-001] Add Tessl MCP search call in computePlanViewState to fetch eval data for each tile, merge into TesslTile objects (GitHub #13)
+- [x] T-B002 [BUG-001] Update renderTesslPanel() to render eval score (percentage), bar chart (pass/fail), and multiplier badge when tile.eval is non-null (GitHub #13)
+- [x] T-B003 [BUG-001] Verify fix passes tests TS-015, TS-016, TS-042, TS-043 for BUG-001: eval scores display when available and are absent when unavailable (GitHub #13)
 
 ---
 

@@ -3811,9 +3811,11 @@
             html += `<span class="tessl-tile-name">${escapeHtml(tile.name)}</span>`;
             html += `<span class="tessl-tile-version">v${escapeHtml(tile.version)}</span>`;
             if (tile.eval) {
+              const chartTotal = tile.eval.chartData.pass + tile.eval.chartData.fail;
+              const barPct = chartTotal > 0 ? Math.round(tile.eval.chartData.pass / chartTotal * 100) : tile.eval.score;
               html += `<div class="tessl-tile-eval">`;
               html += `<span class="tessl-eval-score">${tile.eval.score}%</span>`;
-              html += `<div class="tessl-eval-bar"><div class="tessl-eval-bar-fill" style="width:${tile.eval.score}%"></div></div>`;
+              html += `<div class="tessl-eval-bar" title="${tile.eval.chartData.pass} pass, ${tile.eval.chartData.fail} fail"><div class="tessl-eval-bar-fill" style="width:${barPct}%"></div></div>`;
               if (tile.eval.multiplier) {
                 html += `<span class="tessl-eval-multiplier">\u2191 ${tile.eval.multiplier}x</span>`;
               }
