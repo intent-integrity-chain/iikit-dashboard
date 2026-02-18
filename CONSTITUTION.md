@@ -35,7 +35,7 @@ cached or stale data. When artifacts change, the display MUST update promptly.
 **Rationale**: A dashboard that shows stale information is worse than no
 dashboard at all. Users must trust that what they see is current.
 
-### IV. Professional Kanban UI
+### III. Professional Kanban UI
 
 The dashboard MUST look and feel like a professional kanban tool. The visual
 design MUST be on par with industry-leading kanban boards (Trello, Linear,
@@ -47,7 +47,7 @@ developer prototype.
 that looks like a homework project will not be adopted. Professional UI builds
 trust in the data it displays and makes the tool a pleasure to keep open.
 
-### V. Simplicity
+### IV. Simplicity
 
 Start simple. Prefer the minimal solution that solves the user's problem.
 Do not add features, abstractions, or configurability beyond what is

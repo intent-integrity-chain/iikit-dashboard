@@ -56,6 +56,19 @@ Description.
 ### User Story 3 - OAuth Integration (Priority: P2)
 
 Description.
+
+## Requirements
+
+### Functional Requirements
+
+- **FR-001**: System MUST authenticate users via email
+- **FR-002**: System MUST support password reset
+- **FR-003**: System MUST integrate OAuth providers
+
+## Success Criteria
+
+- **SC-001**: Login completes in under 3 seconds
+- **SC-002**: Password reset email sent within 30 seconds
 `);
 
     fs.writeFileSync(path.join(feature1Dir, 'tasks.md'), `# Tasks
@@ -97,6 +110,49 @@ Description.
         test_specs_file: 'specs/001-auth/tests/test-specs.md'
       }
     }));
+
+    // Analysis fixture for 001-auth (8-column format with plan data)
+    fs.writeFileSync(path.join(feature1Dir, 'analysis.md'), `# Specification Analysis Report
+
+## Findings
+
+| ID | Category | Severity | Location(s) | Summary | Recommendation |
+|----|----------|----------|-------------|---------|----------------|
+| A1 | Coverage Gap | CRITICAL | spec.md:FR-003 | FR-003 missing task | Add task for FR-003 |
+| A2 | Inconsistency | MEDIUM | plan.md:45 | Plan references wrong file | Update plan reference |
+
+## Coverage Summary
+
+| Requirement | Has Task? | Task IDs | Has Test? | Test IDs | Has Plan? | Plan Refs | Status |
+|-------------|-----------|----------|-----------|----------|-----------|-----------|--------|
+| FR-001 | Yes | T001, T002 | Yes | TS-001 | Yes | KDD-1, KDD-3 | Full |
+| FR-002 | No | — | Yes | TS-002 | No | — | Partial |
+
+## Constitution Alignment
+
+| Principle | Status | Evidence |
+|-----------|--------|----------|
+| I. Test-First | ALIGNED | TDD mandatory |
+| II. Real-Time | VIOLATION | No WebSocket |
+
+## Phase Separation Violations
+
+None detected.
+
+## Metrics
+
+| Metric | Value |
+|--------|-------|
+| Total Requirements (FR + SC) | 5 |
+| Total Tasks | 5 |
+| Total Test Specifications | 3 |
+| Requirement Coverage | 4/5 (80%) |
+| Test Coverage | 60% |
+| Critical Issues | 1 |
+| High Issues | 0 |
+| Medium Issues | 1 |
+| Low Issues | 0 |
+`);
 
     // Start server
     const { createServer } = require('../src/server');
@@ -345,6 +401,163 @@ Description.
   // T008: GET /api/testify/:feature returns 404 for unknown feature
   test('GET /api/testify/:feature returns 404 for unknown feature', async () => {
     const res = await httpGet(port, '/api/testify/999-nonexistent');
+    expect(res.status).toBe(404);
+  });
+
+  // === Analyze Consistency Tests (008-analyze-consistency) ===
+
+  // TS-033: GET /api/analyze/:feature returns full analyze state
+  test('GET /api/analyze/:feature returns full analyze state when analysis.md exists', async () => {
+    const res = await httpGet(port, '/api/analyze/001-auth');
+    expect(res.status).toBe(200);
+
+    const data = res.data;
+    expect(data).toHaveProperty('healthScore');
+    expect(data).toHaveProperty('heatmap');
+    expect(data).toHaveProperty('issues');
+    expect(data).toHaveProperty('metrics');
+    expect(data).toHaveProperty('constitutionAlignment');
+    expect(data).toHaveProperty('exists');
+
+    // healthScore shape
+    expect(data.healthScore).not.toBeNull();
+    expect(data.healthScore).toHaveProperty('score');
+    expect(data.healthScore).toHaveProperty('zone');
+    expect(data.healthScore).toHaveProperty('factors');
+    expect(data.healthScore).toHaveProperty('trend');
+
+    // heatmap shape
+    expect(data.heatmap).toHaveProperty('columns');
+    expect(data.heatmap).toHaveProperty('rows');
+    expect(Array.isArray(data.heatmap.columns)).toBe(true);
+    expect(Array.isArray(data.heatmap.rows)).toBe(true);
+
+    // issues shape
+    expect(Array.isArray(data.issues)).toBe(true);
+    expect(data.issues.length).toBeGreaterThan(0);
+
+    // constitutionAlignment shape
+    expect(Array.isArray(data.constitutionAlignment)).toBe(true);
+
+    // exists flag
+    expect(data.exists).toBe(true);
+  });
+
+  // TS-034: GET /api/analyze/:feature returns empty state when no analysis.md
+  test('GET /api/analyze/:feature returns empty state when no analysis.md', async () => {
+    const res = await httpGet(port, '/api/analyze/002-payments');
+    expect(res.status).toBe(200);
+
+    const data = res.data;
+    expect(data.healthScore).toBeNull();
+    expect(data.heatmap).toEqual({ columns: [], rows: [] });
+    expect(data.issues).toEqual([]);
+    expect(data.metrics).toBeNull();
+    expect(data.constitutionAlignment).toEqual([]);
+    expect(data.exists).toBe(false);
+  });
+
+  // TS-035: WebSocket placeholder — verify endpoint shape includes fields for broadcast
+  test('GET /api/analyze/:feature response shape includes all fields needed for WebSocket broadcast', async () => {
+    const res = await httpGet(port, '/api/analyze/001-auth');
+    expect(res.status).toBe(200);
+
+    const data = res.data;
+    // All fields that would be broadcast via analyze_update WebSocket message
+    const requiredKeys = ['healthScore', 'heatmap', 'issues', 'metrics', 'constitutionAlignment', 'exists'];
+    for (const key of requiredKeys) {
+      expect(data).toHaveProperty(key);
+    }
+  });
+
+  // TS-036: healthScore factors have correct JSON structure
+  test('healthScore factors have exactly four keys with correct structure', async () => {
+    const res = await httpGet(port, '/api/analyze/001-auth');
+    expect(res.status).toBe(200);
+
+    const factors = res.data.healthScore.factors;
+    expect(factors).toHaveProperty('requirementsCoverage');
+    expect(factors).toHaveProperty('constitutionCompliance');
+    expect(factors).toHaveProperty('phaseSeparation');
+    expect(factors).toHaveProperty('testCoverage');
+
+    // Exactly four keys
+    expect(Object.keys(factors)).toHaveLength(4);
+
+    // Each factor has value (number) and label (string)
+    for (const key of Object.keys(factors)) {
+      expect(typeof factors[key].value).toBe('number');
+      expect(typeof factors[key].label).toBe('string');
+    }
+  });
+
+  // Plan cell data flows through API when 8-column coverage format is used
+  test('heatmap plan cells reflect parsed plan data from 8-column coverage table', async () => {
+    const res = await httpGet(port, '/api/analyze/001-auth');
+    expect(res.status).toBe(200);
+
+    const rows = res.data.heatmap.rows;
+    // FR-001 has Has Plan?=Yes, Plan Refs=KDD-1, KDD-3
+    const fr001 = rows.find(r => r.id === 'FR-001');
+    expect(fr001).toBeDefined();
+    expect(fr001.cells.plan.status).toBe('covered');
+    expect(fr001.cells.plan.refs).toEqual(['KDD-1', 'KDD-3']);
+
+    // FR-002 has Has Plan?=No
+    const fr002 = rows.find(r => r.id === 'FR-002');
+    expect(fr002).toBeDefined();
+    expect(fr002.cells.plan.status).toBe('missing');
+    expect(fr002.cells.plan.refs).toEqual([]);
+  });
+
+  // TS-037: Heatmap row cells have correct JSON structure
+  test('heatmap rows have correct cell structure', async () => {
+    const res = await httpGet(port, '/api/analyze/001-auth');
+    expect(res.status).toBe(200);
+
+    const rows = res.data.heatmap.rows;
+    expect(rows.length).toBeGreaterThan(0);
+
+    for (const row of rows) {
+      expect(typeof row.id).toBe('string');
+      expect(typeof row.text).toBe('string');
+      expect(row).toHaveProperty('cells');
+
+      // Each row has cells for tasks, tests, plan
+      expect(row.cells).toHaveProperty('tasks');
+      expect(row.cells).toHaveProperty('tests');
+      expect(row.cells).toHaveProperty('plan');
+
+      // Each cell has status and refs
+      for (const cellKey of ['tasks', 'tests', 'plan']) {
+        expect(row.cells[cellKey]).toHaveProperty('status');
+        expect(row.cells[cellKey]).toHaveProperty('refs');
+      }
+    }
+  });
+
+  // TS-038: Issue objects have correct JSON structure
+  test('issue objects have correct JSON structure', async () => {
+    const res = await httpGet(port, '/api/analyze/001-auth');
+    expect(res.status).toBe(200);
+
+    const issues = res.data.issues;
+    expect(issues.length).toBeGreaterThan(0);
+
+    for (const issue of issues) {
+      expect(typeof issue.id).toBe('string');
+      expect(typeof issue.category).toBe('string');
+      expect(typeof issue.severity).toBe('string');
+      expect(typeof issue.location).toBe('string');
+      expect(typeof issue.summary).toBe('string');
+      expect(typeof issue.recommendation).toBe('string');
+      expect(issue).toHaveProperty('resolved');
+    }
+  });
+
+  // Analyze endpoint returns 404 for nonexistent feature
+  test('GET /api/analyze/:feature returns 404 for nonexistent feature', async () => {
+    const res = await httpGet(port, '/api/analyze/999-nonexistent');
     expect(res.status).toBe(404);
   });
 });

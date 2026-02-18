@@ -924,14 +924,259 @@ function parseTaskTestRefs(tasks) {
 
   const refs = {};
   for (const task of tasks) {
-    const match = task.description ? task.description.match(/must pass ((?:TS-\d+(?:,\s*)?)+)/) : null;
-    if (match) {
-      refs[task.id] = match[1].split(/,\s*/).map(s => s.trim()).filter(Boolean);
-    } else {
-      refs[task.id] = [];
-    }
+    const matches = task.description ? task.description.match(/TS-\d+/g) : null;
+    refs[task.id] = matches ? [...new Set(matches)] : [];
   }
   return refs;
 }
 
-module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs };
+/**
+ * Extract a markdown section by heading (## Title), returning content until next ## heading.
+ */
+function extractSection(content, heading) {
+  const regex = new RegExp(`^## ${heading}\\s*$`, 'm');
+  const match = content.match(regex);
+  if (!match) return null;
+
+  const start = match.index + match[0].length;
+  const nextSection = content.indexOf('\n## ', start);
+  return content.substring(start, nextSection >= 0 ? nextSection : content.length).trim();
+}
+
+/**
+ * Parse rows from a pipe-delimited markdown table.
+ * Returns array of arrays (one per row, cells trimmed). Skips header separator row (|---|).
+ */
+function parseMarkdownTable(text) {
+  const lines = text.split('\n').filter(l => l.trim().startsWith('|'));
+  if (lines.length < 2) return [];
+
+  // Skip header row (index 0) and separator row (index 1)
+  return lines.slice(2).map(line =>
+    line.split('|').slice(1, -1).map(cell => cell.trim())
+  ).filter(cells => cells.length > 0 && cells.some(c => c !== ''));
+}
+
+/**
+ * Parse analysis.md Findings section.
+ * Extracts issues with id, category, severity, resolved, location, summary, recommendation.
+ *
+ * @param {string} content - Raw analysis.md content
+ * @returns {Array<{id: string, category: string, severity: string, resolved: boolean, location: string, summary: string, recommendation: string}>}
+ */
+function parseAnalysisFindings(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const section = extractSection(content, 'Findings');
+  if (!section) return [];
+
+  const rows = parseMarkdownTable(section);
+  if (rows.length === 0) return [];
+
+  return rows.map(cells => {
+    if (cells.length < 6) return null;
+
+    const rawSeverity = cells[2];
+    // Detect ~~SEVERITY~~ RESOLVED pattern
+    const resolvedMatch = rawSeverity.match(/~~(\w+)~~\s*RESOLVED/);
+    const resolved = !!resolvedMatch;
+    const severity = resolved ? resolvedMatch[1] : rawSeverity;
+
+    return {
+      id: cells[0],
+      category: cells[1],
+      severity,
+      resolved,
+      location: cells[3],
+      summary: cells[4],
+      recommendation: cells[5]
+    };
+  }).filter(Boolean);
+}
+
+/**
+ * Parse analysis.md Coverage Summary section.
+ * Handles both simple (Requirement, Has Task?, Notes) and
+ * detailed (Requirement, Has Task?, Task IDs, Has Test?, Test IDs, Status) formats.
+ *
+ * @param {string} content - Raw analysis.md content
+ * @returns {Array<{id: string, hasTask: boolean, taskIds: string[], hasTest: boolean, testIds: string[], status: string|null, notes: string}>}
+ */
+function parseAnalysisCoverage(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const section = extractSection(content, 'Coverage Summary');
+  if (!section) return [];
+
+  const rows = parseMarkdownTable(section);
+  if (rows.length === 0) return [];
+
+  // Detect format by number of columns in first data row
+  const hasPlanCols = rows[0].length >= 8;
+  const isDetailed = rows[0].length >= 6;
+
+  return rows.map(cells => {
+    const id = cells[0];
+    const hasTask = /^yes$/i.test(cells[1]);
+
+    if (isDetailed) {
+      // Detailed: Requirement | Has Task? | Task IDs | Has Test? | Test IDs | [Has Plan? | Plan Refs |] Status
+      const taskIds = parseIdList(cells[2]);
+      const hasTest = /^yes$/i.test(cells[3]);
+      const testIds = parseIdList(cells[4]);
+
+      if (hasPlanCols) {
+        const hasPlan = /^yes$/i.test(cells[5]);
+        const planRefs = parseIdList(cells[6]);
+        const status = cells[7] && cells[7] !== '—' && cells[7] !== '-' ? cells[7] : null;
+        return { id, hasTask, taskIds, hasTest, testIds, hasPlan, planRefs, status, notes: '' };
+      }
+
+      const status = cells[5] && cells[5] !== '—' && cells[5] !== '-' ? cells[5] : null;
+      return { id, hasTask, taskIds, hasTest, testIds, status, notes: '' };
+    } else {
+      // Simple: Requirement | Has Task? | Notes
+      const notes = cells[2] || '';
+      return { id, hasTask, taskIds: [], hasTest: false, testIds: [], status: null, notes };
+    }
+  });
+}
+
+/**
+ * Parse a comma-separated list of IDs (e.g., "T001, T002" or "TS-001, TS-037").
+ * Filters out dashes and empty entries.
+ */
+function parseIdList(cell) {
+  if (!cell || cell === '—' || cell === '-' || cell === '–') return [];
+  return cell.split(',').map(s => s.trim()).filter(s => s && s !== '—' && s !== '-' && s !== '–');
+}
+
+/**
+ * Parse analysis.md Metrics section.
+ * Handles both table format (| Metric | Value |) and bullet format (- Metric: Value).
+ *
+ * @param {string} content - Raw analysis.md content
+ * @returns {{totalRequirements: number, totalTasks: number, totalTestSpecs: number, requirementCoverage: string, requirementCoveragePct: number, testCoverage: string|null, testCoveragePct: number, criticalIssues: number, highIssues: number, mediumIssues: number, lowIssues: number}}
+ */
+function parseAnalysisMetrics(content) {
+  const defaults = {
+    totalRequirements: 0, totalTasks: 0, totalTestSpecs: 0,
+    requirementCoverage: '', requirementCoveragePct: 0,
+    testCoverage: null, testCoveragePct: 100,
+    criticalIssues: 0, highIssues: 0, mediumIssues: 0, lowIssues: 0
+  };
+  if (!content || typeof content !== 'string') return defaults;
+
+  const section = extractSection(content, 'Metrics');
+  if (!section) return defaults;
+
+  // Build key-value map from either table or bullet format
+  const kvMap = {};
+
+  // Try table format first
+  const tableRows = parseMarkdownTable(section);
+  if (tableRows.length > 0) {
+    for (const cells of tableRows) {
+      if (cells.length >= 2) kvMap[cells[0].toLowerCase()] = cells[1];
+    }
+  } else {
+    // Try bullet format: - Key: Value
+    const bulletRegex = /^-\s+(.+?):\s+(.+)$/gm;
+    let match;
+    while ((match = bulletRegex.exec(section)) !== null) {
+      kvMap[match[1].trim().toLowerCase()] = match[2].trim();
+    }
+  }
+
+  function findValue(keys) {
+    for (const key of keys) {
+      for (const [k, v] of Object.entries(kvMap)) {
+        if (k.includes(key)) return v;
+      }
+    }
+    return null;
+  }
+
+  function extractPct(raw) {
+    if (!raw) return null;
+    const pctMatch = raw.match(/(\d+)%/);
+    if (pctMatch) return parseInt(pctMatch[1], 10);
+    const fracMatch = raw.match(/\((\d+)%\)/);
+    if (fracMatch) return parseInt(fracMatch[1], 10);
+    return null;
+  }
+
+  const reqCovRaw = findValue(['requirement coverage']);
+  const testCovRaw = findValue(['test coverage']);
+
+  return {
+    totalRequirements: parseInt(findValue(['total requirements']) || '0', 10),
+    totalTasks: parseInt(findValue(['total tasks']) || '0', 10),
+    totalTestSpecs: parseInt(findValue(['total test spec']) || '0', 10),
+    requirementCoverage: reqCovRaw || '',
+    requirementCoveragePct: extractPct(reqCovRaw) || 0,
+    testCoverage: testCovRaw || null,
+    testCoveragePct: testCovRaw ? (extractPct(testCovRaw) || 0) : 100,
+    criticalIssues: parseInt(findValue(['critical']) || '0', 10),
+    highIssues: parseInt(findValue(['high']) || '0', 10),
+    mediumIssues: parseInt(findValue(['medium']) || '0', 10),
+    lowIssues: parseInt(findValue(['low']) || '0', 10)
+  };
+}
+
+/**
+ * Parse analysis.md Constitution Alignment section.
+ *
+ * @param {string} content - Raw analysis.md content
+ * @returns {Array<{principle: string, status: string, evidence: string}>}
+ */
+function parseConstitutionAlignment(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const section = extractSection(content, 'Constitution Alignment');
+  if (!section) return [];
+
+  // Check for "None detected" text
+  if (/none detected/i.test(section) && !section.includes('|')) return [];
+
+  const rows = parseMarkdownTable(section);
+  return rows.map(cells => {
+    if (cells.length < 3) return null;
+    return {
+      principle: cells[0],
+      status: cells[1],
+      evidence: cells[2]
+    };
+  }).filter(Boolean);
+}
+
+/**
+ * Parse analysis.md Phase Separation Violations section.
+ *
+ * @param {string} content - Raw analysis.md content
+ * @returns {Array<{artifact: string, status: string, severity: string|null}>}
+ */
+function parsePhaseSeparation(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const section = extractSection(content, 'Phase Separation Violations');
+  if (!section) return [];
+
+  // Check for "None detected" before the table
+  const noneIdx = section.search(/none detected/i);
+  const tableIdx = section.indexOf('|');
+  if (noneIdx >= 0 && (tableIdx < 0 || noneIdx < tableIdx)) return [];
+
+  const rows = parseMarkdownTable(section);
+  return rows.map(cells => {
+    if (cells.length < 2) return null;
+    const severity = cells.length >= 3 && cells[2] && cells[2] !== '—' && cells[2] !== '-' && cells[2] !== '–' ? cells[2] : null;
+    return {
+      artifact: cells[0],
+      status: cells[1],
+      severity
+    };
+  }).filter(Boolean);
+}
+
+module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation };

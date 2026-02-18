@@ -1,6 +1,6 @@
 {
   "name": "iikit-dashboard",
-  "version": "1.2.0",
+  "version": "1.3.1",
   "description": "Real-time dashboard for Intent Integrity Kit (IIKit) — visualizes every phase of specification-driven AI development",
   "main": "src/server.js",
   "bin": {
@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/intent-integrity-chain/iikit-dashboard"
+    "url": "git+https://github.com/intent-integrity-chain/iikit-dashboard.git"
   },
   "author": "Baruch Sadogursky",
   "license": "MIT",

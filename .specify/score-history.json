@@ -1,0 +1,14 @@
+{
+  "008-analyze-consistency": [
+    {
+      "timestamp": "2026-02-18T12:00:00Z",
+      "score": 96,
+      "coverage_pct": 100,
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 1,
+      "total_findings": 3
+    }
+  ]
+}

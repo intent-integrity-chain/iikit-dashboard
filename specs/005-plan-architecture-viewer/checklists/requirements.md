@@ -31,9 +31,9 @@
 
 ## Notes
 
-- 6 user stories covering all three sub-views + navigation + live updates + fallback
-- 18 functional requirements (FR-001 through FR-018)
+- 5 user stories covering all three sub-views + Tessl tiles + live updates
+- 21 functional requirements (FR-001 through FR-021)
 - 8 success criteria (SC-001 through SC-008)
-- 7 edge cases identified
+- 11 edge cases identified
 - No [NEEDS CLARIFICATION] markers — feature description was detailed enough
 - Depends on 002-intent-flow-pipeline (Phase 3 detail view from the pipeline)
