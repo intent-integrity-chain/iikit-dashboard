@@ -27,7 +27,7 @@ The pipeline bar at the top shows all nine IIKit workflow phases. Click any phas
 | **Spec** | Story map with swim lanes by priority + interactive requirements graph (US / FR / SC nodes and edges) |
 | **Clarify** | Q&A trail from clarification sessions, with clickable spec-item references that navigate back to the Spec view |
 | **Plan** | Tech stack badge wall, interactive file-structure tree (existing vs. planned files), rendered architecture diagram, and Tessl tile cards |
-| **Checklist** | *Coming soon* |
+| **Checklist** | Progress rings per checklist file with color coding (red/yellow/green), gate traffic light (OPEN/BLOCKED), and accordion detail view with CHK IDs and tag badges |
 | **Testify** | *Coming soon* |
 | **Tasks** | *Coming soon* |
 | **Analyze** | *Coming soon* |
@@ -52,6 +52,7 @@ The server reads directly from your project's `specs/` directory:
 | `spec.md` | User stories, requirements, success criteria, and clarification Q&A |
 | `plan.md` | Tech stack, file structure, and architecture diagram |
 | `tasks.md` | Task checkboxes grouped by `[US1]`, `[US2]` tags |
+| `checklists/*.md` | Checklist items with completion status, CHK IDs, and category groupings |
 | `CONSTITUTION.md` | Governance principles and obligation levels |
 | `tessl.json` | Installed Tessl tiles for the dependency panel |
 

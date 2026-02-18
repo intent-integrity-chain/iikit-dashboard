@@ -12,6 +12,7 @@ const { computeAssertionHash, checkIntegrity } = require('./integrity');
 const { computePipelineState } = require('./pipeline');
 const { computeStoryMapState } = require('./storymap');
 const { computePlanViewState } = require('./planview');
+const { computeChecklistViewState } = require('./checklist');
 
 /**
  * List features from specs/ directory.
@@ -167,6 +168,20 @@ function createServer({ projectPath, port = 3000 }) {
     }
   });
 
+  // API: checklist view state for a feature
+  app.get('/api/checklist/:feature', (req, res) => {
+    try {
+      const featureDir = path.join(projectPath, 'specs', req.params.feature);
+      if (!fs.existsSync(featureDir)) {
+        return res.status(404).json({ error: 'Feature not found' });
+      }
+      const checklist = computeChecklistViewState(projectPath, req.params.feature);
+      res.json(checklist);
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  });
+
   // API: board state for a feature
   app.get('/api/board/:feature', (req, res) => {
     try {
@@ -254,6 +269,14 @@ function createServer({ projectPath, port = 3000 }) {
                   type: 'planview_update',
                   feature: ws.currentFeature,
                   planview
+                }));
+              }
+              const checklist = computeChecklistViewState(projectPath, ws.currentFeature);
+              if (checklist) {
+                ws.send(JSON.stringify({
+                  type: 'checklist_update',
+                  feature: ws.currentFeature,
+                  checklist
                 }));
               }
             } catch {

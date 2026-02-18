@@ -1,4 +1,4 @@
-const { parseSpecStories, parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions } = require('../src/parser');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -984,5 +984,125 @@ Also no scenarios.
     const stories = parseSpecStories(content);
     expect(stories[0].scenarioCount).toBe(0);
     expect(stories[1].scenarioCount).toBe(0);
+  });
+});
+
+// TS-020 through TS-033: parseChecklistsDetailed
+describe('parseChecklistsDetailed', () => {
+  let tmpDir;
+
+  beforeEach(() => {
+    tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'checklist-detailed-test-'));
+  });
+
+  afterEach(() => {
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  // TS-020: Returns per-file item arrays with correct counts
+  test('returns per-file item arrays with correct counts', () => {
+    fs.writeFileSync(path.join(tmpDir, 'requirements.md'), '- [x] CHK-001 Req one\n- [x] CHK-002 Req two\n- [x] CHK-003 Req three\n- [ ] CHK-004 Req four\n- [ ] CHK-005 Req five\n');
+    fs.writeFileSync(path.join(tmpDir, 'ux.md'), '- [x] CHK-010 UX item one\n');
+    const result = parseChecklistsDetailed(tmpDir);
+    expect(result).toHaveLength(2);
+
+    const reqFile = result.find(f => f.filename === 'requirements.md');
+    const uxFile = result.find(f => f.filename === 'ux.md');
+
+    expect(reqFile).toBeDefined();
+    expect(reqFile.name).toBe('Requirements');
+    expect(reqFile.total).toBe(5);
+    expect(reqFile.checked).toBe(3);
+    expect(reqFile.items).toHaveLength(5);
+
+    expect(uxFile).toBeDefined();
+    expect(uxFile.name).toBe('Ux');
+    expect(uxFile.filename).toBe('ux.md');
+    expect(uxFile.total).toBe(1);
+    expect(uxFile.checked).toBe(1);
+    expect(uxFile.items).toHaveLength(1);
+  });
+
+  // TS-021: Percentage calculation rounds correctly
+  test('percentage calculation rounds correctly', () => {
+    fs.writeFileSync(path.join(tmpDir, 'review.md'), '- [x] CHK-001 Done\n- [ ] CHK-002 Not done\n- [ ] CHK-003 Not done\n');
+    // Need a second file so requirements.md-only filter doesn't kick in
+    const result = parseChecklistsDetailed(tmpDir);
+    const reviewFile = result.find(f => f.filename === 'review.md');
+    expect(reviewFile).toBeDefined();
+    // 1 checked, 2 unchecked = 1/3 * 100 = 33.33 -> Math.round = 33
+    expect(reviewFile.total).toBe(3);
+    expect(reviewFile.checked).toBe(1);
+  });
+
+  // TS-029: Extracts CHK ID and tags from items
+  test('extracts CHK ID and tags from items', () => {
+    fs.writeFileSync(path.join(tmpDir, 'spec.md'), '- [x] CHK-001 All stories have acceptance scenarios [spec]\n');
+    const result = parseChecklistsDetailed(tmpDir);
+    expect(result).toHaveLength(1);
+    const item = result[0].items[0];
+    expect(item.checked).toBe(true);
+    expect(item.chkId).toBe('CHK-001');
+    expect(item.text).toContain('All stories have acceptance scenarios');
+    expect(item.tags).toEqual(['spec']);
+  });
+
+  // TS-030: Handles items without CHK ID or tags
+  test('handles items without CHK ID or tags', () => {
+    fs.writeFileSync(path.join(tmpDir, 'review.md'), '- [ ] Edge cases identified\n');
+    const result = parseChecklistsDetailed(tmpDir);
+    expect(result).toHaveLength(1);
+    const item = result[0].items[0];
+    expect(item.checked).toBe(false);
+    expect(item.chkId).toBeNull();
+    expect(item.text).toBe('Edge cases identified');
+    expect(item.tags).toEqual([]);
+  });
+
+  // TS-031: Category assignment from nearest heading
+  test('category assignment from nearest heading', () => {
+    fs.writeFileSync(path.join(tmpDir, 'review.md'),
+      '## Requirement Completeness\n\n- [ ] CHK-001 First item\n- [ ] CHK-002 Second item\n\n## Clarity\n\n- [ ] CHK-003 Third item\n');
+    const result = parseChecklistsDetailed(tmpDir);
+    expect(result).toHaveLength(1);
+    const items = result[0].items;
+    expect(items).toHaveLength(3);
+    expect(items[0].category).toBe('Requirement Completeness');
+    expect(items[1].category).toBe('Requirement Completeness');
+    expect(items[2].category).toBe('Clarity');
+  });
+
+  // TS-032: Checklist name derived from filename
+  test('checklist name derived from filename', () => {
+    fs.writeFileSync(path.join(tmpDir, 'requirements.md'), '- [ ] Item\n');
+    fs.writeFileSync(path.join(tmpDir, 'api-design.md'), '- [ ] Item\n');
+    fs.writeFileSync(path.join(tmpDir, 'ux.md'), '- [ ] Item\n');
+    const result = parseChecklistsDetailed(tmpDir);
+    const names = result.map(f => f.name).sort();
+    expect(names).toContain('Requirements');
+    expect(names).toContain('Api Design');
+    expect(names).toContain('Ux');
+  });
+
+  // TS-033: Empty checklist file returns zero total
+  test('empty checklist file returns zero total and percentage', () => {
+    fs.writeFileSync(path.join(tmpDir, 'empty.md'), '# Just a heading\n\nSome text but no checkboxes.\n');
+    const result = parseChecklistsDetailed(tmpDir);
+    expect(result).toHaveLength(1);
+    expect(result[0].total).toBe(0);
+    expect(result[0].checked).toBe(0);
+  });
+
+  // Test 8: requirements.md-only filter returns empty array
+  test('requirements.md-only filter returns empty array', () => {
+    fs.writeFileSync(path.join(tmpDir, 'requirements.md'), '- [x] CHK-001 Done\n- [ ] CHK-002 Not done\n');
+    const result = parseChecklistsDetailed(tmpDir);
+    expect(result).toEqual([]);
+  });
+
+  // Test 9: Missing directory returns empty array
+  test('missing directory returns empty array', () => {
+    const result = parseChecklistsDetailed('/nonexistent/path/to/checklists');
+    expect(result).toEqual([]);
   });
 });

@@ -256,4 +256,45 @@ Description.
     expect(res.status).toBe(200);
     expect(Array.isArray(res.data.stories)).toBe(true);
   });
+
+  // TS-016: GET /api/checklist/:feature returns correct response shape
+  test('GET /api/checklist/:feature returns files array and gate object', async () => {
+    // Create checklist files for 001-auth
+    const checklistDir = path.join(testDir, 'specs', '001-auth', 'checklists');
+    fs.mkdirSync(checklistDir, { recursive: true });
+    fs.writeFileSync(path.join(checklistDir, 'ux.md'), '# UX\n\n- [x] CHK-001 Item 1\n- [ ] CHK-002 Item 2\n');
+
+    const res = await httpGet(port, '/api/checklist/001-auth');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.data.files)).toBe(true);
+    expect(res.data.files.length).toBeGreaterThan(0);
+
+    const file = res.data.files[0];
+    expect(file).toHaveProperty('name');
+    expect(file).toHaveProperty('filename');
+    expect(file).toHaveProperty('total');
+    expect(file).toHaveProperty('checked');
+    expect(file).toHaveProperty('percentage');
+    expect(file).toHaveProperty('color');
+    expect(file).toHaveProperty('items');
+
+    expect(res.data).toHaveProperty('gate');
+    expect(res.data.gate).toHaveProperty('status');
+    expect(res.data.gate).toHaveProperty('level');
+    expect(res.data.gate).toHaveProperty('label');
+  });
+
+  // TS-017: GET /api/checklist/:feature returns 404 for unknown feature
+  test('GET /api/checklist/:feature returns 404 for unknown feature', async () => {
+    const res = await httpGet(port, '/api/checklist/999-nonexistent');
+    expect(res.status).toBe(404);
+  });
+
+  // TS-018: GET /api/checklist/:feature returns empty files when no checklists
+  test('GET /api/checklist/:feature returns empty files with red gate when no checklists', async () => {
+    const res = await httpGet(port, '/api/checklist/002-payments');
+    expect(res.status).toBe(200);
+    expect(res.data.files).toEqual([]);
+    expect(res.data.gate).toEqual({ status: 'blocked', level: 'red', label: 'GATE: BLOCKED' });
+  });
 });
