@@ -1,0 +1,7 @@
+{
+  "testify": {
+    "assertion_hash": "110de136690402dc6a16bdaf83d37ee66c97670c7b03279c92538dda4a9547a1",
+    "generated_at": "2026-02-18T03:39:19Z",
+    "test_specs_file": "specs/007-testify-traceability/tests/test-specs.md"
+  }
+}

@@ -855,4 +855,83 @@ function parseResearchDecisions(content) {
   return decisions;
 }
 
-module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions };
+/**
+ * Parse tests/test-specs.md to extract test specification entries.
+ * Pattern: ### TS-XXX: Title, then **Type**: value, **Priority**: value, **Traceability**: refs
+ *
+ * @param {string} content - Raw markdown content of test-specs.md
+ * @returns {Array<{id: string, title: string, type: string, priority: string, traceability: string[]}>}
+ */
+function parseTestSpecs(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const specs = [];
+  const headingRegex = /### TS-(\d+): (.+)/g;
+  const headingStarts = [];
+  let match;
+
+  while ((match = headingRegex.exec(content)) !== null) {
+    headingStarts.push({
+      id: `TS-${match[1]}`,
+      title: match[2].trim(),
+      index: match.index
+    });
+  }
+
+  for (let i = 0; i < headingStarts.length; i++) {
+    const start = headingStarts[i].index;
+    const end = i + 1 < headingStarts.length ? headingStarts[i + 1].index : content.length;
+    const section = content.substring(start, end);
+
+    // Extract type
+    const typeMatch = section.match(/\*\*Type\*\*:\s*(acceptance|contract|validation)/);
+    const type = typeMatch ? typeMatch[1] : 'validation';
+
+    // Extract priority
+    const priorityMatch = section.match(/\*\*Priority\*\*:\s*(P\d+)/);
+    const priority = priorityMatch ? priorityMatch[1] : 'P3';
+
+    // Extract traceability — comma-separated IDs, filter to FR-/SC- only
+    let traceability = [];
+    const traceMatch = section.match(/\*\*Traceability\*\*:\s*(.+)/);
+    if (traceMatch) {
+      traceability = traceMatch[1]
+        .split(/,\s*/)
+        .map(s => s.trim())
+        .filter(s => /^(FR|SC)-\d+$/.test(s));
+    }
+
+    specs.push({
+      id: headingStarts[i].id,
+      title: headingStarts[i].title,
+      type,
+      priority,
+      traceability
+    });
+  }
+
+  return specs;
+}
+
+/**
+ * Extract "must pass TS-xxx" references from already-parsed task descriptions.
+ *
+ * @param {Array<{id: string, description: string}>} tasks - Parsed tasks array
+ * @returns {Object<string, string[]>} Map of taskId to testSpecIds array
+ */
+function parseTaskTestRefs(tasks) {
+  if (!tasks || !Array.isArray(tasks)) return {};
+
+  const refs = {};
+  for (const task of tasks) {
+    const match = task.description ? task.description.match(/must pass ((?:TS-\d+(?:,\s*)?)+)/) : null;
+    if (match) {
+      refs[task.id] = match[1].split(/,\s*/).map(s => s.trim()).filter(Boolean);
+    } else {
+      refs[task.id] = [];
+    }
+  }
+  return refs;
+}
+
+module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs };

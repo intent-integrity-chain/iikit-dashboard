@@ -297,4 +297,54 @@ Description.
     expect(res.data.files).toEqual([]);
     expect(res.data.gate).toEqual({ status: 'blocked', level: 'red', label: 'GATE: BLOCKED' });
   });
+
+  // T008: TS-021 — GET /api/testify/:feature returns complete TestifyViewState
+  test('GET /api/testify/:feature returns complete testify state', async () => {
+    // Feature 001-auth has spec.md, tasks.md, and tests/test-specs.md
+    const res = await httpGet(port, '/api/testify/001-auth');
+    expect(res.status).toBe(200);
+
+    const data = res.data;
+    expect(data).toHaveProperty('requirements');
+    expect(data).toHaveProperty('testSpecs');
+    expect(data).toHaveProperty('tasks');
+    expect(data).toHaveProperty('edges');
+    expect(data).toHaveProperty('gaps');
+    expect(data).toHaveProperty('pyramid');
+    expect(data).toHaveProperty('integrity');
+    expect(data).toHaveProperty('exists');
+
+    expect(Array.isArray(data.requirements)).toBe(true);
+    expect(Array.isArray(data.testSpecs)).toBe(true);
+    expect(Array.isArray(data.tasks)).toBe(true);
+    expect(Array.isArray(data.edges)).toBe(true);
+    expect(data.gaps).toHaveProperty('untestedRequirements');
+    expect(data.gaps).toHaveProperty('unimplementedTests');
+    expect(data.pyramid).toHaveProperty('acceptance');
+    expect(data.pyramid).toHaveProperty('contract');
+    expect(data.pyramid).toHaveProperty('validation');
+    expect(data.integrity).toHaveProperty('status');
+  });
+
+  // T008: TS-022 — GET /api/testify/:feature returns empty state when test-specs.md missing
+  test('GET /api/testify/:feature returns empty state when no test-specs.md', async () => {
+    // Feature 002-payments has no tests/test-specs.md
+    const res = await httpGet(port, '/api/testify/002-payments');
+    expect(res.status).toBe(200);
+
+    const data = res.data;
+    expect(data.exists).toBe(false);
+    expect(data.testSpecs).toEqual([]);
+    expect(data.edges).toEqual([]);
+    expect(data.pyramid.acceptance.count).toBe(0);
+    expect(data.pyramid.contract.count).toBe(0);
+    expect(data.pyramid.validation.count).toBe(0);
+    expect(data.integrity.status).toBe('missing');
+  });
+
+  // T008: GET /api/testify/:feature returns 404 for unknown feature
+  test('GET /api/testify/:feature returns 404 for unknown feature', async () => {
+    const res = await httpGet(port, '/api/testify/999-nonexistent');
+    expect(res.status).toBe(404);
+  });
 });
