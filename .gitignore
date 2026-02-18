@@ -4,5 +4,5 @@ node_modules/
 .tessl/tiles/
 
 # Agent skill symlinks (recreated by `tessl install`)
-.claude/skills/tessl:*
-.codex/skills/tessl:*
+.claude/skills/
+.codex/skills/
