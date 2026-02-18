@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>IIKit Kanban Board</title>
+  <title>IIKit Dashboard</title>
   <style>
     /* ====== CSS Custom Properties ====== */
     :root {
@@ -808,6 +808,11 @@
 
     .pipeline-connector.complete {
       background: var(--color-done);
+    }
+
+    .pipeline-redirect {
+      font-size: 8px;
+      opacity: 0.5;
     }
 
     .pipeline-node.optional .pipeline-label {
@@ -2270,9 +2275,34 @@
       .analyze-section.slide-in { animation: none; opacity: 1; transform: none; }
     }
 
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      padding: 10px 20px;
+      font-size: 13px;
+      box-shadow: var(--shadow-card-hover);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    .toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+      pointer-events: auto;
+    }
+
   </style>
 </head>
 <body>
+  <div id="toast" class="toast"></div>
   <!-- Header -->
   <header class="header" role="banner">
     <div class="header-left">
@@ -2306,7 +2336,7 @@
   <main class="content-area" role="main">
     <div id="contentArea">
       <div class="board-container">
-        <div id="board" class="board" role="region" aria-label="Kanban board">
+        <div id="board" class="board" role="region" aria-label="Dashboard board">
           <div class="loading" id="loadingState">
             <div class="loading-spinner" aria-label="Loading board data"></div>
           </div>
@@ -2379,7 +2409,7 @@
 
           node.innerHTML = `
             <div class="pipeline-dot ${phase.status}">${PHASE_ICONS[phase.status] || ''}</div>
-            <span class="pipeline-label">${escapeHtml(phase.name)}</span>
+            <span class="pipeline-label">${escapeHtml(phase.name)}${phase.id === 'tasks' ? ' <span class="pipeline-redirect" title="Opens Implement board">&#x2197;</span>' : ''}</span>
             <span class="pipeline-progress">${phase.progress || ''}</span>
           `;
 
@@ -2389,6 +2419,15 @@
       }
 
       function switchTab(phaseId) {
+        if (phaseId === 'tasks') {
+          // Tasks tab redirects to Implement (kanban board) since tasks are shown there
+          activeTab = 'implement';
+          if (currentPipeline) renderPipeline(currentPipeline);
+          renderBoardView();
+          showToast('Tasks are managed on the Implement board');
+          return;
+        }
+
         activeTab = phaseId;
         // Re-render pipeline to update active state
         if (currentPipeline) renderPipeline(currentPipeline);
@@ -2417,7 +2456,7 @@
       function renderBoardView() {
         contentArea.innerHTML = `
           <div class="board-container">
-            <div id="board" class="board" role="region" aria-label="Kanban board"></div>
+            <div id="board" class="board" role="region" aria-label="Dashboard board"></div>
           </div>`;
         // Re-assign boardEl reference
         const newBoardEl = document.getElementById('board');
@@ -4332,6 +4371,14 @@
       function escapeHtml(str) {
         if (!str) return '';
         return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      // ====== Toast ======
+      function showToast(message, duration = 2500) {
+        const el = document.getElementById('toast');
+        el.textContent = message;
+        el.classList.add('visible');
+        setTimeout(() => el.classList.remove('visible'), duration);
       }
 
       // ====== Integrity Badge ======
