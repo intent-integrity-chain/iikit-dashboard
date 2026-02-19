@@ -268,6 +268,60 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 
 ---
 
+## Bug Fix Tests
+
+### TS-018: Clarify empty state text alignment is correct
+
+**Source**: bugs.md:BUG-001:text-alignment
+**Type**: bugfix | **Priority**: P3
+
+**Given**: a feature where `/iikit-02-clarify` was run but found no ambiguities (no clarifications section in spec.md)
+**When**: the developer clicks the CLARIFY phase in the pipeline bar
+**Then**: the empty state text is properly aligned and does not break mid-word or wrap incorrectly
+
+**Traceability**: BUG-001, GitHub #26
+
+---
+
+### TS-019: Clarify empty state distinguishes "never run" from "run with no issues"
+
+**Source**: bugs.md:BUG-001:misleading-message
+**Type**: bugfix | **Priority**: P3
+
+**Given**: a feature where `/iikit-02-clarify` was run and completed successfully with no ambiguities found
+**When**: the developer clicks the CLARIFY phase in the pipeline bar
+**Then**: the empty state message indicates that clarification was completed with no issues found, NOT that "no clarification sessions have been recorded"
+
+**Traceability**: BUG-001, GitHub #26
+
+---
+
+### TS-020: Clarify empty state shows "not yet run" when clarify has not been executed
+
+**Source**: bugs.md:BUG-001:not-run-state
+**Type**: bugfix | **Priority**: P3
+
+**Given**: a feature where `/iikit-02-clarify` has never been run (no clarifications section, pipeline shows clarify as incomplete)
+**When**: the developer clicks the CLARIFY phase in the pipeline bar
+**Then**: the empty state message suggests running `/iikit-02-clarify` to identify and resolve ambiguities
+
+**Traceability**: BUG-001, GitHub #26
+
+---
+
+### TS-021: Pipeline phase tabs are uniform in size
+
+**Source**: bugs.md:BUG-002:inconsistent-sizes
+**Type**: bugfix | **Priority**: P3
+
+**Given**: a dashboard with the full pipeline bar (CONSTITUTION through IMPLEMENT)
+**When**: the pipeline bar renders
+**Then**: all phase tab buttons have consistent width and height, creating a uniform visual appearance
+
+**Traceability**: BUG-002, GitHub #27
+
+---
+
 ## Summary
 
 | Source | Count | Types |
@@ -275,4 +329,5 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 | spec.md | 10 | acceptance |
 | plan.md | 3 | contract |
 | data-model.md | 4 | validation |
-| **Total** | **17** | |
+| bugs.md | 4 | bugfix |
+| **Total** | **21** | |

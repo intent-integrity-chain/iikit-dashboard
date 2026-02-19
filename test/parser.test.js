@@ -1,4 +1,4 @@
-const { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation } = require('../src/parser');
+const { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation, parseBugs } = require('../src/parser');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -65,8 +65,10 @@ describe('parseTasks', () => {
     expect(tasks[0]).toEqual({
       id: 'T003',
       storyTag: 'US1',
+      bugTag: null,
       description: 'Implement WebSocket server',
-      checked: true
+      checked: true,
+      isBugFix: false
     });
   });
 
@@ -77,8 +79,10 @@ describe('parseTasks', () => {
     expect(tasks[0]).toEqual({
       id: 'T005',
       storyTag: 'US2',
+      bugTag: null,
       description: 'Add feature selector',
-      checked: false
+      checked: false,
+      isBugFix: false
     });
   });
 
@@ -100,10 +104,10 @@ describe('parseTasks', () => {
 `;
     const tasks = parseTasks(content);
     expect(tasks).toHaveLength(4);
-    expect(tasks[0]).toEqual({ id: 'T011', storyTag: 'US1', description: 'Add chokidar file watcher', checked: false });
-    expect(tasks[1]).toEqual({ id: 'T012', storyTag: 'US1', description: 'Add WebSocket server', checked: true });
-    expect(tasks[2]).toEqual({ id: 'T013', storyTag: 'US1', description: 'Implement GET endpoint', checked: false });
-    expect(tasks[3]).toEqual({ id: 'T014', storyTag: 'US2', description: 'Create index.html', checked: true });
+    expect(tasks[0]).toEqual({ id: 'T011', storyTag: 'US1', bugTag: null, description: 'Add chokidar file watcher', checked: false, isBugFix: false });
+    expect(tasks[1]).toEqual({ id: 'T012', storyTag: 'US1', bugTag: null, description: 'Add WebSocket server', checked: true, isBugFix: false });
+    expect(tasks[2]).toEqual({ id: 'T013', storyTag: 'US1', bugTag: null, description: 'Implement GET endpoint', checked: false, isBugFix: false });
+    expect(tasks[3]).toEqual({ id: 'T014', storyTag: 'US2', bugTag: null, description: 'Create index.html', checked: true, isBugFix: false });
   });
 
   test('handles tasks without story tag', () => {
@@ -1603,5 +1607,279 @@ None detected
 
   test('returns empty array for null', () => {
     expect(parsePhaseSeparation(null)).toEqual([]);
+  });
+});
+
+// === 009-bugs-tab: parseBugs tests (T001) ===
+// TS-030, TS-031, TS-032, TS-033, TS-043, TS-044
+
+describe('parseBugs', () => {
+  // TS-030: Bug ID must match BUG-\d+ pattern
+  test('extracts only entries with valid BUG-\\d+ IDs', () => {
+    const content = `# Bug Reports
+
+## BUG-001
+
+**Reported**: 2026-02-19
+**Severity**: critical
+**Status**: reported
+**GitHub Issue**: #13
+**Description**: Login fails with plus sign
+
+---
+
+## BUG-099
+
+**Reported**: 2026-02-18
+**Severity**: medium
+**Status**: fixed
+**GitHub Issue**: _(none)_
+**Description**: Dashboard flickers
+
+---
+
+## INVALID-BUG
+
+**Severity**: high
+**Status**: reported
+**Description**: Should be skipped
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toHaveLength(2);
+    expect(bugs[0].id).toBe('BUG-001');
+    expect(bugs[1].id).toBe('BUG-099');
+  });
+
+  // TS-031: Unrecognized severity defaults to medium
+  test('unrecognized severity defaults to medium', () => {
+    const content = `## BUG-001
+
+**Severity**: unknown
+**Status**: reported
+**Description**: Test bug
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toHaveLength(1);
+    expect(bugs[0].severity).toBe('medium');
+  });
+
+  // TS-032: Unrecognized status defaults to reported
+  test('unrecognized status defaults to reported', () => {
+    const content = `## BUG-001
+
+**Severity**: high
+**Status**: in-progress
+**Description**: Test bug
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toHaveLength(1);
+    expect(bugs[0].status).toBe('reported');
+  });
+
+  // TS-033: Missing bug fields default to null
+  test('missing fields default to null with correct defaults', () => {
+    const content = `## BUG-001
+
+**Severity**: critical
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toHaveLength(1);
+    expect(bugs[0].id).toBe('BUG-001');
+    expect(bugs[0].severity).toBe('critical');
+    expect(bugs[0].reported).toBeNull();
+    expect(bugs[0].status).toBe('reported');
+    expect(bugs[0].githubIssue).toBeNull();
+    expect(bugs[0].description).toBeNull();
+    expect(bugs[0].rootCause).toBeNull();
+    expect(bugs[0].fixReference).toBeNull();
+  });
+
+  // TS-043: parseBugs returns empty array for missing file (content is null/undefined)
+  test('returns empty array for null/undefined input', () => {
+    expect(parseBugs(null)).toEqual([]);
+    expect(parseBugs(undefined)).toEqual([]);
+  });
+
+  // TS-044: parseBugs returns empty array for empty file (content is empty string)
+  test('returns empty array for empty string', () => {
+    expect(parseBugs('')).toEqual([]);
+  });
+
+  test('returns empty array for file with no valid bug entries', () => {
+    const content = `# Bug Reports: empty-bugs-feature
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toEqual([]);
+  });
+
+  test('extracts all fields from a complete bug entry', () => {
+    const content = `## BUG-001
+
+**Reported**: 2026-02-19
+**Severity**: critical
+**Status**: reported
+**GitHub Issue**: #13
+**Description**: Login fails when email contains plus sign
+**Root Cause**: URL encoding issue
+**Fix Reference**: T-B001
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toHaveLength(1);
+    expect(bugs[0]).toEqual({
+      id: 'BUG-001',
+      reported: '2026-02-19',
+      severity: 'critical',
+      status: 'reported',
+      githubIssue: '#13',
+      description: 'Login fails when email contains plus sign',
+      rootCause: 'URL encoding issue',
+      fixReference: 'T-B001'
+    });
+  });
+
+  test('treats _(none)_ and _(empty until...)_ as null', () => {
+    const content = `## BUG-001
+
+**Severity**: low
+**Status**: reported
+**GitHub Issue**: _(none)_
+**Description**: Some bug
+**Root Cause**: _(empty until investigation)_
+**Fix Reference**: _(empty until implementation)_
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toHaveLength(1);
+    expect(bugs[0].githubIssue).toBeNull();
+    expect(bugs[0].rootCause).toBeNull();
+    expect(bugs[0].fixReference).toBeNull();
+  });
+
+  test('extracts multiple bugs from full bugs.md', () => {
+    const content = `# Bug Reports: test-feature
+
+## BUG-001
+
+**Reported**: 2026-02-19
+**Severity**: critical
+**Status**: reported
+**GitHub Issue**: #13
+**Description**: Login fails
+
+---
+
+## BUG-002
+
+**Reported**: 2026-02-18
+**Severity**: medium
+**Status**: fixed
+**GitHub Issue**: _(none)_
+**Description**: Dashboard flickers
+
+---
+
+## BUG-003
+
+**Reported**: 2026-02-17
+**Severity**: low
+**Status**: reported
+**GitHub Issue**: _(none)_
+**Description**: Tooltip not dismissing
+`;
+    const bugs = parseBugs(content);
+    expect(bugs).toHaveLength(3);
+    expect(bugs[0].id).toBe('BUG-001');
+    expect(bugs[0].severity).toBe('critical');
+    expect(bugs[1].id).toBe('BUG-002');
+    expect(bugs[1].status).toBe('fixed');
+    expect(bugs[2].id).toBe('BUG-003');
+    expect(bugs[2].severity).toBe('low');
+  });
+});
+
+// === 009-bugs-tab: Extended parseTasks tests (T002) ===
+// TS-034, TS-035, TS-045
+
+describe('parseTasks extended for bug fix tasks', () => {
+  // TS-045: Extended parseTasks regex matches both T\d+ and T-B\d+ formats
+  test('parses both regular and T-B prefixed tasks', () => {
+    const content = `# Tasks
+
+- [x] T001 [US1] Feature task
+- [ ] T-B001 [BUG-001] Bug fix task
+`;
+    const tasks = parseTasks(content);
+    expect(tasks).toHaveLength(2);
+
+    expect(tasks[0].id).toBe('T001');
+    expect(tasks[0].storyTag).toBe('US1');
+    expect(tasks[0].isBugFix).toBe(false);
+    expect(tasks[0].bugTag).toBeNull();
+
+    expect(tasks[1].id).toBe('T-B001');
+    expect(tasks[1].isBugFix).toBe(true);
+    expect(tasks[1].bugTag).toBe('BUG-001');
+    expect(tasks[1].storyTag).toBeNull();
+  });
+
+  // TS-034: FixTask ID must match T-B\d+ pattern
+  test('identifies T-B prefixed tasks as bug fixes', () => {
+    const content = `- [ ] T-B001 [BUG-001] Fix login
+- [x] T-B002 [BUG-001] Write regression test
+- [x] T001 [US1] Regular task
+- [ ] T002 [US2] Another regular task
+`;
+    const tasks = parseTasks(content);
+    expect(tasks).toHaveLength(4);
+
+    const bugFixes = tasks.filter(t => t.isBugFix);
+    expect(bugFixes).toHaveLength(2);
+    expect(bugFixes[0].id).toBe('T-B001');
+    expect(bugFixes[1].id).toBe('T-B002');
+
+    const regular = tasks.filter(t => !t.isBugFix);
+    expect(regular).toHaveLength(2);
+  });
+
+  // TS-035: FixTask bugTag must match BUG-\d+ pattern
+  test('extracts bugTag from [BUG-NNN] tags, null for invalid tags', () => {
+    const content = `- [ ] T-B001 [BUG-001] Fix login
+- [ ] T-B002 [INVALID] Fix signup
+`;
+    const tasks = parseTasks(content);
+    expect(tasks).toHaveLength(2);
+    expect(tasks[0].bugTag).toBe('BUG-001');
+    expect(tasks[1].bugTag).toBeNull();
+  });
+
+  test('T-B tasks with [P] marker parse correctly', () => {
+    const content = '- [ ] T-B003 [P] [BUG-002] Parallel bug fix task\n';
+    const tasks = parseTasks(content);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].id).toBe('T-B003');
+    expect(tasks[0].isBugFix).toBe(true);
+    expect(tasks[0].bugTag).toBe('BUG-002');
+    expect(tasks[0].checked).toBe(false);
+  });
+
+  test('checked T-B tasks have checked: true', () => {
+    const content = '- [x] T-B004 [BUG-002] Completed bug fix\n';
+    const tasks = parseTasks(content);
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0].checked).toBe(true);
+    expect(tasks[0].isBugFix).toBe(true);
+  });
+
+  test('existing parseTasks still works for regular tasks', () => {
+    const content = `- [x] T003 [US1] Implement WebSocket server
+- [ ] T005 [US2] Add feature selector
+- [ ] T006 [P] [US1] Parallel task
+- [ ] T001 Initialize package.json
+`;
+    const tasks = parseTasks(content);
+    expect(tasks).toHaveLength(4);
+    expect(tasks[0]).toMatchObject({ id: 'T003', storyTag: 'US1', checked: true, isBugFix: false });
+    expect(tasks[1]).toMatchObject({ id: 'T005', storyTag: 'US2', checked: false, isBugFix: false });
+    expect(tasks[2]).toMatchObject({ id: 'T006', storyTag: 'US1', isBugFix: false });
+    expect(tasks[3]).toMatchObject({ id: 'T001', storyTag: null, isBugFix: false });
   });
 });

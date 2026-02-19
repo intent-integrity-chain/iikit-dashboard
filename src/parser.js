@@ -57,23 +57,31 @@ function parseSpecStories(content) {
 /**
  * Parse tasks.md to extract tasks with checkbox status and story tags.
  * Pattern: - [x] TXXX [P]? [USy]? Description
+ * Extended: also matches T-B\d+ IDs and [BUG-\d+] tags for bug fix tasks.
  *
  * @param {string} content - Raw markdown content of tasks.md
- * @returns {Array<{id: string, storyTag: string|null, description: string, checked: boolean}>}
+ * @returns {Array<{id: string, storyTag: string|null, bugTag: string|null, description: string, checked: boolean, isBugFix: boolean}>}
  */
 function parseTasks(content) {
   if (!content || typeof content !== 'string') return [];
 
-  const regex = /- \[([ x])\] (T\d+)\s+(?:\[P\]\s*)?(?:\[(US\d+)\]\s*)?(.*)/g;
+  const regex = /- \[([ x])\] (T(?:-B)?\d+)\s+(?:\[P\]\s*)?(?:\[(US\d+|BUG-\d+)\]\s*)?(.*)/g;
   const tasks = [];
   let match;
 
   while ((match = regex.exec(content)) !== null) {
+    const id = match[2];
+    const tag = match[3] || null;
+    const isBugFix = id.startsWith('T-B');
+    const isBugTag = tag && /^BUG-\d+$/.test(tag);
+
     tasks.push({
-      id: match[2],
-      storyTag: match[3] || null,
+      id,
+      storyTag: (tag && !isBugTag) ? tag : null,
+      bugTag: isBugTag ? tag : null,
       description: match[4].trim(),
-      checked: match[1] === 'x'
+      checked: match[1] === 'x',
+      isBugFix
     });
   }
 
@@ -1179,4 +1187,75 @@ function parsePhaseSeparation(content) {
   }).filter(Boolean);
 }
 
-module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation };
+/**
+ * Parse bugs.md to extract bug entries.
+ * Pattern: ## BUG-NNN headings with field lines.
+ * Permissive parsing — returns [] on missing/empty/malformed input.
+ *
+ * @param {string} content - Raw markdown content of bugs.md
+ * @returns {Array<{id: string, reported: string|null, severity: string, status: string, githubIssue: string|null, description: string|null, rootCause: string|null, fixReference: string|null}>}
+ */
+function parseBugs(content) {
+  if (!content || typeof content !== 'string') return [];
+
+  const validSeverities = new Set(['critical', 'high', 'medium', 'low']);
+  const validStatuses = new Set(['reported', 'fixed']);
+
+  const headingRegex = /^## (BUG-\d+)\s*$/gm;
+  const bugStarts = [];
+  let match;
+
+  while ((match = headingRegex.exec(content)) !== null) {
+    bugStarts.push({ id: match[1], index: match.index });
+  }
+
+  const bugs = [];
+
+  for (let i = 0; i < bugStarts.length; i++) {
+    const start = bugStarts[i].index;
+    const end = i + 1 < bugStarts.length ? bugStarts[i + 1].index : content.length;
+    const section = content.substring(start, end);
+
+    const bug = {
+      id: bugStarts[i].id,
+      reported: extractField(section, 'Reported'),
+      severity: extractField(section, 'Severity') || 'medium',
+      status: extractField(section, 'Status') || 'reported',
+      githubIssue: extractField(section, 'GitHub Issue'),
+      description: extractField(section, 'Description'),
+      rootCause: extractField(section, 'Root Cause'),
+      fixReference: extractField(section, 'Fix Reference')
+    };
+
+    // Validate severity
+    if (!validSeverities.has(bug.severity)) {
+      bug.severity = 'medium';
+    }
+
+    // Validate status
+    if (!validStatuses.has(bug.status)) {
+      bug.status = 'reported';
+    }
+
+    bugs.push(bug);
+  }
+
+  return bugs;
+}
+
+/**
+ * Extract a **Field**: Value from a bug section.
+ * Returns null for _(none)_, _(empty...)_ patterns, and missing fields.
+ */
+function extractField(section, fieldName) {
+  const regex = new RegExp(`\\*\\*${fieldName}\\*\\*:\\s*(.+)`, 'm');
+  const match = section.match(regex);
+  if (!match) return null;
+
+  const value = match[1].trim();
+  if (!value || /^_\(/.test(value)) return null;
+
+  return value;
+}
+
+module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation, parseBugs };

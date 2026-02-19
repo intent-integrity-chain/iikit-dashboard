@@ -4,7 +4,7 @@
 
 **Reported**: 2026-02-18
 **Severity**: medium
-**Status**: reported
+**Status**: fixed
 **GitHub Issue**: #13
 
 **Description**: Show Tessl tile eval scores when available via API/MCP (deferred feature — FR-014 was specified but KDD-5 deferred implementation until API availability. Tessl MCP search now provides eval data.)
