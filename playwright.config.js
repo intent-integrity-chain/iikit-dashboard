@@ -4,7 +4,7 @@ module.exports = defineConfig({
   testDir: './test/visual',
   outputDir: './test/visual/test-results',
   snapshotDir: './test/visual/snapshots',
-  snapshotPathTemplate: '{snapshotDir}/{testFilePath}/{arg}{ext}',
+  snapshotPathTemplate: '{snapshotDir}/{testFilePath}/{platform}/{arg}{ext}',
   timeout: 30000,
   expect: {
     toHaveScreenshot: {
