@@ -2854,7 +2854,7 @@
         pipelineBar.appendChild(bugsGap);
 
         const bugsTab = document.createElement('button');
-        bugsTab.className = 'pipeline-node pipeline-node-bugs' + (activeTab === 'bugs' ? ' active' : '');
+        bugsTab.className = 'bugs-tab' + (activeTab === 'bugs' ? ' active' : '');
         bugsTab.setAttribute('data-view', 'bugs');
         bugsTab.setAttribute('tabindex', '0');
         if (activeTab === 'bugs') bugsTab.setAttribute('aria-current', 'true');
