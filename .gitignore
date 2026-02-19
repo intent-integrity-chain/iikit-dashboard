@@ -6,3 +6,9 @@ node_modules/
 # Agent skill symlinks (recreated by `tessl install`)
 .claude/skills/
 .codex/skills/
+
+# Dashboard runtime
+.specify/dashboard.pid.json
+
+# Playwright test artifacts
+test/visual/test-results/
