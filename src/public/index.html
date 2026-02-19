@@ -1675,6 +1675,64 @@
       100% { outline-color: var(--color-accent); }
     }
 
+    /* ====== Cross-Link Navigation ====== */
+    .cross-link {
+      cursor: pointer;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-decoration-color: var(--color-accent);
+      text-underline-offset: 2px;
+      transition: text-decoration-color var(--transition-fast);
+    }
+    .cross-link:hover {
+      text-decoration-style: solid;
+      text-decoration-color: var(--color-accent-hover);
+    }
+
+    .card.highlighted {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+      animation: highlight-pulse 1.5s ease-out;
+    }
+
+    .task-item.highlighted {
+      background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+      border-radius: var(--radius-sm);
+      animation: highlight-pulse 1.5s ease-out;
+    }
+
+    .checklist-item.highlighted {
+      background: color-mix(in srgb, var(--color-accent) 15%, transparent);
+      border-radius: var(--radius-sm);
+      animation: highlight-pulse 1.5s ease-out;
+    }
+
+    .clarify-entry.highlighted {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+      border-radius: var(--radius-sm);
+      animation: highlight-pulse 1.5s ease-out;
+    }
+
+    .sankey-node.task-checked .sankey-node-rect {
+      stroke: var(--color-done);
+      stroke-width: 2;
+    }
+
+    .cross-link-tip {
+      font-size: 11px;
+      font-style: italic;
+      color: var(--color-text-muted);
+      padding: 6px 12px;
+      user-select: none;
+    }
+
+    @keyframes highlight-pulse {
+      0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent) 40%, transparent); }
+      70% { box-shadow: 0 0 0 8px transparent; }
+      100% { box-shadow: 0 0 0 0 transparent; }
+    }
+
     /* Detail Panel — floating left sidebar */
     .detail-panel {
       position: fixed;
@@ -2358,6 +2416,7 @@
       let currentTestify = null;
       let currentAnalyze = null;
       let activeTab = null;
+      let externalSankeyHighlight = null;
       let ws = null;
       let reconnectTimer = null;
       let previousCardColumns = {}; // Track card positions for animations
@@ -2453,9 +2512,160 @@
         }
       }
 
+      // ====== Cross-Panel Navigation ======
+      const CROSS_LINK_MOD_KEY = /Mac|iPhone|iPad/.test(navigator.platform || '') ? '\u2318' : 'Ctrl';
+
+      async function navigateToPanel(panelId, entityId) {
+        switchTab(panelId);
+
+        // Sentinel elements per panel — poll until the panel has rendered
+        const sentinels = {
+          spec: '.graph-node', testify: '.sankey-node', implement: '.card',
+          checklist: '.checklist-item', clarify: '.clarify-entry', analyze: '.heatmap-row'
+        };
+        const sel = sentinels[panelId];
+        if (sel) {
+          for (let i = 0; i < 30; i++) {
+            if (contentArea.querySelector(sel)) break;
+            await new Promise(r => setTimeout(r, 50));
+          }
+        }
+
+        // Dispatch to panel-specific highlight
+        const highlighters = {
+          spec: highlightSpecEntity,
+          testify: highlightTestifyEntity,
+          implement: highlightBoardEntity,
+          checklist: highlightChecklistEntity,
+          clarify: highlightClarifyEntity
+        };
+        const fn = highlighters[panelId];
+        if (fn) fn(entityId);
+      }
+
+      // Delegated Cmd/Ctrl+click handler for all cross-links
+      contentArea.addEventListener('click', (e) => {
+        if (!(e.metaKey || e.ctrlKey)) return;
+        const link = e.target.closest('[data-cross-target]');
+        if (link) {
+          e.preventDefault();
+          e.stopPropagation();
+          navigateToPanel(link.dataset.crossTarget, link.dataset.crossId);
+        }
+      });
+
+      // ====== Panel-Specific Highlight Functions ======
+
+      function highlightSpecEntity(entityId) {
+        // Only normalize US refs (US-2 → US2); FR/SC keep their hyphens (SC-007 stays SC-007)
+        const nodeId = entityId.replace(/^US-/i, 'US');
+        highlightGraphNode(nodeId);
+
+        // Scroll to story card (for US refs) or graph node (for FR/SC)
+        const card = contentArea.querySelector(`.story-card[data-story-id="${nodeId}"]`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          card.classList.add('highlighted');
+          setTimeout(() => card.classList.remove('highlighted'), 2000);
+          const story = currentStoryMap?.stories?.find(s => s.id === nodeId);
+          if (story) showDetailPanel(nodeId, 'us', story.title, story.body || '');
+          return;
+        }
+        const nodeEl = contentArea.querySelector(`.graph-node[data-id="${nodeId}"]`);
+        if (nodeEl) {
+          nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const type = nodeId.startsWith('FR') ? 'fr' : 'sc';
+          showDetailPanel(nodeId, type, nodeId, nodeEl.dataset.desc || '');
+        }
+      }
+
+      function highlightTestifyEntity(entityId) {
+        if (externalSankeyHighlight) {
+          externalSankeyHighlight(entityId);
+        }
+        const nodeEl = contentArea.querySelector(`.sankey-node[data-node-id="${entityId}"]`);
+        if (nodeEl) {
+          nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+
+      function highlightBoardEntity(entityId) {
+        // Task IDs (T prefix): find .task-id span by text, expand list, highlight
+        if (/^T\d+$/i.test(entityId)) {
+          const taskIds = contentArea.querySelectorAll('.task-id');
+          for (const span of taskIds) {
+            if (span.textContent.trim() === entityId) {
+              const taskItem = span.closest('.task-item');
+              const taskList = span.closest('.task-list');
+              // Expand collapsed task list
+              if (taskList && taskList.classList.contains('collapsed')) {
+                const btn = taskList.previousElementSibling;
+                if (btn && btn.classList.contains('task-toggle')) {
+                  btn.click();
+                }
+              }
+              if (taskItem) {
+                taskItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                taskItem.classList.add('highlighted');
+                setTimeout(() => taskItem.classList.remove('highlighted'), 2000);
+              }
+              return;
+            }
+          }
+        }
+
+        // Story IDs (US prefix): find .card[data-card-id]
+        const card = contentArea.querySelector(`.card[data-card-id="${entityId}"]`);
+        if (card) {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          card.classList.add('highlighted');
+          setTimeout(() => card.classList.remove('highlighted'), 2000);
+        }
+      }
+
+      function highlightChecklistEntity(entityId) {
+        // Search tags and inline cross-link spans for the entity ID
+        const matches = contentArea.querySelectorAll(`.checklist-item-tag, .checklist-item .cross-link[data-cross-id="${entityId}"]`);
+        for (const el of matches) {
+          if (el.dataset.crossId === entityId || el.textContent.trim() === entityId) {
+            const item = el.closest('.checklist-item');
+            // Expand parent section if collapsed
+            const detail = el.closest('.checklist-detail');
+            if (detail && !detail.classList.contains('open')) {
+              const filename = detail.id?.replace('checklist-detail-', '');
+              if (filename && currentChecklist) {
+                toggleChecklistExpand(filename, currentChecklist);
+                // Re-query after re-render
+                setTimeout(() => highlightChecklistEntity(entityId), 100);
+                return;
+              }
+            }
+            if (item) {
+              item.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              item.classList.add('highlighted');
+              setTimeout(() => item.classList.remove('highlighted'), 2000);
+            }
+            return;
+          }
+        }
+      }
+
+      function highlightClarifyEntity(entityId) {
+        const ref = contentArea.querySelector(`.clarify-ref[data-ref-id="${entityId}"]`);
+        if (ref) {
+          const entry = ref.closest('.clarify-entry');
+          if (entry) {
+            entry.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            entry.classList.add('highlighted');
+            setTimeout(() => entry.classList.remove('highlighted'), 2000);
+          }
+        }
+      }
+
       function renderBoardView() {
         contentArea.innerHTML = `
           <div class="board-container">
+            <div class="cross-link-tip">Tip: ${CROSS_LINK_MOD_KEY}+click any identifier to navigate to its linked panel</div>
             <div id="board" class="board" role="region" aria-label="Dashboard board"></div>
           </div>`;
         // Re-assign boardEl reference
@@ -2542,6 +2752,8 @@
         });
         html += '</div>';
 
+        html += `<div class="cross-link-tip">Tip: ${CROSS_LINK_MOD_KEY}+click any FR/SC tag to navigate to its linked panel</div>`;
+
         // Accordion detail panels
         data.files.forEach((file) => {
           const isExpanded = expandedChecklist === file.filename;
@@ -2600,13 +2812,22 @@
             ? `<span class="checklist-item-id">${escapeHtml(item.chkId)}</span>`
             : '';
 
-          const tags = (item.tags || []).map(t =>
-            `<span class="checklist-item-tag">${escapeHtml(t)}</span>`
-          ).join('');
+          const tags = (item.tags || []).map(t => {
+            const isCrossLink = /^(FR|SC)-?\d+$/i.test(t);
+            if (isCrossLink) {
+              return `<span class="checklist-item-tag cross-link" data-cross-target="spec" data-cross-id="${escapeHtml(t)}">${escapeHtml(t)}</span>`;
+            }
+            return `<span class="checklist-item-tag">${escapeHtml(t)}</span>`;
+          }).join('');
+
+          const linkedText = escapeHtml(item.text).replace(
+            /\b((?:FR|SC)-\d+)\b/g,
+            '<span class="cross-link" data-cross-target="spec" data-cross-id="$1">$1</span>'
+          );
 
           html += `<div class="checklist-item">
             ${icon}${chkId}
-            <span style="flex:1">${escapeHtml(item.text)}</span>
+            <span style="flex:1">${linkedText}</span>
             ${tags}
           </div>`;
         });
@@ -2656,6 +2877,8 @@
 
         // Integrity seal
         html += renderIntegritySeal(data.integrity);
+
+        html += `<div class="cross-link-tip">Tip: ${CROSS_LINK_MOD_KEY}+click any identifier to navigate to its linked panel</div>`;
 
         // Sankey diagram
         html += renderSankeyDiagram(data);
@@ -2743,10 +2966,20 @@
           midY += groupH + GROUP_GAP;
         }
 
-        // Right column: tasks
+        // Right column: tasks — mark completed tasks from board data
+        const checkedTaskIds = new Set();
+        if (currentBoard) {
+          for (const cards of [currentBoard.todo, currentBoard.in_progress, currentBoard.done]) {
+            for (const card of (cards || [])) {
+              for (const t of (card.tasks || [])) {
+                if (t.checked) checkedTaskIds.add(t.id);
+              }
+            }
+          }
+        }
         const taskNodes = tasks.map((t, i) => ({
           ...t, x: COL_RIGHT, y: PAD + 30 + i * (NODE_H + NODE_GAP),
-          col: 'right', isGap: false
+          col: 'right', isGap: false, isChecked: checkedTaskIds.has(t.id)
         }));
 
         // SVG height
@@ -2866,7 +3099,7 @@
           for (const n of nodes) {
             const w = n.w || NODE_W;
             const chain = Array.from(getDirectedChain(n.id)).join(' ');
-            const gapClass = n.isGap ? ' gap-node' : '';
+            const gapClass = n.isGap ? ' gap-node' : (n.isChecked ? ' task-checked' : '');
             const isUntestedReq = gaps.untestedRequirements.includes(n.id);
             const isUnimplTest = gaps.unimplementedTests.includes(n.id);
             let ariaDesc = n.id;
@@ -2887,8 +3120,17 @@
             const desc = n.text || n.title || n.description || '';
             const truncDesc = desc.length > 22 ? desc.substring(0, 22) + '...' : desc;
 
+            // Cross-link: requirements → spec, tasks → implement, gap nodes → checklist
+            let crossAttr = '';
+            if (n.isGap) {
+              crossAttr = ` data-cross-target="checklist" data-cross-id="${escapeHtml(n.id)}"`;
+            } else if (n.col === 'left') {
+              crossAttr = ` data-cross-target="spec" data-cross-id="${escapeHtml(n.id)}"`;
+            } else if (n.col === 'right') {
+              crossAttr = ` data-cross-target="implement" data-cross-id="${escapeHtml(n.id)}"`;
+            }
             s += `<g class="sankey-node${gapClass}" tabindex="0" role="button"
-              data-node-id="${escapeHtml(n.id)}" data-chain="${escapeHtml(chain)}"
+              data-node-id="${escapeHtml(n.id)}" data-chain="${escapeHtml(chain)}"${crossAttr}
               aria-describedby="desc-${escapeHtml(n.id)}">
               <title>${escapeHtml(n.id)}: ${escapeHtml(desc)}${isUntestedReq ? ' (untested)' : ''}${isUnimplTest ? ' (unimplemented)' : ''}</title>
               <desc id="desc-${escapeHtml(n.id)}">${escapeHtml(ariaDesc)}</desc>
@@ -2936,6 +3178,9 @@
         const allElements = [...allNodes, ...allFlows];
         let lockedChain = null; // Click locks the highlight
 
+        // Expose highlight to cross-panel navigation
+        externalSankeyHighlight = (nodeId) => { lockedChain = nodeId; highlightChain(nodeId); };
+
         function highlightChain(nodeId) {
           // Get full chain from data-chain attribute
           const nodeEl = svgEl.querySelector(`[data-node-id="${nodeId}"]`);
@@ -2981,8 +3226,9 @@
             if (!lockedChain) highlightChain(nodeId);
           });
           node.addEventListener('mouseleave', clearHighlight);
-          // Click: lock/unlock chain highlight
-          node.addEventListener('click', () => {
+          // Click: lock/unlock chain highlight (skip if Cmd/Ctrl for cross-navigation)
+          node.addEventListener('click', (e) => {
+            if (e.metaKey || e.ctrlKey) return;
             if (lockedChain === nodeId) {
               lockedChain = null;
               clearHighlight();
@@ -3057,6 +3303,7 @@
         contentArea.innerHTML = `
           <div class="storymap-view" role="region" aria-label="Spec Story Map">
             <div class="storymap-main">
+              <div class="cross-link-tip">Tip: ${CROSS_LINK_MOD_KEY}+click any identifier to navigate to its linked panel</div>
               <div class="storymap-section-title">Story Map</div>
               <div class="swim-lanes" role="list" aria-label="User stories by priority"></div>
               <div class="storymap-section-title">Requirements Graph</div>
@@ -3095,7 +3342,7 @@
             <div class="swim-lane-cards">`;
           for (const story of stories) {
             const refs = (story.requirementRefs || []).map(r => `<span class="story-card-badge">${escapeHtml(r)}</span>`).join('');
-            html += `<div class="story-card" data-story-id="${escapeHtml(story.id)}" tabindex="0" role="button" aria-label="${escapeHtml(story.title)}">
+            html += `<div class="story-card" data-story-id="${escapeHtml(story.id)}" data-cross-target="implement" data-cross-id="${escapeHtml(story.id)}" tabindex="0" role="button" aria-label="${escapeHtml(story.title)}">
               <div class="story-card-header">
                 <span class="story-card-id">${escapeHtml(story.id)}</span>
                 <span class="story-card-priority ${story.priority.toLowerCase()}">${escapeHtml(story.priority)}</span>
@@ -3114,6 +3361,7 @@
         // Story card click → highlight graph node + show detail (FR-016)
         container.querySelectorAll('.story-card').forEach(card => {
           card.addEventListener('click', (e) => {
+            if (e.metaKey || e.ctrlKey) return; // Let cross-link handler handle Cmd/Ctrl+click
             const storyId = card.dataset.storyId;
             highlightGraphNode(storyId);
             const story = data.stories.find(s => s.id === storyId);
@@ -3229,7 +3477,8 @@
         const radius = { us: 18, fr: 14, sc: 12 };
         for (const n of nodes) {
           const r = radius[n.type] || 14;
-          svgContent += `<g class="graph-node graph-node-${n.type}" data-id="${n.id}" data-desc="${escapeHtml(n.desc)}" tabindex="0" role="button" aria-label="${n.label}: ${escapeHtml(n.desc)}">
+          const crossTarget = n.type === 'us' ? 'implement' : 'testify';
+          svgContent += `<g class="graph-node graph-node-${n.type}" data-id="${n.id}" data-desc="${escapeHtml(n.desc)}" data-cross-target="${crossTarget}" data-cross-id="${n.id}" tabindex="0" role="button" aria-label="${n.label}: ${escapeHtml(n.desc)}">
             <circle cx="${n.x}" cy="${n.y}" r="${r}" stroke="var(--color-bg)" stroke-width="2"/>
             <text x="${n.x}" y="${n.y + r + 14}">${n.label}</text>
           </g>`;
@@ -3239,6 +3488,7 @@
 
         // Click-to-highlight + detail panel (FR-006)
         svg.addEventListener('click', (e) => {
+          if (e.metaKey || e.ctrlKey) return; // Let cross-link handler handle Cmd/Ctrl+click
           const nodeEl = e.target.closest('.graph-node');
           if (nodeEl) {
             const id = nodeEl.dataset.id;
@@ -3283,6 +3533,7 @@
         let dragOffset = { x: 0, y: 0 };
 
         svg.addEventListener('mousedown', (e) => {
+          if (e.metaKey || e.ctrlKey) return; // Don't drag on Cmd/Ctrl+click
           const nodeEl = e.target.closest('.graph-node');
           if (!nodeEl) return;
           e.preventDefault();
@@ -3383,6 +3634,19 @@
           .replace(/\*(.+?)\*/g, '<em>$1</em>')
           .replace(/^(\d+)\.\s+/gm, '<br>$1. ');
 
+        // Check for related clarifications
+        let clarifyLink = '';
+        if (currentStoryMap && currentStoryMap.clarifications) {
+          const hasClarify = currentStoryMap.clarifications.some(c =>
+            c.refs && c.refs.some(r => r === id || r.replace(/^(US|FR|SC)-/i, (_, p) => p.toUpperCase()) === id)
+          );
+          if (hasClarify) {
+            clarifyLink = `<div style="margin-top:12px;padding-top:8px;border-top:1px solid var(--color-border-subtle)">
+              <a href="#" class="clarify-nav-link" data-entity-id="${escapeHtml(id)}" style="font-size:12px;color:var(--color-accent);cursor:pointer;text-decoration:underline">View Clarifications &rarr;</a>
+            </div>`;
+          }
+        }
+
         slot.innerHTML = `
           <div class="detail-panel" role="region" aria-label="Detail view for ${escapeHtml(id)}">
             <div class="detail-panel-header">
@@ -3391,9 +3655,17 @@
             </div>
             <div class="detail-panel-title">${escapeHtml(title)}</div>
             <div class="detail-panel-body">${rendered}</div>
+            ${clarifyLink}
           </div>`;
 
         slot.querySelector('.detail-panel-close').addEventListener('click', closeDetailPanel);
+        const clarifyNav = slot.querySelector('.clarify-nav-link');
+        if (clarifyNav) {
+          clarifyNav.addEventListener('click', (e) => {
+            e.preventDefault();
+            navigateToPanel('clarify', clarifyNav.dataset.entityId);
+          });
+        }
         slot.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
 
@@ -3458,6 +3730,7 @@
             <span class="clarify-title">Clarification Trail</span>
             <span class="clarify-count">${clarifications.length} Q&amp;A${clarifications.length !== 1 ? 's' : ''}</span>
           </div>
+          <div class="cross-link-tip">Tip: ${CROSS_LINK_MOD_KEY}+click any identifier to navigate to its linked panel</div>
           <div class="clarify-sessions">`;
 
         for (const [session, entries] of Object.entries(sessions)) {
@@ -3491,40 +3764,8 @@
       }
 
       async function navigateToSpecItem(refId) {
-        // Normalize: clarification refs use US-2 but parser creates US2
-        const nodeId = refId.replace(/^US-/, 'US');
-
-        // Switch to Spec tab and wait for async render to complete
-        switchTab('spec');
-        // Poll until the graph SVG has rendered (async fetch may take time)
-        for (let i = 0; i < 20; i++) {
-          if (contentArea.querySelector('.graph-node')) break;
-          await new Promise(r => setTimeout(r, 50));
-        }
-
-        // Highlight the node in the graph
-        highlightGraphNode(nodeId);
-
-        // For US refs, scroll to and highlight the story card
-        const card = contentArea.querySelector(`.story-card[data-story-id="${nodeId}"]`);
-        if (card) {
-          card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          card.classList.add('highlighted');
-          setTimeout(() => card.classList.remove('highlighted'), 2000);
-          // Show detail for the story
-          const story = currentStoryMap?.stories?.find(s => s.id === nodeId);
-          if (story) showDetailPanel(nodeId, 'us', story.title, story.body || '');
-          return;
-        }
-
-        // For FR/SC refs, scroll to the graph node
-        const nodeEl = contentArea.querySelector(`.graph-node[data-id="${nodeId}"]`);
-        if (nodeEl) {
-          nodeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          const type = nodeId.startsWith('FR') ? 'fr' : 'sc';
-          const desc = nodeEl.dataset.desc || '';
-          showDetailPanel(nodeId, type, nodeId, desc);
-        }
+        // Thin wrapper — delegates to generic cross-panel navigation
+        navigateToPanel('spec', refId);
       }
 
       // ====== Constitution View ======
@@ -3754,6 +3995,7 @@
 
         // Coverage Heatmap Section
         html += '<div class="analyze-section" style="animation-delay: 0.1s">';
+        html += `<div class="cross-link-tip">Tip: ${CROSS_LINK_MOD_KEY}+click any identifier to navigate to its linked panel</div>`;
         html += '<div class="analyze-section-header">Coverage Heatmap</div>';
         html += renderHeatmap(data.heatmap);
         html += '</div>';
@@ -4337,7 +4579,7 @@
         const priorityClass = card.priority ? card.priority.toLowerCase() : 'p3';
 
         el.innerHTML = `
-          <div class="card-id">${card.id}</div>
+          <div class="card-id cross-link" data-cross-target="spec" data-cross-id="${card.id}">${card.id}</div>
           <div class="card-header">
             <div class="card-title" title="${escapeHtml(card.title)}">${escapeHtml(card.title)}</div>
             <span class="priority-badge ${priorityClass}" aria-label="Priority ${card.priority}">${card.priority}</span>
@@ -4359,7 +4601,7 @@
             ${(card.tasks || []).map(t => `
               <li class="task-item ${t.checked ? 'checked' : ''}">
                 <span class="task-checkbox ${t.checked ? 'checked' : ''}" aria-hidden="true"></span>
-                <span class="task-id">${t.id}</span>
+                <span class="task-id cross-link" data-cross-target="testify" data-cross-id="${t.id}">${t.id}</span>
                 <span class="task-description">${escapeHtml(t.description)}</span>
               </li>
             `).join('')}
