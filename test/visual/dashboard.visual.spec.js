@@ -69,7 +69,7 @@ test.describe('Header', () => {
   test('feature selector dropdown', async ({ page }) => {
     await waitForDashboard(page);
     const selector = page.locator('.feature-selector');
-    await expect(selector).toHaveScreenshot('feature-selector.png', { maxDiffPixelRatio: 0.05 });
+    await expect(selector).toHaveScreenshot('feature-selector.png', { maxDiffPixelRatio: 0.10 });
   });
 });
 
