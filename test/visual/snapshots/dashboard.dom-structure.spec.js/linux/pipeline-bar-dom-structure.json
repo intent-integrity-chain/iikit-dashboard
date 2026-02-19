@@ -324,9 +324,8 @@
     {
       "tag": "button",
       "classes": [
-        "muted",
-        "pipeline-node",
-        "pipeline-node-bugs"
+        "bugs-tab",
+        "muted"
       ],
       "dataAttrs": {
         "data-view": "bugs"
