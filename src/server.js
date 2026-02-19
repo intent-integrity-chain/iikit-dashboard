@@ -99,6 +99,33 @@ function getBoardState(projectPath, featureId) {
 }
 
 /**
+ * Write a pidfile with metadata so external scripts can identify this dashboard instance.
+ */
+function writePidfile(projectPath, port) {
+  const resolved = path.resolve(projectPath);
+  const specifyDir = path.join(resolved, '.specify');
+  fs.mkdirSync(specifyDir, { recursive: true });
+  const pidData = {
+    pid: process.pid,
+    port,
+    directory: resolved,
+    startedAt: new Date().toISOString()
+  };
+  fs.writeFileSync(path.join(specifyDir, 'dashboard.pid.json'), JSON.stringify(pidData, null, 2));
+}
+
+/**
+ * Remove the pidfile on shutdown.
+ */
+function removePidfile(projectPath) {
+  try {
+    fs.unlinkSync(path.join(path.resolve(projectPath), '.specify', 'dashboard.pid.json'));
+  } catch (err) {
+    if (err.code !== 'ENOENT') throw err;
+  }
+}
+
+/**
  * Create and configure the Express server with WebSocket support.
  *
  * @param {Object} options
@@ -107,10 +134,16 @@ function getBoardState(projectPath, featureId) {
  * @returns {Promise<{server: http.Server, port: number, wss: WebSocketServer}>}
  */
 function createServer({ projectPath, port = 3000 }) {
+  const resolvedPath = path.resolve(projectPath);
   const app = express();
 
   // Serve static files from src/public
   app.use(express.static(path.join(__dirname, 'public')));
+
+  // API: project metadata
+  app.get('/api/meta', (req, res) => {
+    res.json({ projectPath: resolvedPath });
+  });
 
   // API: list features
   app.get('/api/features', (req, res) => {
@@ -363,9 +396,10 @@ function createServer({ projectPath, port = 3000 }) {
   return new Promise((resolve) => {
     server.listen(port, () => {
       const actualPort = server.address().port;
-      resolve({ server, port: actualPort, wss, watcher });
+      writePidfile(resolvedPath, actualPort);
+      resolve({ server, port: actualPort, wss, watcher, projectPath: resolvedPath });
     });
   });
 }
 
-module.exports = { createServer, listFeatures, getBoardState };
+module.exports = { createServer, listFeatures, getBoardState, removePidfile };

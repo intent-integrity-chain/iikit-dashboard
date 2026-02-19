@@ -2,11 +2,11 @@
 'use strict';
 
 const path = require('path');
-const { createServer } = require('../src/server');
+const { createServer, removePidfile } = require('../src/server');
 
 // Parse arguments
 const args = process.argv.slice(2);
-let projectPath = process.cwd();
+let projectPath = path.resolve(process.cwd());
 let port = 3000;
 
 for (let i = 0; i < args.length; i++) {
@@ -46,6 +46,7 @@ async function main() {
     // Handle graceful shutdown
     process.on('SIGINT', () => {
       console.log('\n  Shutting down...');
+      removePidfile(projectPath);
       result.server.close(() => {
         if (result.watcher) result.watcher.close();
         process.exit(0);
@@ -53,6 +54,7 @@ async function main() {
     });
 
     process.on('SIGTERM', () => {
+      removePidfile(projectPath);
       result.server.close(() => {
         if (result.watcher) result.watcher.close();
         process.exit(0);

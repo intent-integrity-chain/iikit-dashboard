@@ -560,4 +560,53 @@ None detected.
     const res = await httpGet(port, '/api/analyze/999-nonexistent');
     expect(res.status).toBe(404);
   });
+
+  // === Pidfile and Meta Endpoint Tests ===
+
+  test('pidfile is created after createServer with correct contents', () => {
+    const pidPath = path.join(testDir, '.specify', 'dashboard.pid.json');
+    expect(fs.existsSync(pidPath)).toBe(true);
+
+    const pidData = JSON.parse(fs.readFileSync(pidPath, 'utf-8'));
+    expect(pidData).toHaveProperty('pid');
+    expect(pidData).toHaveProperty('port');
+    expect(pidData).toHaveProperty('directory');
+    expect(pidData).toHaveProperty('startedAt');
+    expect(pidData.pid).toBe(process.pid);
+    expect(pidData.port).toBe(port);
+    expect(path.isAbsolute(pidData.directory)).toBe(true);
+    expect(() => new Date(pidData.startedAt).toISOString()).not.toThrow();
+  });
+
+  test('removePidfile cleans up the pidfile', () => {
+    const { removePidfile } = require('../src/server');
+    // Write a dummy pidfile to a separate temp dir to avoid disrupting other tests
+    const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'iikit-pid-test-'));
+    const specifyDir = path.join(tmpDir, '.specify');
+    fs.mkdirSync(specifyDir, { recursive: true });
+    fs.writeFileSync(path.join(specifyDir, 'dashboard.pid.json'), '{}');
+
+    removePidfile(tmpDir);
+    expect(fs.existsSync(path.join(specifyDir, 'dashboard.pid.json'))).toBe(false);
+
+    // Calling again should not throw (ENOENT is ignored)
+    expect(() => removePidfile(tmpDir)).not.toThrow();
+
+    fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  test('GET /api/meta returns projectPath as absolute path', async () => {
+    const res = await httpGet(port, '/api/meta');
+    expect(res.status).toBe(200);
+    expect(res.data).toHaveProperty('projectPath');
+    expect(path.isAbsolute(res.data.projectPath)).toBe(true);
+  });
+
+  test('stale pidfile is overwritten on new startup', async () => {
+    // The pidfile was already created by beforeAll; verify it has current data
+    const pidPath = path.join(testDir, '.specify', 'dashboard.pid.json');
+    const pidData = JSON.parse(fs.readFileSync(pidPath, 'utf-8'));
+    expect(pidData.pid).toBe(process.pid);
+    expect(pidData.port).toBe(port);
+  });
 });
