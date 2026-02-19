@@ -724,8 +724,9 @@
       border-radius: var(--radius-md);
       cursor: pointer;
       transition: background var(--transition-fast), transform var(--transition-fast);
-      flex: 0 1 auto;
-      min-width: 40px;
+      flex: 1 1 0;
+      min-width: 72px;
+      max-width: 110px;
       position: relative;
       border: 1px solid var(--color-border-subtle);
       background: transparent;
@@ -829,6 +830,340 @@
       opacity: 0.8;
     }
 
+    /* ====== Bugs Tab (standalone, no connector) ====== */
+    .bugs-tab-gap {
+      width: 16px;
+      flex-shrink: 0;
+    }
+
+    .bugs-tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 8px;
+      border: 1px solid var(--color-border);
+      background: var(--color-surface);
+      transition: all 0.15s ease;
+      position: relative;
+      font-family: inherit;
+      color: inherit;
+    }
+
+    .bugs-tab:hover {
+      border-color: var(--color-text-secondary);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .bugs-tab.active {
+      border-color: var(--color-accent);
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .bugs-tab.muted {
+      opacity: 0.45;
+    }
+
+    .bugs-tab-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .bugs-tab-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--color-text-secondary);
+    }
+
+    .bugs-tab-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 18px;
+      text-align: center;
+      color: #fff;
+    }
+
+    .bugs-tab-badge.muted {
+      opacity: 0.4;
+      background: var(--color-text-secondary);
+    }
+
+    .bugs-tab-badge.severity-critical { background: #ff4757; }
+    .bugs-tab-badge.severity-high { background: #ffa502; }
+    .bugs-tab-badge.severity-medium { background: #f1c40f; color: #1a1a2e; }
+    .bugs-tab-badge.severity-low { background: #6b7189; }
+
+    /* ====== Bug Severity Colors ====== */
+    .severity-critical { color: #ff4757; }
+    .severity-high { color: #ffa502; }
+    .severity-medium { color: #f1c40f; }
+    .severity-low { color: #6b7189; }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .severity-badge.severity-critical { background: rgba(255, 71, 87, 0.15); color: #ff4757; }
+    .severity-badge.severity-high { background: rgba(255, 165, 2, 0.15); color: #ffa502; }
+    .severity-badge.severity-medium { background: rgba(241, 196, 15, 0.15); color: #f1c40f; }
+    .severity-badge.severity-low { background: rgba(107, 113, 137, 0.15); color: #6b7189; }
+
+    /* ====== Bugs View ====== */
+    .bugs-view {
+      padding: 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .bugs-view-header {
+      margin-bottom: 20px;
+    }
+
+    .bugs-view-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .bugs-view-subtitle {
+      font-size: 13px;
+      color: var(--color-text-secondary);
+      margin-top: 4px;
+    }
+
+    .bugs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .bugs-table th {
+      text-align: left;
+      padding: 10px 12px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      border-bottom: 1px solid var(--color-border);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .bugs-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      vertical-align: middle;
+    }
+
+    .bugs-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .bugs-table tr.highlighted td {
+      background: rgba(99, 102, 241, 0.12);
+      transition: background 0.3s ease;
+    }
+
+    .bugs-table .bug-id {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-weight: 600;
+      color: var(--color-text-primary);
+    }
+
+    .bugs-table .bug-status {
+      text-transform: capitalize;
+    }
+
+    .bugs-table .bug-status.fixed {
+      color: var(--color-done);
+    }
+
+    .bugs-table .bug-progress {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 12px;
+    }
+
+    .bugs-table .bug-description {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .bugs-table .github-link {
+      color: var(--color-accent);
+      text-decoration: none;
+    }
+
+    .bugs-table .github-link:hover {
+      text-decoration: underline;
+    }
+
+    .bugs-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 20px;
+      text-align: center;
+    }
+
+    .bugs-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.4;
+    }
+
+    .bugs-empty-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--color-text-primary);
+      margin-bottom: 8px;
+    }
+
+    .bugs-empty-text {
+      font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+
+    .orphaned-section {
+      margin-top: 24px;
+      padding: 16px;
+      border: 1px dashed var(--color-border);
+      border-radius: 8px;
+      opacity: 0.7;
+    }
+
+    .orphaned-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .orphaned-task {
+      font-size: 12px;
+      color: var(--color-text-secondary);
+      padding: 4px 0;
+    }
+
+    .bug-icon-inline {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-right: 4px;
+      vertical-align: middle;
+      opacity: 0.7;
+    }
+
+    /* Pipeline bugs gap & node (spec aliases) */
+    .pipeline-bugs-gap {
+      width: 20px;
+      flex-shrink: 0;
+    }
+    .pipeline-node-bugs.muted {
+      opacity: 0.5;
+    }
+    .bugs-dot {
+      background: var(--color-surface-elevated) !important;
+      border: 2px solid var(--color-border) !important;
+      color: var(--color-text-muted) !important;
+    }
+    .bug-count-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 9px;
+      font-size: 11px;
+      font-weight: 700;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+    .bug-count-badge.muted {
+      background: var(--color-surface-elevated);
+      color: var(--color-text-muted);
+    }
+
+    /* Bug view additional styles */
+    .bugs-view-container {
+      padding: 24px;
+      max-width: 1200px;
+    }
+    .bugs-view-container h2 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--color-text);
+    }
+    .bug-row:hover {
+      background: var(--color-surface-hover);
+    }
+    .fix-progress {
+      font-variant-numeric: tabular-nums;
+      font-weight: 500;
+    }
+    .bug-status {
+      text-transform: capitalize;
+    }
+    .bug-status.fixed {
+      color: var(--color-success, #2ecc71);
+    }
+    .bug-github-link {
+      color: var(--color-accent);
+      text-decoration: none;
+    }
+    .bug-github-link:hover {
+      text-decoration: underline;
+    }
+    .bug-empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--color-text-muted);
+      font-size: 14px;
+    }
+    .bug-empty-state svg {
+      display: block;
+      margin: 0 auto 12px;
+      opacity: 0.4;
+    }
+    .orphaned-tasks-section {
+      margin-top: 32px;
+      padding: 16px;
+      background: var(--color-surface-elevated);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--color-warning, #f5a623);
+      opacity: 0.7;
+    }
+    .orphaned-tasks-section h3 {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-warning, #f5a623);
+      margin-bottom: 8px;
+    }
+    .orphaned-tasks-section .task-item {
+      font-size: 12px;
+      color: var(--color-text-muted);
+      padding: 4px 0;
+    }
+
     /* ====== Content Area ====== */
     .content-area {
       flex: 1;
@@ -867,6 +1202,8 @@
       font-size: 13px;
       color: var(--color-text-muted);
       max-width: 360px;
+      margin: 0 auto;
+      text-align: center;
     }
 
     /* ====== Checklist Quality Gates Tab ====== */
@@ -1558,6 +1895,10 @@
       text-align: center;
       padding: 60px 20px;
       color: var(--color-text-muted);
+      max-width: 480px;
+      margin: 0 auto;
+      word-break: normal;
+      overflow-wrap: break-word;
     }
 
     .clarify-header {
@@ -2426,6 +2767,7 @@
       let expandedChecklist = null;
       let currentTestify = null;
       let currentAnalyze = null;
+      let currentBugs = null;
       let activeTab = null;
       let externalSankeyHighlight = null;
       let ws = null;
@@ -2451,6 +2793,25 @@
         skipped: '&#8212;',
         available: '&#9679;'
       };
+
+      const BUG_ICON_SMALL = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2l1.88 1.88M14.12 3.88L16 2M9 7.13v-1a3 3 0 0 1 6 0v1M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6zM3.5 11H2M5.06 6.5l-1.5-1M22 11h-1.5M18.94 6.5l1.5-1M12 20v2"/></svg>';
+
+      function getBugsBadgeHtml(bugsData) {
+        if (!bugsData || !bugsData.exists) return '';
+        const count = bugsData.summary.open;
+        const sev = bugsData.summary.highestOpenSeverity;
+
+        const colors = { critical: '#ff4757', high: '#ffa502', medium: '#f1c40f', low: '#6b7189' };
+        const textColors = { critical: '#fff', high: '#fff', medium: '#1a1a2e', low: '#fff' };
+
+        if (count === 0) {
+          return ' <span class="bug-count-badge muted">0</span>';
+        }
+
+        const bg = colors[sev] || '#6b7189';
+        const fg = textColors[sev] || '#fff';
+        return ` <span class="bug-count-badge" style="background:${bg};color:${fg}">${count}</span>`;
+      }
 
       function renderPipeline(pipeline) {
         if (!pipeline || !pipeline.phases) return;
@@ -2486,6 +2847,28 @@
           node.addEventListener('click', () => switchTab(phase.id));
           pipelineBar.appendChild(node);
         });
+
+        // Bugs tab — standalone, no connector
+        const bugsGap = document.createElement('div');
+        bugsGap.className = 'pipeline-bugs-gap';
+        pipelineBar.appendChild(bugsGap);
+
+        const bugsTab = document.createElement('button');
+        bugsTab.className = 'pipeline-node pipeline-node-bugs' + (activeTab === 'bugs' ? ' active' : '');
+        bugsTab.setAttribute('data-view', 'bugs');
+        bugsTab.setAttribute('tabindex', '0');
+        if (activeTab === 'bugs') bugsTab.setAttribute('aria-current', 'true');
+
+        const badgeHtml = currentBugs ? getBugsBadgeHtml(currentBugs) : '';
+        bugsTab.innerHTML = `
+          <div class="pipeline-dot bugs-dot">${BUG_ICON_SMALL}</div>
+          <span class="pipeline-label">Bugs${badgeHtml}</span>
+        `;
+        if (currentBugs && !currentBugs.exists) {
+          bugsTab.classList.add('muted');
+        }
+        bugsTab.addEventListener('click', () => switchTab('bugs'));
+        pipelineBar.appendChild(bugsTab);
       }
 
       function switchTab(phaseId) {
@@ -2518,6 +2901,8 @@
           renderTestifyView();
         } else if (phaseId === 'analyze') {
           renderAnalyzeView();
+        } else if (phaseId === 'bugs') {
+          renderBugsView();
         } else {
           renderPlaceholderView(phaseId);
         }
@@ -2532,7 +2917,8 @@
         // Sentinel elements per panel — poll until the panel has rendered
         const sentinels = {
           spec: '.graph-node', testify: '.sankey-node', implement: '.card',
-          checklist: '.checklist-item', clarify: '.clarify-entry', analyze: '.heatmap-row'
+          checklist: '.checklist-item', clarify: '.clarify-entry', analyze: '.heatmap-row',
+          bugs: '.bug-row'
         };
         const sel = sentinels[panelId];
         if (sel) {
@@ -2548,7 +2934,8 @@
           testify: highlightTestifyEntity,
           implement: highlightBoardEntity,
           checklist: highlightChecklistEntity,
-          clarify: highlightClarifyEntity
+          clarify: highlightClarifyEntity,
+          bugs: highlightBugsEntity
         };
         const fn = highlighters[panelId];
         if (fn) fn(entityId);
@@ -2683,6 +3070,138 @@
         const newBoardEl = document.getElementById('board');
         if (currentBoard) {
           renderBoardInto(newBoardEl, currentBoard);
+        }
+      }
+
+      // ====== Bugs View (T014, T015, T016) ======
+
+      async function renderBugsView() {
+        if (!currentFeature) return;
+
+        contentArea.innerHTML = '<div class="loading">Loading bug data...</div>';
+        try {
+          const res = await fetch(`/api/bugs/${currentFeature}`);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const data = await res.json();
+          currentBugs = data;
+          if (currentPipeline) renderPipeline(currentPipeline);
+          renderBugsContent(data);
+        } catch (err) {
+          contentArea.innerHTML = `<div class="error-message">Error loading bugs: ${escapeHtml(err.message)}</div>`;
+        }
+      }
+
+      function renderBugsContent(data) {
+        if (!data || !data.exists || data.bugs.length === 0) {
+          // T015: Empty state
+          const msg = !data || !data.exists
+            ? 'No bugs have been reported for this feature.'
+            : 'All clear — no bug entries found.';
+          contentArea.innerHTML = `
+            <div class="bugs-empty">
+              <div class="bugs-empty-icon">&#10003;</div>
+              <div class="bugs-empty-title">No Bugs</div>
+              <div class="bugs-empty-text">${msg}</div>
+            </div>`;
+          return;
+        }
+
+        const { bugs, orphanedTasks, summary, repoUrl } = data;
+
+        let tableRows = '';
+        for (const bug of bugs) {
+          // Fix task progress
+          const progressText = bug.fixTasks.total > 0
+            ? `${bug.fixTasks.checked}/${bug.fixTasks.total}`
+            : '\u2014';
+
+          // GitHub link (T016)
+          let githubHtml = '\u2014';
+          if (bug.githubIssue) {
+            const resolvedUrl = resolveGitHubUrl(bug.githubIssue, repoUrl);
+            if (resolvedUrl) {
+              githubHtml = `<a href="${escapeHtml(resolvedUrl)}" class="github-link bug-github-link" target="_blank" rel="noopener">${escapeHtml(bug.githubIssue)} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3"/></svg></a>`;
+            } else {
+              githubHtml = escapeHtml(bug.githubIssue);
+            }
+          }
+
+          // Fix task list for cross-links
+          let taskLinks = '';
+          if (bug.fixTasks.total > 0) {
+            taskLinks = bug.fixTasks.tasks.map(t =>
+              `<span class="task-id cross-link" data-cross-target="implement" data-cross-id="${t.id}" style="cursor:pointer;color:var(--color-accent);font-family:monospace;font-size:11px;">${t.id}</span>`
+            ).join(', ');
+          }
+
+          tableRows += `
+            <tr class="bug-row" data-bug-id="${bug.id}">
+              <td class="bug-id">${bug.id}</td>
+              <td><span class="severity-badge severity-${bug.severity}">${bug.severity}</span></td>
+              <td class="bug-status ${bug.status === 'fixed' ? 'fixed' : ''}">${bug.status}</td>
+              <td class="bug-progress">${progressText}${taskLinks ? '<br>' + taskLinks : ''}</td>
+              <td class="bug-description" title="${escapeHtml(bug.description || '')}">${escapeHtml(bug.description || '\u2014')}</td>
+              <td>${githubHtml}</td>
+            </tr>`;
+        }
+
+        // Orphaned tasks section (TS-020)
+        let orphanedHtml = '';
+        if (orphanedTasks && orphanedTasks.length > 0) {
+          orphanedHtml = `
+            <div class="orphaned-section">
+              <div class="orphaned-title">&#9888; Orphaned Fix Tasks (no matching bug in bugs.md)</div>
+              ${orphanedTasks.map(t => `
+                <div class="orphaned-task">
+                  <span class="task-id cross-link" data-cross-target="implement" data-cross-id="${t.id}" style="cursor:pointer;color:var(--color-accent);">${t.id}</span>
+                  [${t.bugTag}] ${escapeHtml(t.description)}
+                </div>
+              `).join('')}
+            </div>`;
+        }
+
+        contentArea.innerHTML = `
+          <div class="bugs-view">
+            <div class="bugs-view-header">
+              <div class="bugs-view-title">Bug Tracking</div>
+              <div class="bugs-view-subtitle">${summary.total} total &middot; ${summary.open} open &middot; ${summary.fixed} fixed</div>
+            </div>
+            <div class="cross-link-tip">Tip: ${CROSS_LINK_MOD_KEY}+click task IDs to navigate to the Implement board</div>
+            <table class="bugs-table" role="table" aria-label="Bug status table">
+              <thead>
+                <tr>
+                  <th>Bug ID</th>
+                  <th aria-sort="descending">Severity</th>
+                  <th>Status</th>
+                  <th>Fix Tasks</th>
+                  <th>Description</th>
+                  <th>GitHub</th>
+                </tr>
+              </thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+            ${orphanedHtml}
+          </div>`;
+      }
+
+      // T016: Client-side GitHub URL resolution
+      function resolveGitHubUrl(issueRef, repoUrl) {
+        if (!issueRef || !repoUrl) return null;
+        const match = issueRef.match(/#(\d+)/);
+        if (!match) return null;
+        let base = repoUrl.replace(/\.git$/, '');
+        const ssh = base.match(/^git@([^:]+):(.+)$/);
+        if (ssh) base = 'https://' + ssh[1] + '/' + ssh[2];
+        return base + '/issues/' + match[1];
+      }
+
+      // T021: Highlight a bug row in the Bugs tab
+      function highlightBugsEntity(entityId) {
+        const row = contentArea.querySelector(`tr[data-bug-id="${entityId}"]`);
+        if (row) {
+          row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          row.classList.add('highlighted');
+          setTimeout(() => row.classList.remove('highlighted'), 2000);
         }
       }
 
@@ -3719,11 +4238,22 @@
 
       function renderClarifyContent(clarifications) {
         if (!clarifications.length) {
+          // TS-019/TS-020: Distinguish "clarify was run, no issues" from "never run"
+          const clarifyPhase = currentPipeline?.phases?.find(p => p.id === 'clarify');
+          const clarifyWasRun = clarifyPhase && (clarifyPhase.status === 'complete' || clarifyPhase.status === 'skipped');
+
+          const title = clarifyWasRun
+            ? 'Clarification Complete'
+            : 'Clarify Not Yet Run';
+          const text = clarifyWasRun
+            ? 'The clarification phase was completed with no ambiguities found. The specification is clear as written.'
+            : 'This is an optional phase. Run <code>/iikit-02-clarify</code> to identify and resolve ambiguities in the spec.';
+
           contentArea.innerHTML = `
             <div class="clarify-view" role="region" aria-label="Clarifications">
               <div class="clarify-empty">
-                <div class="placeholder-view-title">No Clarifications Recorded</div>
-                <div class="placeholder-view-text">This is an optional phase. The specification exists but no clarification sessions have been recorded. Run <code>/iikit-02-clarify</code> to identify and resolve ambiguities in the spec.</div>
+                <div class="placeholder-view-title">${title}</div>
+                <div class="placeholder-view-text">${text}</div>
               </div>
             </div>`;
           return;
@@ -4418,6 +4948,7 @@
             featureSelect.value = currentFeature;
             loadPipeline(currentFeature);
             loadBoard(currentFeature);
+            loadBugs(currentFeature);
           } else if (features.length === 0) {
             showEmptyState();
           }
@@ -4450,8 +4981,10 @@
           currentPlanView = null; // Reset plan view cache
           currentTestify = null; // Reset testify cache
           currentAnalyze = null; // Reset analyze cache
+          currentBugs = null; // Reset bugs cache
           loadPipeline(val);
           loadBoard(val);
+          loadBugs(val);
           // Resubscribe WebSocket
           if (ws && ws.readyState === WebSocket.OPEN) {
             ws.send(JSON.stringify({ type: 'subscribe', feature: val }));
@@ -4479,6 +5012,21 @@
         } catch (err) {
           console.error('Failed to load board:', err);
           showEmptyState('Failed to load board data');
+        }
+      }
+
+      async function loadBugs(featureId) {
+        try {
+          const res = await fetch(`/api/bugs/${featureId}`);
+          if (res.ok) {
+            currentBugs = await res.json();
+            // Update badge on pipeline bar
+            if (currentPipeline) renderPipeline(currentPipeline);
+            // If bugs view is active, re-render it
+            if (activeTab === 'bugs') renderBugsContent(currentBugs);
+          }
+        } catch {
+          // Silently fail — bugs are optional
         }
       }
 
@@ -4575,9 +5123,11 @@
         if (targetEl) renderBoardInto(targetEl, board);
       }
 
+      const BUG_SVG_ICON = '<svg class="bug-icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2l1.88 1.88M14.12 3.88L16 2M9 7.13v-1a3.003 3.003 0 116 0v1M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 014-4h4a4 4 0 014 4v3c0 3.3-2.7 6-6 6zM2 11h3M19 11h3M2 16h3M19 16h3"/></svg>';
+
       function createCardElement(card, columnKey) {
         const el = document.createElement('div');
-        el.className = 'card';
+        el.className = 'card' + (card.isBugCard ? ' bug-card' : '');
         el.setAttribute('data-card-id', card.id);
         el.setAttribute('role', 'article');
         el.setAttribute('aria-label', `${card.title} - ${card.priority} - ${card.progress} tasks complete`);
@@ -4589,10 +5139,14 @@
 
         const priorityClass = card.priority ? card.priority.toLowerCase() : 'p3';
 
+        const cardIdHtml = card.isBugCard
+          ? `<div class="card-id cross-link" data-cross-target="bugs" data-cross-id="${card.id}">${BUG_SVG_ICON}${card.id}</div>`
+          : `<div class="card-id cross-link" data-cross-target="spec" data-cross-id="${card.id}">${card.id}</div>`;
+
         el.innerHTML = `
-          <div class="card-id cross-link" data-cross-target="spec" data-cross-id="${card.id}">${card.id}</div>
+          ${cardIdHtml}
           <div class="card-header">
-            <div class="card-title" title="${escapeHtml(card.title)}">${escapeHtml(card.title)}</div>
+            <div class="card-title" title="${escapeHtml(card.title)}">${card.isBugCard ? BUG_SVG_ICON : ''}${escapeHtml(card.title)}</div>
             <span class="priority-badge ${priorityClass}" aria-label="Priority ${card.priority}">${card.priority}</span>
           </div>
           <div class="progress-container">
@@ -4609,13 +5163,19 @@
             ${(card.tasks || []).length} tasks
           </button>
           <ul class="task-list collapsed" id="tasks-${card.id}" aria-label="Tasks for ${card.id}">
-            ${(card.tasks || []).map(t => `
-              <li class="task-item ${t.checked ? 'checked' : ''}">
+            ${(card.tasks || []).map(t => {
+              const isBugTask = t.isBugFix || (t.id && t.id.startsWith('T-B'));
+              const taskIcon = isBugTask ? BUG_SVG_ICON : '';
+              const bugTagLink = t.bugTag
+                ? ` <span class="cross-link" data-cross-target="bugs" data-cross-id="${t.bugTag}" style="cursor:pointer;color:var(--color-accent);font-size:11px;">[${t.bugTag}]</span>`
+                : '';
+              return `
+              <li class="task-item ${t.checked ? 'checked' : ''}" data-task-id="${t.id}">
                 <span class="task-checkbox ${t.checked ? 'checked' : ''}" aria-hidden="true"></span>
-                <span class="task-id cross-link" data-cross-target="testify" data-cross-id="${t.id}">${t.id}</span>
+                ${taskIcon}<span class="task-id cross-link" data-cross-target="testify" data-cross-id="${t.id}">${t.id}</span>${bugTagLink}
                 <span class="task-description">${escapeHtml(t.description)}</span>
-              </li>
-            `).join('')}
+              </li>`;
+            }).join('')}
           </ul>`;
 
         return el;
@@ -5121,6 +5681,16 @@
               currentConstitution = msg.constitution;
               if (activeTab === 'constitution') {
                 renderConstitutionContent(msg.constitution);
+              }
+            }
+            break;
+
+          case 'bugs_update':
+            if (msg.feature === currentFeature && msg.bugs) {
+              currentBugs = msg.bugs;
+              if (currentPipeline) renderPipeline(currentPipeline);
+              if (activeTab === 'bugs') {
+                renderBugsContent(msg.bugs);
               }
             }
             break;

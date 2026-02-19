@@ -609,4 +609,98 @@ None detected.
     expect(pidData.pid).toBe(process.pid);
     expect(pidData.port).toBe(port);
   });
+
+  // === 009-bugs-tab: Contract tests for GET /api/bugs/:feature (T009) ===
+
+  // TS-025: GET /api/bugs/:feature returns bug state with fix tasks
+  test('GET /api/bugs/:feature returns bug state when bugs.md exists', async () => {
+    // Create bugs.md and tasks.md for 001-auth feature
+    const featureDir = path.join(testDir, 'specs', '001-auth');
+    fs.writeFileSync(path.join(featureDir, 'bugs.md'), `# Bug Reports
+
+## BUG-001
+
+**Reported**: 2026-02-19
+**Severity**: critical
+**Status**: reported
+**GitHub Issue**: #13
+**Description**: Login fails when email contains plus sign
+
+---
+
+## BUG-002
+
+**Reported**: 2026-02-18
+**Severity**: medium
+**Status**: fixed
+**GitHub Issue**: _(none)_
+**Description**: Dashboard flickers on theme toggle
+`);
+
+    // Update tasks.md to include bug fix tasks
+    fs.writeFileSync(path.join(featureDir, 'tasks.md'), `# Tasks
+
+## Phase 2
+- [x] T001 [US1] Create login form
+- [x] T002 [US1] Add validation
+- [ ] T003 [US2] Design reset flow
+- [ ] T004 [US2] Send reset email
+- [ ] T005 [US3] Add OAuth buttons
+
+## Bug Fix Tasks
+- [ ] T-B001 [BUG-001] Investigate root cause
+- [x] T-B002 [BUG-001] Implement fix
+- [ ] T-B003 [BUG-001] Write regression test
+- [x] T-B004 [BUG-002] Fix flicker
+`);
+
+    const res = await httpGet(port, '/api/bugs/001-auth');
+    expect(res.status).toBe(200);
+
+    const data = res.data;
+    expect(data.exists).toBe(true);
+    expect(Array.isArray(data.bugs)).toBe(true);
+    expect(data.bugs.length).toBe(2);
+
+    // Sorted by severity: critical first
+    expect(data.bugs[0].id).toBe('BUG-001');
+    expect(data.bugs[0].severity).toBe('critical');
+    expect(data.bugs[0].status).toBe('reported');
+    expect(data.bugs[0].githubIssue).toBe('#13');
+    expect(data.bugs[0].fixTasks.total).toBe(3);
+    expect(data.bugs[0].fixTasks.checked).toBe(1);
+
+    expect(data.bugs[1].id).toBe('BUG-002');
+    expect(data.bugs[1].severity).toBe('medium');
+    expect(data.bugs[1].status).toBe('fixed');
+
+    expect(data.summary).toBeDefined();
+    expect(data.summary.total).toBe(2);
+    expect(data.summary.open).toBe(1);
+    expect(data.summary.fixed).toBe(1);
+    expect(data.summary.highestOpenSeverity).toBe('critical');
+    expect(data.summary.bySeverity).toEqual({ critical: 1, high: 0, medium: 0, low: 0 });
+  });
+
+  // TS-026: GET /api/bugs/:feature returns empty state when no bugs.md
+  test('GET /api/bugs/:feature returns empty state when no bugs.md', async () => {
+    const res = await httpGet(port, '/api/bugs/002-payments');
+    expect(res.status).toBe(200);
+
+    const data = res.data;
+    expect(data.exists).toBe(false);
+    expect(data.bugs).toEqual([]);
+    expect(data.summary.total).toBe(0);
+    expect(data.summary.open).toBe(0);
+    expect(data.summary.fixed).toBe(0);
+    expect(data.summary.highestOpenSeverity).toBeNull();
+    expect(data.summary.bySeverity).toEqual({ critical: 0, high: 0, medium: 0, low: 0 });
+  });
+
+  // TS-027: GET /api/bugs/:feature returns 404 for unknown feature
+  test('GET /api/bugs/:feature returns 404 for unknown feature', async () => {
+    const res = await httpGet(port, '/api/bugs/nonexistent-feature');
+    expect(res.status).toBe(404);
+    expect(res.data.error).toBe('Feature not found');
+  });
 });

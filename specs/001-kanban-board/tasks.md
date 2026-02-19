@@ -145,3 +145,12 @@ T001 → T004 → T005 → T007 → T009 → T011 → T012 → T014 → T016 →
 - Each user story checkpoint is independently demonstrable
 - Test spec references (TS-XXX) enable TDD: write tests first per constitution
 - Commit after each task or logical group
+
+---
+
+## Bug Fix Tasks
+
+- [x] T-B001 [BUG-001] Implement fix for BUG-001 referencing test specs TS-018, TS-019, TS-020: Fix Clarify empty state text alignment and distinguish "never run" vs "run with no issues found" in src/public/index.html (GitHub #26)
+- [x] T-B002 [BUG-001] Verify fix passes tests TS-018, TS-019, TS-020 for BUG-001: Clarify empty state text alignment and message accuracy (GitHub #26)
+- [x] T-B003 [BUG-002] Implement fix for BUG-002 referencing test spec TS-021: Make pipeline phase tab buttons uniform in size in src/public/index.html (GitHub #27)
+- [x] T-B004 [BUG-002] Verify fix passes test TS-021 for BUG-002: Pipeline tab buttons consistent sizing (GitHub #27)

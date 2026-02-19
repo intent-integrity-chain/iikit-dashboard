@@ -10,5 +10,17 @@
       "low": 1,
       "total_findings": 3
     }
+  ],
+  "009-bugs-tab": [
+    {
+      "timestamp": "2026-02-19T12:45:00Z",
+      "score": 95,
+      "coverage_pct": 100,
+      "critical": 0,
+      "high": 0,
+      "medium": 2,
+      "low": 2,
+      "total_findings": 4
+    }
   ]
 }

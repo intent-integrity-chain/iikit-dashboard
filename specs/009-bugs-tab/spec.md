@@ -36,7 +36,7 @@ The Bugs tab in the pipeline bar displays a count of open (non-fixed) bugs for t
 
 1. **Given** a feature with 2 open bugs (1 critical, 1 low), **When** the pipeline bar renders, **Then** the Bugs tab shows a badge with "2" in red (highest open severity is critical)
 2. **Given** a feature with 1 open bug (medium severity), **When** the pipeline bar renders, **Then** the Bugs tab shows a badge with "1" in yellow
-3. **Given** a feature with all bugs in "fixed" status, **When** the pipeline bar renders, **Then** the Bugs tab shows no count badge (or "0" muted)
+3. **Given** a feature with all bugs in "fixed" status, **When** the pipeline bar renders, **Then** the Bugs tab shows a muted "0" badge (badge remains visible but dimmed)
 4. **Given** a feature with no `bugs.md` file, **When** the pipeline bar renders, **Then** the Bugs tab appears without a badge, in a muted/dimmed style
 5. **Given** a bug is added to `bugs.md` on disk, **When** the file change is detected via WebSocket, **Then** the Bugs tab badge updates to reflect the new count and severity
 
@@ -91,8 +91,9 @@ When `bugs.md` or `tasks.md` changes on disk (e.g., during a `/iikit-bugfix` or 
 
 ### Edge Cases
 
+- What happens when a bug has zero fix tasks in tasks.md? → Show "—" in the fix task progress column
 - What happens when `bugs.md` exists but is empty or malformed? → Show empty state with a message
-- What happens when a BUG-NNN is referenced in tasks but not in bugs.md? → Show task progress without bug metadata, flag as orphaned
+- What happens when a BUG-NNN is referenced in tasks but not in bugs.md? → Show orphaned tasks in a separate "Orphaned Fix Tasks" section at the bottom of the bug table with a warning icon and muted styling
 - What happens when `tasks.md` has T-B tasks but no `bugs.md` exists? → Show the Bugs tab muted (no badge), bug view shows empty state
 - How does the tab behave when switching features? → Reload bug data for the new feature, update badge and table
 
@@ -102,20 +103,27 @@ When `bugs.md` or `tasks.md` changes on disk (e.g., during a `/iikit-bugfix` or 
 
 - **FR-001**: System MUST render a Bugs tab at the end of the pipeline bar, visually separated from the workflow chain with no connector line
 - **FR-002**: System MUST display an open bug count badge on the Bugs tab, color-coded by the highest severity among open bugs (red=critical, orange=high, yellow=medium, gray=low)
-- **FR-003**: System MUST parse `bugs.md` to extract BUG-NNN entries with severity, status, description, GitHub issue link, root cause, and fix reference fields
-- **FR-004**: System MUST render a bug status table with columns: Bug ID, Severity (color-coded badge), Status, Fix Tasks (progress), Description, and GitHub Issue link
+- **FR-003**: System MUST parse `bugs.md` to extract BUG-NNN entries with reported date, severity, status, description, GitHub issue link, root cause, and fix reference fields
+- **FR-004**: System MUST render a bug status table with columns: Bug ID, Severity (color-coded badge), Status, Fix Tasks (progress), Description, and GitHub Issue link — sorted by severity descending (critical first), then by bug ID ascending
 - **FR-005**: System MUST compute fix task progress per bug by matching T-B prefixed tasks tagged with [BUG-NNN] in `tasks.md`
 - **FR-006**: System MUST show a bug icon on T-B prefixed tasks in the Implement board to visually distinguish them from feature tasks
 - **FR-007**: System MUST support Cmd+click cross-panel navigation: BUG-NNN tags in the Implement board navigate to the Bugs tab, task IDs in the Bugs tab navigate to the Implement board
 - **FR-008**: System MUST update the Bugs tab in real time via WebSocket when `bugs.md` or `tasks.md` changes on disk
 - **FR-009**: System MUST show an empty state when no `bugs.md` exists or when the file contains no valid bug entries
-- **FR-010**: System MUST hide or mute the bug count badge when there are no open bugs
+- **FR-010**: System MUST show a muted "0" badge when there are no open bugs (badge remains visible but dimmed)
 - **FR-011**: System MUST provide a REST endpoint `GET /api/bugs/:feature` returning the bug state for a given feature
+- **FR-012**: System MUST resolve GitHub issue references (e.g., "#13") to clickable URLs by deriving the repository URL from the git remote origin; if no remote is configured, display the reference as plain text
 
 ### Key Entities
 
 - **Bug**: Represents a reported defect — has an ID (BUG-NNN), severity (critical/high/medium/low), status (reported/fixed), description, optional GitHub issue link, optional root cause, and optional fix reference
 - **Fix Task**: A task in `tasks.md` prefixed with T-B and tagged with [BUG-NNN] — has completion status (checked/unchecked) and a description
+
+### Dependencies & Assumptions
+
+- The `bugs.md` file format follows the template produced by `/iikit-bugfix` (v1.8.1+): `## BUG-NNN` headings with `**Reported**`, `**Severity**`, `**Status**`, `**GitHub Issue**`, `**Description**`, `**Root Cause**`, `**Fix Reference**` fields
+- Fix tasks in `tasks.md` follow the `/iikit-bugfix` naming convention: `T-B` prefix with `[BUG-NNN]` tag
+- The dashboard is read-only — it never writes to `bugs.md` or `tasks.md`
 
 ## Success Criteria *(mandatory)*
 

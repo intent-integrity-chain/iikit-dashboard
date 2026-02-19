@@ -19,8 +19,9 @@ function computeBoardState(stories, tasks) {
   if (!stories || !Array.isArray(stories)) return board;
   if (!tasks) tasks = [];
 
-  // Group tasks by storyTag
+  // Group tasks by storyTag or bugTag
   const tasksByStory = {};
+  const tasksByBug = {};
   const untaggedTasks = [];
 
   for (const task of tasks) {
@@ -29,6 +30,11 @@ function computeBoardState(stories, tasks) {
         tasksByStory[task.storyTag] = [];
       }
       tasksByStory[task.storyTag].push(task);
+    } else if (task.bugTag) {
+      if (!tasksByBug[task.bugTag]) {
+        tasksByBug[task.bugTag] = [];
+      }
+      tasksByBug[task.bugTag].push(task);
     } else {
       untaggedTasks.push(task);
     }
@@ -82,6 +88,33 @@ function computeBoardState(stories, tasks) {
       tasks: untaggedTasks,
       progress: `${checkedCount}/${totalCount}`,
       column
+    };
+
+    board[column].push(card);
+  }
+
+  // Handle bug fix tasks — group into per-bug cards
+  for (const [bugId, bugTasks] of Object.entries(tasksByBug)) {
+    const checkedCount = bugTasks.filter(t => t.checked).length;
+    const totalCount = bugTasks.length;
+
+    let column;
+    if (checkedCount === 0) {
+      column = 'todo';
+    } else if (checkedCount === totalCount) {
+      column = 'done';
+    } else {
+      column = 'in_progress';
+    }
+
+    const card = {
+      id: bugId,
+      title: `Bug Fix: ${bugId}`,
+      priority: 'P2',
+      tasks: bugTasks,
+      progress: `${checkedCount}/${totalCount}`,
+      column,
+      isBugCard: true
     };
 
     board[column].push(card);
