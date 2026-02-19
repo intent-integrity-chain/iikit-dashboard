@@ -314,6 +314,48 @@
           ]
         }
       ]
+    },
+    {
+      "tag": "div",
+      "classes": [
+        "pipeline-bugs-gap"
+      ]
+    },
+    {
+      "tag": "button",
+      "classes": [
+        "muted",
+        "pipeline-node",
+        "pipeline-node-bugs"
+      ],
+      "dataAttrs": {
+        "data-view": "bugs"
+      },
+      "children": [
+        {
+          "tag": "div",
+          "classes": [
+            "bugs-dot",
+            "pipeline-dot"
+          ],
+          "children": [
+            {
+              "tag": "svg",
+              "children": [
+                {
+                  "tag": "path"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "span",
+          "classes": [
+            "pipeline-label"
+          ]
+        }
+      ]
     }
   ]
 }
