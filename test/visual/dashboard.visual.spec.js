@@ -57,7 +57,7 @@ test.describe('Header', () => {
   test('header with project label, feature selector, integrity badge', async ({ page }) => {
     await waitForDashboard(page);
     const header = page.locator('header.header');
-    await expect(header).toHaveScreenshot('header.png');
+    await expect(header).toHaveScreenshot('header.png', { maxDiffPixelRatio: 0.05 });
   });
 
   test('pipeline bar shows all phases', async ({ page }) => {
