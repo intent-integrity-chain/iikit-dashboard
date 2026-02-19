@@ -11,11 +11,12 @@ The dashboard launches automatically early in the IIKit workflow — no manual s
 You can also start it standalone to browse historical data for any project that has feature specs:
 
 ```bash
-npx iikit-dashboard              # current directory
-npx iikit-dashboard /path/to/project   # specific project
+npx iikit-dashboard                       # current directory
+npx iikit-dashboard /path/to/project      # specific project
+npx iikit-dashboard --port 3001           # custom port
 ```
 
-The dashboard opens at `http://localhost:3000`.
+The dashboard opens at `http://localhost:3000` by default. A pidfile (`.specify/dashboard.pid.json`) is written on startup so external tools can discover which project a running dashboard serves and at which port.
 
 ## Views
 
@@ -23,40 +24,48 @@ The pipeline bar at the top shows all nine IIKit workflow phases. Click any phas
 
 | Phase | View |
 |-------|------|
-| **Constitution** | Radar chart of governance principles with obligation levels (MUST / SHOULD / MAY) |
-| **Spec** | Story map with swim lanes by priority + interactive requirements graph (US / FR / SC nodes and edges) |
-| **Clarify** | Q&A trail from clarification sessions, with clickable spec-item references that navigate back to the Spec view |
-| **Plan** | Tech stack badge wall, interactive file-structure tree (existing vs. planned files), rendered architecture diagram, and Tessl tile cards |
+| **Constitution** | Radar chart of governance principles with obligation levels (MUST / SHOULD / MAY) and version timeline |
+| **Spec** | Story map with swim lanes by priority + interactive force-directed requirements graph (US / FR / SC nodes and edges) with detail side-panel |
+| **Clarify** | Q&A trail from clarification sessions grouped by date, with clickable spec-item references that navigate to the Spec view |
+| **Plan** | Tech context key-value pairs, interactive file-structure tree (existing vs. planned files), rendered architecture diagram, and Tessl tile cards with live eval scores |
 | **Checklist** | Progress rings per checklist file with color coding (red/yellow/green), gate traffic light (OPEN/BLOCKED), and accordion detail view with CHK IDs and tag badges |
-| **Testify** | *Coming soon* |
-| **Tasks** | *Coming soon* |
-| **Analyze** | *Coming soon* |
-| **Implement** | Kanban board with cards sliding Todo → In Progress → Done as the agent checks off tasks |
+| **Testify** | Assertion integrity seal (Verified/Tampered/Missing), Sankey traceability diagram (Requirements → Test Specs → Tasks), test pyramid, and gap highlighting for untested requirements |
+| **Tasks** | Redirects to the Implement board (tasks are managed there) |
+| **Analyze** | Health gauge (0–100) with four weighted factors, coverage heatmap (Tasks/Tests/Plan per requirement), and sortable/filterable severity table of analysis findings |
+| **Implement** | Kanban board with cards sliding Todo → In Progress → Done as the agent checks off tasks, with collapsible per-story task lists |
 
 ## Features
 
 - **Live updates** — all views refresh in real time via WebSocket as project files change
 - **Pipeline navigation** — phase nodes show status (complete / in-progress / skipped / not started) with progress percentages
+- **Cross-panel navigation** — Cmd/Ctrl+click any FR, US, SC, or task identifier to jump to its linked panel (Spec, Testify, Implement, Checklist, or Clarify)
 - **Feature selector** — dropdown to switch between features in `specs/`, sorted newest-first
-- **Clarification traceability** — Q&A entries link back to the FR / US / SC spec items they clarify
-- **Integrity badges** — shows whether test assertions have been tampered with
+- **Project label** — header shows the project directory name with full path on hover, so you know which project a dashboard tab belongs to
+- **Integrity badges** — shows whether test assertions have been tampered with (verified / tampered / missing)
+- **Tessl eval scores** — Plan view tile cards display live eval data (score, pass/fail chart) when available
+- **Activity indicator** — green dot pulses in the header when files are actively changing
+- **Multi-project support** — pidfile at `.specify/dashboard.pid.json` lets external scripts identify running instances per project
 - **Three-state theme** — cycles System (OS preference) → Light → Dark
 - **Zero build step** — single HTML file with inline CSS and JS
 
 ## How It Works
 
-The server reads directly from your project's `specs/` directory:
+The server reads directly from your project's directory:
 
 | File | Purpose |
 |------|---------|
-| `spec.md` | User stories, requirements, success criteria, and clarification Q&A |
-| `plan.md` | Tech stack, file structure, and architecture diagram |
-| `tasks.md` | Task checkboxes grouped by `[US1]`, `[US2]` tags |
-| `checklists/*.md` | Checklist items with completion status, CHK IDs, and category groupings |
 | `CONSTITUTION.md` | Governance principles and obligation levels |
-| `tessl.json` | Installed Tessl tiles for the dependency panel |
+| `specs/<feature>/spec.md` | User stories, requirements, success criteria, and clarification Q&A |
+| `specs/<feature>/plan.md` | Tech stack, file structure, and architecture diagram |
+| `specs/<feature>/research.md` | Research decisions (displayed as tooltips in Plan view) |
+| `specs/<feature>/tasks.md` | Task checkboxes grouped by `[US1]`, `[US2]` tags |
+| `specs/<feature>/checklists/*.md` | Checklist items with completion status, CHK IDs, and category groupings |
+| `specs/<feature>/tests/test-specs.md` | Test specifications for the Testify traceability view |
+| `specs/<feature>/context.json` | Assertion hash for integrity verification |
+| `specs/<feature>/analysis.md` | Consistency analysis findings, coverage, and metrics |
+| `tessl.json` | Installed Tessl tiles for the Plan dependency panel |
 
-A file watcher (chokidar) detects changes and pushes updates to the browser via WebSocket with 300 ms debounce.
+A file watcher (chokidar) monitors the project tree (excluding `node_modules` and `.git`) and pushes updates to the browser via WebSocket with 300 ms debounce.
 
 ## Requirements
 
