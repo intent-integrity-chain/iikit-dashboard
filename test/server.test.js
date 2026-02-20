@@ -24,6 +24,7 @@ function httpGet(port, path) {
 
 describe('Server', () => {
   let server;
+  let watcher;
   let testDir;
   let port;
 
@@ -159,9 +160,11 @@ None detected.
     const result = await createServer({ projectPath: testDir, port: 0 });
     server = result.server;
     port = result.port;
+    watcher = result.watcher;
   });
 
   afterAll(async () => {
+    if (watcher) await watcher.close();
     if (server) {
       await new Promise((resolve) => server.close(resolve));
     }

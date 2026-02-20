@@ -1,6 +1,6 @@
 {
   "name": "iikit-dashboard",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Real-time dashboard for Intent Integrity Kit (IIKit) — visualizes every phase of specification-driven AI development",
   "main": "src/server.js",
   "bin": {
@@ -12,7 +12,7 @@
   ],
   "scripts": {
     "start": "node bin/iikit-dashboard.js",
-    "test": "jest --forceExit --testPathIgnorePatterns=test/visual",
+    "test": "jest --testPathIgnorePatterns=test/visual",
     "test:visual": "npx playwright test",
     "test:visual:update": "npx playwright test --update-snapshots"
   },
