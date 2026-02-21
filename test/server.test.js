@@ -255,6 +255,25 @@ None detected.
     expect(res.data.principles).toEqual([]);
   });
 
+  // TS-022: GET /api/premise returns premise content when file exists
+  test('GET /api/premise returns content when PREMISE.md exists', async () => {
+    fs.writeFileSync(path.join(testDir, 'PREMISE.md'), '# My Premise\n\n## What\n\nA test app.\n');
+    const res = await httpGet(port, '/api/premise');
+    expect(res.status).toBe(200);
+    expect(res.data.exists).toBe(true);
+    expect(res.data.content).toContain('A test app.');
+    // Clean up
+    fs.unlinkSync(path.join(testDir, 'PREMISE.md'));
+  });
+
+  // TS-023: GET /api/premise returns empty when no file
+  test('GET /api/premise returns exists false when no PREMISE.md', async () => {
+    const res = await httpGet(port, '/api/premise');
+    expect(res.status).toBe(200);
+    expect(res.data.exists).toBe(false);
+    expect(res.data.content).toBeNull();
+  });
+
   // TS-012: GET /api/pipeline/:feature returns correct phase array
   test('GET /api/pipeline/:feature returns pipeline with 9 phases', async () => {
     const res = await httpGet(port, '/api/pipeline/001-auth');
@@ -267,6 +286,22 @@ None detected.
       'constitution', 'spec', 'clarify', 'plan',
       'checklist', 'testify', 'tasks', 'analyze', 'implement'
     ]);
+  });
+
+  // TS-020: Pipeline label is "Premise & Constitution" when PREMISE.md exists
+  test('GET /api/pipeline/:feature returns "Premise & Constitution" label when PREMISE.md exists', async () => {
+    fs.writeFileSync(path.join(testDir, 'PREMISE.md'), '# Premise\n\n## What\n\nA test app.\n');
+    const res = await httpGet(port, '/api/pipeline/001-auth');
+    const constitutionPhase = res.data.phases.find(p => p.id === 'constitution');
+    expect(constitutionPhase.name).toBe('Premise &\nConstitution');
+    fs.unlinkSync(path.join(testDir, 'PREMISE.md'));
+  });
+
+  // TS-021: Pipeline label remains "Constitution" when no PREMISE.md
+  test('GET /api/pipeline/:feature returns "Constitution" label when no PREMISE.md', async () => {
+    const res = await httpGet(port, '/api/pipeline/001-auth');
+    const constitutionPhase = res.data.phases.find(p => p.id === 'constitution');
+    expect(constitutionPhase.name).toBe('Constitution');
   });
 
   // TS-013: Pipeline API returns correct status values per phase

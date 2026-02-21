@@ -726,7 +726,7 @@
       transition: background var(--transition-fast), transform var(--transition-fast);
       flex: 1 1 0;
       min-width: 72px;
-      max-width: 110px;
+      max-width: 140px;
       position: relative;
       border: 1px solid var(--color-border-subtle);
       background: transparent;
@@ -801,6 +801,20 @@
       text-overflow: ellipsis;
       max-width: 100%;
     }
+    .pipeline-label-multiline {
+      white-space: nowrap;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      line-height: 1.3;
+    }
+    .pipeline-label-multiline .pipeline-label-line {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
 
     .pipeline-progress {
       font-size: 9px;
@@ -810,7 +824,7 @@
     }
 
     .pipeline-connector {
-      flex: 1 1 24px;
+      flex: 0 1 24px;
       min-width: 4px;
       height: 2px;
       background: var(--color-border);
@@ -2175,6 +2189,42 @@
       padding: 24px 28px;
     }
 
+    .premise-section {
+      margin-bottom: 24px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .premise-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin: 0 0 12px;
+      color: var(--text);
+    }
+    .premise-heading {
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+      margin: 14px 0 6px;
+    }
+    .premise-text {
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text);
+      margin: 0 0 6px;
+    }
+    .premise-list {
+      margin: 4px 0 8px 18px;
+      padding: 0;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      color: var(--text);
+    }
+    .premise-list li {
+      margin-bottom: 3px;
+    }
+
     .constitution-layout {
       display: flex;
       gap: 32px;
@@ -2840,7 +2890,7 @@
 
           node.innerHTML = `
             <div class="pipeline-dot ${phase.status}">${PHASE_ICONS[phase.status] || ''}</div>
-            <span class="pipeline-label">${escapeHtml(phase.name)}${phase.id === 'tasks' ? ' <span class="pipeline-redirect" title="Opens Implement board">&#x2197;</span>' : ''}</span>
+            <span class="pipeline-label${phase.name.includes('\n') ? ' pipeline-label-multiline' : ''}">${phase.name.includes('\n') ? phase.name.split('\n').map(l => `<span class="pipeline-label-line">${escapeHtml(l)}</span>`).join('') : escapeHtml(phase.name)}${phase.id === 'tasks' ? ' <span class="pipeline-redirect" title="Opens Implement board">&#x2197;</span>' : ''}</span>
             <span class="pipeline-progress">${phase.progress || ''}</span>
           `;
 
@@ -4311,14 +4361,19 @@
 
       // ====== Constitution View ======
       let currentConstitution = null;
+      let currentPremise = null;
       let selectedPrinciple = null;
 
       async function renderConstitutionView() {
         try {
+          const fetches = [];
           if (!currentConstitution) {
-            const res = await fetch('/api/constitution');
-            currentConstitution = await res.json();
+            fetches.push(fetch('/api/constitution').then(r => r.json()).then(d => { currentConstitution = d; }));
           }
+          if (!currentPremise) {
+            fetches.push(fetch('/api/premise').then(r => r.json()).then(d => { currentPremise = d; }));
+          }
+          await Promise.all(fetches);
           renderConstitutionContent(currentConstitution);
         } catch (err) {
           console.error('Failed to load constitution:', err);
@@ -4363,8 +4418,14 @@
         // Timeline
         const timelineHtml = data.version ? renderTimeline(data.version) : '';
 
+        // Premise section
+        const premiseHtml = currentPremise && currentPremise.exists
+          ? `<div class="premise-section">${renderPremiseContent(currentPremise.content)}</div>`
+          : '';
+
         contentArea.innerHTML = `
           <div class="constitution-view">
+            ${premiseHtml}
             <div class="constitution-layout">
               <div class="constitution-left">
                 <div class="radar-container">${radarSvg}</div>
@@ -4394,6 +4455,37 @@
             itemEl.addEventListener('click', () => selectPrinciple(p));
           }
         });
+      }
+
+      function renderPremiseContent(markdown) {
+        // Simple markdown to HTML: headings, paragraphs, bold, lists
+        const lines = markdown.split('\n');
+        let html = '';
+        let inList = false;
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            if (inList) { html += '</ul>'; inList = false; }
+            continue;
+          }
+          if (/^# /.test(trimmed)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<h3 class="premise-title">${escapeHtml(trimmed.slice(2))}</h3>`;
+          } else if (/^## /.test(trimmed)) {
+            if (inList) { html += '</ul>'; inList = false; }
+            html += `<h4 class="premise-heading">${escapeHtml(trimmed.slice(3))}</h4>`;
+          } else if (/^- /.test(trimmed)) {
+            if (!inList) { html += '<ul class="premise-list">'; inList = true; }
+            const content = trimmed.slice(2).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html += `<li>${content}</li>`;
+          } else {
+            if (inList) { html += '</ul>'; inList = false; }
+            const content = trimmed.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+            html += `<p class="premise-text">${content}</p>`;
+          }
+        }
+        if (inList) html += '</ul>';
+        return html;
       }
 
       function generateRadarSVG(principles) {
@@ -5681,6 +5773,15 @@
               currentConstitution = msg.constitution;
               if (activeTab === 'constitution') {
                 renderConstitutionContent(msg.constitution);
+              }
+            }
+            break;
+
+          case 'premise_update':
+            if (msg.premise) {
+              currentPremise = msg.premise;
+              if (activeTab === 'constitution') {
+                renderConstitutionContent(currentConstitution);
               }
             }
             break;

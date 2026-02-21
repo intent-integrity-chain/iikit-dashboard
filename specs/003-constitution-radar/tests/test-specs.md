@@ -282,6 +282,78 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 
 ---
 
+## Bug Fix Tests
+
+### TS-019: Premise content rendered in Constitution panel when premise.md exists
+
+**Source**: bugs.md:BUG-001 (GitHub #29)
+**Type**: acceptance
+**Priority**: P1
+
+**Given**: a premise.md file exists in the project root with premise content
+**When**: the developer clicks the Constitution pipeline node
+**Then**: the panel displays the rendered premise content above the constitution radar chart
+
+**Traceability**: BUG-001
+
+---
+
+### TS-020: Panel title reads "Premise and Constitution" when premise.md exists
+
+**Source**: bugs.md:BUG-001 (GitHub #29)
+**Type**: acceptance
+**Priority**: P1
+
+**Given**: a premise.md file exists in the project root
+**When**: the Constitution panel renders
+**Then**: the panel title is "Premise and Constitution" instead of "Constitution"
+
+**Traceability**: BUG-001
+
+---
+
+### TS-021: Panel title remains "Constitution" when no premise.md exists
+
+**Source**: bugs.md:BUG-001 (GitHub #29)
+**Type**: acceptance
+**Priority**: P1
+
+**Given**: no premise.md file exists in the project root
+**When**: the Constitution panel renders
+**Then**: the panel title remains "Constitution"
+
+**Traceability**: BUG-001
+
+---
+
+### TS-022: GET /api/premise returns premise content when file exists
+
+**Source**: bugs.md:BUG-001 (GitHub #29)
+**Type**: contract
+**Priority**: P1
+
+**Given**: a premise.md file exists in the project root
+**When**: GET /api/premise is requested
+**Then**: response is JSON with "content" containing the markdown text and "exists": true
+
+**Traceability**: BUG-001
+
+---
+
+### TS-023: GET /api/premise returns empty when no file
+
+**Source**: bugs.md:BUG-001 (GitHub #29)
+**Type**: contract
+**Priority**: P1
+
+**Given**: no premise.md exists in the project root
+**When**: GET /api/premise is requested
+**Then**: response is JSON with "content": null, "exists": false
+
+**Traceability**: BUG-001
+
+---
+
 ## Summary
 
 | Source | Count | Types |
@@ -289,4 +361,5 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 | spec.md | 7 | acceptance |
 | plan.md | 3 | contract |
 | data-model.md | 8 | validation |
-| **Total** | **18** | |
+| bugs.md | 5 | acceptance, contract |
+| **Total** | **23** | |

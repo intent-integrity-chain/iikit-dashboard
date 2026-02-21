@@ -242,6 +242,23 @@ function hasClarifications(specContent) {
 }
 
 /**
+ * Parse PREMISE.md to return its raw markdown content.
+ *
+ * @param {string} projectPath - Path to the project root
+ * @returns {{content: string|null, exists: boolean}}
+ */
+function parsePremise(projectPath) {
+  const premisePath = path.join(projectPath, 'PREMISE.md');
+
+  if (!fs.existsSync(premisePath)) {
+    return { content: null, exists: false };
+  }
+
+  const content = fs.readFileSync(premisePath, 'utf-8');
+  return { content, exists: true };
+}
+
+/**
  * Parse CONSTITUTION.md to extract principles with full details and version metadata.
  *
  * @param {string} projectPath - Path to the project root
@@ -1258,4 +1275,4 @@ function extractField(section, fieldName) {
   return value;
 }
 
-module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation, parseBugs };
+module.exports = { parseSpecStories, parseTasks, parseChecklists, parseChecklistsDetailed, parseConstitutionTDD, hasClarifications, parseConstitutionPrinciples, parsePremise, parseRequirements, parseSuccessCriteria, parseClarifications, parseStoryRequirementRefs, parseTechContext, parseFileStructure, parseAsciiDiagram, parseTesslJson, parseResearchDecisions, parseTestSpecs, parseTaskTestRefs, parseAnalysisFindings, parseAnalysisCoverage, parseAnalysisMetrics, parseConstitutionAlignment, parsePhaseSeparation, parseBugs };

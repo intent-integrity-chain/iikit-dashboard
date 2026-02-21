@@ -27,6 +27,7 @@ function computePipelineState(projectPath, featureId) {
   const tasksExists = fs.existsSync(tasksPath);
   const testSpecsExists = fs.existsSync(testSpecsPath);
   const constitutionExists = fs.existsSync(constitutionPath);
+  const premiseExists = fs.existsSync(path.join(projectPath, 'PREMISE.md'));
   const analysisExists = fs.existsSync(analysisPath);
 
   // Read spec content for clarifications check
@@ -47,7 +48,7 @@ function computePipelineState(projectPath, featureId) {
   const phases = [
     {
       id: 'constitution',
-      name: 'Constitution',
+      name: premiseExists ? 'Premise &\nConstitution' : 'Constitution',
       status: constitutionExists ? 'complete' : 'not_started',
       progress: null,
       optional: false

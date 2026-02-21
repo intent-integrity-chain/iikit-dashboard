@@ -1,7 +1,7 @@
 {
   "testify": {
-    "assertion_hash": "c0f42e7aadf70053951b61e514bc12e015a94d27e3d2164bd3884f65bdbf24fd",
-    "generated_at": "2026-02-11T18:53:07Z",
+    "assertion_hash": "217d48bc08c5c308ff6003ea705e8dfe2e7007b645dbea1cc1b2642aba5af8b8",
+    "generated_at": "2026-02-21T00:25:40Z",
     "test_specs_file": "specs/003-constitution-radar/tests/test-specs.md"
   }
 }

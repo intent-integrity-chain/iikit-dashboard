@@ -1,6 +1,6 @@
 {
   "name": "iikit-dashboard",
-  "version": "1.6.1",
+  "version": "1.7.0",
   "description": "Real-time dashboard for Intent Integrity Kit (IIKit) — visualizes every phase of specification-driven AI development",
   "main": "src/server.js",
   "bin": {

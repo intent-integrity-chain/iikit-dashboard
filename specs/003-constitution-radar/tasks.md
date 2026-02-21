@@ -57,3 +57,8 @@ Phase 5: T013 -> T014 -> T015
 **MVP**: Phase 1-2 (parser + radar chart renders with principles)
 **Complete**: Phase 3-5 (detail card, timeline, live updates)
 **Polish**: Phase 6 (final verification)
+
+## Bug Fix Tasks
+
+- [x] T-B001 [BUG-001] Implement fix for BUG-001 referencing test specs TS-019 through TS-023: Add /api/premise endpoint, render premise.md content in Constitution panel, rename panel to "Premise and Constitution" when premise.md exists (GitHub #29)
+- [x] T-B002 [BUG-001] Verify fix passes tests TS-019 through TS-023 for BUG-001: Run test suite confirming premise rendering, panel title logic, and API endpoint (GitHub #29)
