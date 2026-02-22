@@ -35,6 +35,19 @@ function extractDashboardData(htmlPath) {
 }
 
 describe('Bundle correctness (TS-004, FR-006a)', () => {
+  beforeAll(() => {
+    // Build bundle if it doesn't exist (CI doesn't run build step)
+    if (!fs.existsSync(BUNDLED_PATH)) {
+      const buildScript = path.join(__dirname, '..', 'build', 'bundle-generator.js');
+      const result = spawnSync(process.execPath, [buildScript], {
+        encoding: 'utf-8', timeout: 30000, cwd: path.join(__dirname, '..')
+      });
+      if (result.status !== 0) {
+        throw new Error(`Build failed: ${result.stderr}`);
+      }
+    }
+  });
+
   test('bundled and modular generator produce identical DASHBOARD_DATA', () => {
     expect(fs.existsSync(BUNDLED_PATH)).toBe(true);
 
