@@ -85,7 +85,7 @@ describe('Compute module smoke tests', () => {
     const { computeAssertionHash, checkIntegrity } = require('../src/integrity');
     expect(typeof computeAssertionHash).toBe('function');
     expect(typeof checkIntegrity).toBe('function');
-    const hash = computeAssertionHash('**Given**: a project\n**When**: run\n**Then**:\n- result\n');
+    const hash = computeAssertionHash('    Given a project\n    When run\n    Then result\n');
     expect(typeof hash).toBe('string');
     expect(hash.length).toBe(64); // SHA-256 hex
     const result = checkIntegrity(hash, hash);

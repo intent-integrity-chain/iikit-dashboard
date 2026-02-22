@@ -478,6 +478,78 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 
 ---
 
+## Bug Fix Tests
+
+### TS-033: parseTestSpecs parses Gherkin .feature file format
+
+**Source**: BUG-001:Gherkin parser support
+**Type**: validation
+**Priority**: P1
+
+**Given**: a Gherkin .feature file containing `@TS-001 @P1 @acceptance @FR-001 @SC-001` tags followed by `Scenario: Login with valid credentials` and Given/When/Then steps
+**When**: parseTestSpecs() parses the content
+**Then**: the result contains an entry with id "TS-001", title "Login with valid credentials", type "acceptance", priority "P1", and traceability ["FR-001", "SC-001"]
+
+**Traceability**: FR-001, BUG-001
+
+---
+
+### TS-034: computeAssertionHash extracts Gherkin step lines from multiple sorted files
+
+**Source**: BUG-001:integrity hash migration
+**Type**: validation
+**Priority**: P1
+
+**Given**: two .feature files where file "a.feature" contains `Given a user` / `When they login` / `Then they see dashboard` and file "b.feature" contains `Given an admin` / `When they login` / `Then they see admin panel`
+**When**: computeAssertionHash() is called with the concatenated content (files sorted by name)
+**Then**: the hash is computed from lines matching `^\s*(Given|When|Then|And|But) ` with leading whitespace stripped, producing a deterministic SHA256 hash
+
+**Traceability**: FR-009, FR-010, BUG-001
+
+---
+
+### TS-035: Pipeline detects Testify phase from .feature files
+
+**Source**: BUG-001:pipeline detection
+**Type**: validation
+**Priority**: P1
+
+**Given**: a feature directory containing tests/features/acceptance.feature but no tests/test-specs.md
+**When**: computePipelineState() evaluates the testify phase
+**Then**: the testify phase status is "complete" (not "not_started")
+
+**Traceability**: FR-013, BUG-001
+
+---
+
+### TS-036: computeTestifyState aggregates test specs from multiple .feature files
+
+**Source**: BUG-001:multi-file aggregation
+**Type**: validation
+**Priority**: P1
+
+**Given**: a feature directory with tests/features/acceptance.feature containing 3 test specs and tests/features/validation.feature containing 2 test specs
+**When**: computeTestifyState() is called
+**Then**: the returned testSpecs array contains all 5 test specs with correct ids, types, priorities, and traceability links
+
+**Traceability**: FR-001, FR-002, BUG-001
+
+---
+
+### TS-037: Gherkin Background and Scenario Outline parsed without breaking
+
+**Source**: BUG-001:advanced Gherkin constructs
+**Type**: validation
+**Priority**: P2
+
+**Given**: a .feature file containing Background: with shared Given steps, Scenario Outline: with Examples: table, and Rule: grouping
+**When**: parseTestSpecs() parses the content
+**Then**: the parser does not throw errors and correctly extracts tagged scenarios (Background steps are not counted as separate test specs)
+
+**Traceability**: FR-001, BUG-001
+
+---
+
 ## Summary
 
 | Source | Count | Types |
@@ -485,4 +557,5 @@ If requirements change, re-run /iikit-05-testify to regenerate test specs.
 | spec.md | 20 | acceptance |
 | plan.md | 3 | contract |
 | data-model.md | 9 | validation |
-| **Total** | **32** | |
+| BUG-001 | 5 | validation |
+| **Total** | **37** | |

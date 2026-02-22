@@ -153,17 +153,6 @@
                         "sankey-flow"
                       ],
                       "dataAttrs": {
-                        "data-chain-ids": "FR-001 TS-002",
-                        "data-from": "FR-001",
-                        "data-to": "TS-002"
-                      }
-                    },
-                    {
-                      "tag": "path",
-                      "classes": [
-                        "sankey-flow"
-                      ],
-                      "dataAttrs": {
                         "data-chain-ids": "FR-002 TS-003",
                         "data-from": "FR-002",
                         "data-to": "TS-003"
@@ -200,6 +189,17 @@
                         "data-chain-ids": "SC-003 TS-004",
                         "data-from": "SC-003",
                         "data-to": "TS-004"
+                      }
+                    },
+                    {
+                      "tag": "path",
+                      "classes": [
+                        "sankey-flow"
+                      ],
+                      "dataAttrs": {
+                        "data-chain-ids": "FR-001 TS-002",
+                        "data-from": "FR-001",
+                        "data-to": "TS-002"
                       }
                     },
                     {
@@ -788,49 +788,6 @@
                         "sankey-node"
                       ],
                       "dataAttrs": {
-                        "data-node-id": "TS-002",
-                        "data-chain": "TS-002 FR-001",
-                        "data-cross-target": "checklist",
-                        "data-cross-id": "TS-002"
-                      },
-                      "ariaAttrs": {
-                        "aria-describedby": "desc-TS-002"
-                      },
-                      "role": "button",
-                      "children": [
-                        {
-                          "tag": "title"
-                        },
-                        {
-                          "tag": "desc"
-                        },
-                        {
-                          "tag": "rect",
-                          "classes": [
-                            "sankey-node-rect"
-                          ]
-                        },
-                        {
-                          "tag": "text",
-                          "classes": [
-                            "sankey-node-label"
-                          ]
-                        },
-                        {
-                          "tag": "text",
-                          "classes": [
-                            "sankey-node-desc"
-                          ]
-                        }
-                      ]
-                    },
-                    {
-                      "tag": "g",
-                      "classes": [
-                        "gap-node",
-                        "sankey-node"
-                      ],
-                      "dataAttrs": {
                         "data-node-id": "TS-003",
                         "data-chain": "TS-003 FR-002 SC-002",
                         "data-cross-target": "checklist",
@@ -881,6 +838,49 @@
                       },
                       "ariaAttrs": {
                         "aria-describedby": "desc-TS-004"
+                      },
+                      "role": "button",
+                      "children": [
+                        {
+                          "tag": "title"
+                        },
+                        {
+                          "tag": "desc"
+                        },
+                        {
+                          "tag": "rect",
+                          "classes": [
+                            "sankey-node-rect"
+                          ]
+                        },
+                        {
+                          "tag": "text",
+                          "classes": [
+                            "sankey-node-label"
+                          ]
+                        },
+                        {
+                          "tag": "text",
+                          "classes": [
+                            "sankey-node-desc"
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "tag": "g",
+                      "classes": [
+                        "gap-node",
+                        "sankey-node"
+                      ],
+                      "dataAttrs": {
+                        "data-node-id": "TS-002",
+                        "data-chain": "TS-002 FR-001",
+                        "data-cross-target": "checklist",
+                        "data-cross-id": "TS-002"
+                      },
+                      "ariaAttrs": {
+                        "aria-describedby": "desc-TS-002"
                       },
                       "role": "button",
                       "children": [

@@ -1,13 +1,13 @@
 const { computeAssertionHash, checkIntegrity } = require('../src/integrity');
 
-// TS-017: Integrity check detects hash mismatch
+// TS-017: Integrity check detects hash mismatch (Gherkin format)
 describe('computeAssertionHash', () => {
-  test('computes SHA256 hash from Given/When/Then lines', () => {
-    const content = `### TS-001: Live task checkbox update
-
-**Given**: a feature with tasks.md containing 10 unchecked tasks
-**When**: an agent checks off a task
-**Then**: the checkbox updates within 5 seconds
+  test('computes SHA256 hash from Gherkin step lines', () => {
+    const content = `Feature: Dashboard
+  Scenario: Live task checkbox update
+    Given a feature with tasks.md containing 10 unchecked tasks
+    When an agent checks off a task
+    Then the checkbox updates within 5 seconds
 `;
     const hash = computeAssertionHash(content);
     expect(hash).toBeDefined();
@@ -16,9 +16,9 @@ describe('computeAssertionHash', () => {
   });
 
   test('same content produces same hash', () => {
-    const content = `**Given**: input A
-**When**: action B
-**Then**: result C
+    const content = `    Given input A
+    When action B
+    Then result C
 `;
     const hash1 = computeAssertionHash(content);
     const hash2 = computeAssertionHash(content);
@@ -26,13 +26,13 @@ describe('computeAssertionHash', () => {
   });
 
   test('different content produces different hash', () => {
-    const content1 = `**Given**: input A
-**When**: action B
-**Then**: result C
+    const content1 = `    Given input A
+    When action B
+    Then result C
 `;
-    const content2 = `**Given**: input A
-**When**: action B
-**Then**: result D
+    const content2 = `    Given input A
+    When action B
+    Then result D
 `;
     const hash1 = computeAssertionHash(content1);
     const hash2 = computeAssertionHash(content2);
@@ -40,17 +40,29 @@ describe('computeAssertionHash', () => {
   });
 
   test('whitespace normalization produces consistent hashes', () => {
-    const content1 = `**Given**:  input   A
-**When**:  action  B
-**Then**:  result  C
+    const content1 = `    Given  input   A
+    When  action  B
+    Then  result  C
 `;
-    const content2 = `**Given**: input A
-**When**: action B
-**Then**: result C
+    const content2 = `    Given input A
+    When action B
+    Then result C
 `;
     const hash1 = computeAssertionHash(content1);
     const hash2 = computeAssertionHash(content2);
     expect(hash1).toBe(hash2);
+  });
+
+  test('extracts And and But step keywords', () => {
+    const content = `    Given input A
+    And input B
+    When action C
+    But not action D
+    Then result E
+`;
+    const hash = computeAssertionHash(content);
+    expect(hash).toBeDefined();
+    expect(hash).toHaveLength(64);
   });
 
   test('returns null for content with no assertions', () => {
