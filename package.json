@@ -14,7 +14,8 @@
     "start": "node bin/iikit-dashboard.js",
     "test": "jest --testPathIgnorePatterns=test/visual",
     "test:visual": "npx playwright test",
-    "test:visual:update": "npx playwright test --update-snapshots"
+    "test:visual:update": "npx playwright test --update-snapshots",
+    "build:generator": "node build/bundle-generator.js"
   },
   "keywords": [
     "iikit",

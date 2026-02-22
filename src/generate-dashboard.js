@@ -161,13 +161,21 @@ function writeAtomic(outputPath, content) {
   fs.renameSync(tmpPath, outputPath);
 }
 
+// Template HTML — loaded from file (modular) or inlined by esbuild (bundled)
+let _cachedTemplate = null;
+function loadTemplate() {
+  if (_cachedTemplate) return _cachedTemplate;
+  const templatePath = path.join(__dirname, 'public', 'index.html');
+  _cachedTemplate = fs.readFileSync(templatePath, 'utf-8');
+  return _cachedTemplate;
+}
+
 /**
  * Run one generation cycle.
  */
 async function generate(projectPath) {
   const resolvedPath = path.resolve(projectPath);
-  const templatePath = path.join(__dirname, 'public', 'index.html');
-  const templateHtml = fs.readFileSync(templatePath, 'utf-8');
+  const templateHtml = loadTemplate();
 
   const dashboardData = await assembleDashboardData(resolvedPath);
 
