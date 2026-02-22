@@ -27,11 +27,6 @@
               "tag": "div",
               "classes": [
                 "placeholder-view-text"
-              ],
-              "children": [
-                {
-                  "tag": "code"
-                }
               ]
             }
           ]

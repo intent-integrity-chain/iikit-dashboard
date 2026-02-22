@@ -230,27 +230,7 @@
     .integrity-badge.tampered .integrity-dot { background: var(--color-tampered); }
     .integrity-badge.missing .integrity-dot { background: var(--color-missing); }
 
-    /* ====== Connection Status ====== */
-    .activity-indicator {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      cursor: help;
-      transition: background-color var(--transition-normal), box-shadow var(--transition-normal);
-      background-color: var(--color-text-muted);
-    }
-
-    .activity-indicator.active {
-      background-color: var(--color-verified);
-      box-shadow: 0 0 8px rgba(39, 201, 63, 0.6);
-      animation: pulse-glow 1.5s ease-in-out infinite;
-    }
-
-    .activity-indicator.idle {
-      background-color: var(--color-text-muted);
-      box-shadow: none;
-      animation: none;
-    }
+    /* ====== Connection Status (reserved) ====== */
 
     @keyframes pulse-glow {
       0%, 100% { box-shadow: 0 0 4px rgba(39, 201, 63, 0.4); }
@@ -2784,7 +2764,7 @@
       <button id="themeToggle" class="theme-toggle" aria-label="Toggle light/dark theme" title="Toggle theme" tabindex="0">
         <span id="themeIcon">&#9790;</span>
       </button>
-      <div id="activityIndicator" class="activity-indicator idle" role="status" aria-label="Agent activity: idle" title="Agent idle — no recent file changes"></div>
+      <div id="activityIndicator" role="status" aria-label="Agent activity: idle" title="Agent idle — no recent file changes" style="display:none"></div>
     </div>
   </header>
 
@@ -2820,8 +2800,8 @@
       let currentBugs = null;
       let activeTab = null;
       let externalSankeyHighlight = null;
-      let ws = null;
-      let reconnectTimer = null;
+      // DASHBOARD_DATA mode: when data is inlined by the generator
+      const staticMode = typeof window.DASHBOARD_DATA === 'object' && window.DASHBOARD_DATA !== null;
       let previousCardColumns = {}; // Track card positions for animations
 
       // ====== DOM References ======
@@ -2829,8 +2809,6 @@
       const featureSelect = document.getElementById('featureSelect');
       const integrityBadge = document.getElementById('integrityBadge');
       const activityIndicator = document.getElementById('activityIndicator');
-      let lastActivityTime = 0;
-      const ACTIVITY_TIMEOUT = 10000; // 10 seconds
       const loadingState = document.getElementById('loadingState');
       const pipelineBar = document.getElementById('pipelineBar');
       const contentArea = document.getElementById('contentArea');
@@ -3130,9 +3108,14 @@
 
         contentArea.innerHTML = '<div class="loading">Loading bug data...</div>';
         try {
-          const res = await fetch(`/api/bugs/${currentFeature}`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
+          let data;
+          if (staticMode && window.DASHBOARD_DATA.featureData[currentFeature]) {
+            data = window.DASHBOARD_DATA.featureData[currentFeature].bugs;
+          } else {
+            const res = await fetch(`/api/bugs/${currentFeature}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            data = await res.json();
+          }
           currentBugs = data;
           if (currentPipeline) renderPipeline(currentPipeline);
           renderBugsContent(data);
@@ -3275,9 +3258,13 @@
         if (!currentFeature) return;
 
         try {
-          const res = await fetch(`/api/checklist/${currentFeature}`);
-          if (!res.ok) throw new Error('Failed to load');
-          currentChecklist = await res.json();
+          if (staticMode && window.DASHBOARD_DATA.featureData[currentFeature]) {
+            currentChecklist = window.DASHBOARD_DATA.featureData[currentFeature].checklist;
+          } else {
+            const res = await fetch(`/api/checklist/${currentFeature}`);
+            if (!res.ok) throw new Error('Failed to load');
+            currentChecklist = await res.json();
+          }
           expandedChecklist = null;
           renderChecklistContent(currentChecklist);
         } catch {
@@ -3430,6 +3417,11 @@
         if (!currentFeature) return;
 
         try {
+          if (staticMode && window.DASHBOARD_DATA.featureData[currentFeature]) {
+            currentTestify = window.DASHBOARD_DATA.featureData[currentFeature].testify;
+            renderTestifyContent(currentTestify);
+            return;
+          }
           const res = await fetch(`/api/testify/${currentFeature}`);
           if (!res.ok) throw new Error('Failed to load');
           currentTestify = await res.json();
@@ -3860,9 +3852,13 @@
 
         try {
           if (!currentStoryMap) {
-            const res = await fetch(`/api/storymap/${currentFeature}`);
-            if (!res.ok) throw new Error('Failed to load');
-            currentStoryMap = await res.json();
+            if (staticMode && window.DASHBOARD_DATA.featureData[currentFeature]) {
+              currentStoryMap = window.DASHBOARD_DATA.featureData[currentFeature].storyMap;
+            } else {
+              const res = await fetch(`/api/storymap/${currentFeature}`);
+              if (!res.ok) throw new Error('Failed to load');
+              currentStoryMap = await res.json();
+            }
           }
           renderStoryMapContent(currentStoryMap);
         } catch {
@@ -4276,9 +4272,13 @@
 
         try {
           if (!currentStoryMap) {
-            const res = await fetch(`/api/storymap/${currentFeature}`);
-            if (!res.ok) throw new Error('Failed to load');
-            currentStoryMap = await res.json();
+            if (staticMode && window.DASHBOARD_DATA.featureData[currentFeature]) {
+              currentStoryMap = window.DASHBOARD_DATA.featureData[currentFeature].storyMap;
+            } else {
+              const res = await fetch(`/api/storymap/${currentFeature}`);
+              if (!res.ok) throw new Error('Failed to load');
+              currentStoryMap = await res.json();
+            }
           }
           renderClarifyContent(currentStoryMap.clarifications || []);
         } catch {
@@ -4366,14 +4366,19 @@
 
       async function renderConstitutionView() {
         try {
-          const fetches = [];
-          if (!currentConstitution) {
-            fetches.push(fetch('/api/constitution').then(r => r.json()).then(d => { currentConstitution = d; }));
+          if (staticMode) {
+            if (!currentConstitution) currentConstitution = window.DASHBOARD_DATA.constitution;
+            if (!currentPremise) currentPremise = window.DASHBOARD_DATA.premise;
+          } else {
+            const fetches = [];
+            if (!currentConstitution) {
+              fetches.push(fetch('/api/constitution').then(r => r.json()).then(d => { currentConstitution = d; }));
+            }
+            if (!currentPremise) {
+              fetches.push(fetch('/api/premise').then(r => r.json()).then(d => { currentPremise = d; }));
+            }
+            await Promise.all(fetches);
           }
-          if (!currentPremise) {
-            fetches.push(fetch('/api/premise').then(r => r.json()).then(d => { currentPremise = d; }));
-          }
-          await Promise.all(fetches);
           renderConstitutionContent(currentConstitution);
         } catch (err) {
           console.error('Failed to load constitution:', err);
@@ -4596,9 +4601,13 @@
       async function renderAnalyzeView() {
         if (!currentFeature) return;
         try {
-          const res = await fetch(`/api/analyze/${currentFeature}`);
-          if (!res.ok) throw new Error('Failed to load');
-          currentAnalyze = await res.json();
+          if (staticMode && window.DASHBOARD_DATA.featureData[currentFeature]) {
+            currentAnalyze = window.DASHBOARD_DATA.featureData[currentFeature].analyze;
+          } else {
+            const res = await fetch(`/api/analyze/${currentFeature}`);
+            if (!res.ok) throw new Error('Failed to load');
+            currentAnalyze = await res.json();
+          }
           renderAnalyzeContent(currentAnalyze);
         } catch {
           contentArea.innerHTML = '<div class="analyze-empty"><div class="analyze-empty-title">Failed to load analyze data.</div></div>';
@@ -5012,9 +5021,14 @@
 
       async function loadPipeline(featureId) {
         try {
-          const res = await fetch(`/api/pipeline/${featureId}`);
-          if (!res.ok) return;
-          const pipeline = await res.json();
+          let pipeline;
+          if (staticMode && window.DASHBOARD_DATA.featureData[featureId]) {
+            pipeline = window.DASHBOARD_DATA.featureData[featureId].pipeline;
+          } else {
+            const res = await fetch(`/api/pipeline/${featureId}`);
+            if (!res.ok) return;
+            pipeline = await res.json();
+          }
           currentPipeline = pipeline;
 
           if (!activeTab) {
@@ -5031,8 +5045,13 @@
       // ====== Feature Loading ======
       async function loadFeatures() {
         try {
-          const res = await fetch('/api/features');
-          const features = await res.json();
+          let features;
+          if (staticMode) {
+            features = window.DASHBOARD_DATA.features;
+          } else {
+            const res = await fetch('/api/features');
+            features = await res.json();
+          }
           updateFeatureSelector(features);
 
           if (features.length > 0 && !currentFeature) {
@@ -5077,10 +5096,6 @@
           loadPipeline(val);
           loadBoard(val);
           loadBugs(val);
-          // Resubscribe WebSocket
-          if (ws && ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'subscribe', feature: val }));
-          }
         }
       });
 
@@ -5095,9 +5110,14 @@
       async function loadBoard(featureId) {
         try {
           showLoading();
-          const res = await fetch(`/api/board/${featureId}`);
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const board = await res.json();
+          let board;
+          if (staticMode && window.DASHBOARD_DATA.featureData[featureId]) {
+            board = window.DASHBOARD_DATA.featureData[featureId].board;
+          } else {
+            const res = await fetch(`/api/board/${featureId}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            board = await res.json();
+          }
           currentBoard = board;
           renderBoard(board);
           updateIntegrity(board.integrity);
@@ -5109,14 +5129,17 @@
 
       async function loadBugs(featureId) {
         try {
-          const res = await fetch(`/api/bugs/${featureId}`);
-          if (res.ok) {
-            currentBugs = await res.json();
-            // Update badge on pipeline bar
-            if (currentPipeline) renderPipeline(currentPipeline);
-            // If bugs view is active, re-render it
-            if (activeTab === 'bugs') renderBugsContent(currentBugs);
+          let bugs;
+          if (staticMode && window.DASHBOARD_DATA.featureData[featureId]) {
+            bugs = window.DASHBOARD_DATA.featureData[featureId].bugs;
+          } else {
+            const res = await fetch(`/api/bugs/${featureId}`);
+            if (!res.ok) return;
+            bugs = await res.json();
           }
+          currentBugs = bugs;
+          if (currentPipeline) renderPipeline(currentPipeline);
+          if (activeTab === 'bugs') renderBugsContent(currentBugs);
         } catch {
           // Silently fail — bugs are optional
         }
@@ -5320,8 +5343,12 @@
         if (!currentFeature) return;
         try {
           if (!currentPlanView) {
-            const res = await fetch(`/api/planview/${currentFeature}`);
-            currentPlanView = await res.json();
+            if (staticMode && window.DASHBOARD_DATA.featureData[currentFeature]) {
+              currentPlanView = window.DASHBOARD_DATA.featureData[currentFeature].planView;
+            } else {
+              const res = await fetch(`/api/planview/${currentFeature}`);
+              currentPlanView = await res.json();
+            }
           }
           renderPlanViewContent(currentPlanView);
         } catch (err) {
@@ -5634,187 +5661,7 @@
         slot.querySelector('.detail-panel-close').addEventListener('click', () => { slot.innerHTML = ''; });
       }
 
-      // ====== WebSocket ======
-      function connectWebSocket() {
-        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const url = `${protocol}//${location.host}`;
-
-        // connecting
-
-        try {
-          ws = new WebSocket(url);
-        } catch (err) {
-          // disconnected
-          scheduleReconnect();
-          return;
-        }
-
-        ws.onopen = () => {
-          // connected
-          if (reconnectTimer) {
-            clearTimeout(reconnectTimer);
-            reconnectTimer = null;
-          }
-          // Subscribe to current feature
-          if (currentFeature) {
-            ws.send(JSON.stringify({ type: 'subscribe', feature: currentFeature }));
-          }
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const msg = JSON.parse(event.data);
-            handleMessage(msg);
-          } catch (err) {
-            console.error('Failed to parse WebSocket message:', err);
-          }
-        };
-
-        ws.onclose = () => {
-          // disconnected
-          ws = null;
-          scheduleReconnect();
-        };
-
-        ws.onerror = () => {
-          // onclose will fire after onerror
-        };
-      }
-
-      function markActivity() {
-        lastActivityTime = Date.now();
-        if (!activityIndicator.classList.contains('active')) {
-          activityIndicator.classList.remove('idle');
-          activityIndicator.classList.add('active');
-          activityIndicator.title = 'Agent active \u2014 files changing';
-          activityIndicator.setAttribute('aria-label', 'Agent activity: active');
-        }
-      }
-
-      // Check activity every 2 seconds
-      setInterval(() => {
-        if (lastActivityTime > 0 && Date.now() - lastActivityTime > ACTIVITY_TIMEOUT) {
-          if (activityIndicator.classList.contains('active')) {
-            activityIndicator.classList.remove('active');
-            activityIndicator.classList.add('idle');
-            activityIndicator.title = 'Agent idle \u2014 no recent file changes';
-            activityIndicator.setAttribute('aria-label', 'Agent activity: idle');
-          }
-        }
-      }, 2000);
-
-      function handleMessage(msg) {
-        markActivity();
-        switch (msg.type) {
-          case 'board_update':
-            if (msg.feature === currentFeature && msg.board) {
-              currentBoard = msg.board;
-              if (activeTab === 'implement') {
-                renderBoard(msg.board);
-              }
-              updateIntegrity(msg.board.integrity);
-            }
-            break;
-
-          case 'pipeline_update':
-            if (msg.feature === currentFeature && msg.pipeline) {
-              currentPipeline = msg.pipeline;
-              renderPipeline(msg.pipeline);
-            }
-            break;
-
-          case 'storymap_update':
-            if (msg.feature === currentFeature && msg.storymap) {
-              currentStoryMap = msg.storymap;
-              if (activeTab === 'spec') {
-                renderStoryMapContent(msg.storymap);
-              }
-            }
-            break;
-
-          case 'planview_update':
-            if (msg.feature === currentFeature && msg.planview) {
-              currentPlanView = msg.planview;
-              if (activeTab === 'plan') {
-                renderPlanViewContent(msg.planview);
-              }
-            }
-            break;
-
-          case 'checklist_update':
-            if (msg.feature === currentFeature && msg.checklist) {
-              currentChecklist = msg.checklist;
-              if (activeTab === 'checklist') {
-                renderChecklistContent(msg.checklist);
-              }
-            }
-            break;
-
-          case 'testify_update':
-            if (msg.feature === currentFeature && msg.testify) {
-              currentTestify = msg.testify;
-              if (activeTab === 'testify') {
-                renderTestifyContent(msg.testify);
-              }
-            }
-            break;
-
-          case 'analyze_update':
-            if (msg.feature === currentFeature && msg.analyze) {
-              currentAnalyze = msg.analyze;
-              if (activeTab === 'analyze') {
-                renderAnalyzeContent(msg.analyze);
-              }
-            }
-            break;
-
-          case 'constitution_update':
-            if (msg.constitution) {
-              currentConstitution = msg.constitution;
-              if (activeTab === 'constitution') {
-                renderConstitutionContent(msg.constitution);
-              }
-            }
-            break;
-
-          case 'premise_update':
-            if (msg.premise) {
-              currentPremise = msg.premise;
-              if (activeTab === 'constitution') {
-                renderConstitutionContent(currentConstitution);
-              }
-            }
-            break;
-
-          case 'bugs_update':
-            if (msg.feature === currentFeature && msg.bugs) {
-              currentBugs = msg.bugs;
-              if (currentPipeline) renderPipeline(currentPipeline);
-              if (activeTab === 'bugs') {
-                renderBugsContent(msg.bugs);
-              }
-            }
-            break;
-
-          case 'features_update':
-            if (msg.features) {
-              updateFeatureSelector(msg.features);
-              if (currentFeature) {
-                featureSelect.value = currentFeature;
-              }
-            }
-            break;
-        }
-      }
-
-      function scheduleReconnect() {
-        if (reconnectTimer) return;
-        reconnectTimer = setTimeout(() => {
-          reconnectTimer = null;
-          connectWebSocket();
-        }, 3000);
-      }
-
+      // ====== WebSocket (removed — replaced by meta-refresh in static mode) ======
 
       // ====== Theme Toggle ======
       const themeToggle = document.getElementById('themeToggle');
@@ -5870,14 +5717,42 @@
       applyTheme(themeMode);
 
       // ====== Init ======
-      fetch('/api/meta').then(r => r.json()).then(meta => {
+      if (staticMode) {
+        // Bootstrap from inlined DASHBOARD_DATA (generated HTML)
+        const D = window.DASHBOARD_DATA;
         const label = document.getElementById('projectLabel');
-        const dirName = meta.projectPath.split('/').pop();
+        const dirName = D.meta.projectPath.split('/').pop();
         label.textContent = dirName;
-        label.title = meta.projectPath;
-      }).catch(() => {});
-      loadFeatures();
-      connectWebSocket();
+        label.title = D.meta.projectPath;
+        currentConstitution = D.constitution;
+        currentPremise = D.premise;
+        updateFeatureSelector(D.features);
+        if (D.features.length > 0) {
+          currentFeature = D.features[0].id;
+          featureSelect.value = currentFeature;
+          const fd = D.featureData[currentFeature];
+          if (fd) {
+            currentPipeline = fd.pipeline;
+            currentBoard = fd.board;
+            currentBugs = fd.bugs;
+            if (!activeTab) activeTab = selectDefaultTab(fd.pipeline);
+            renderPipeline(fd.pipeline);
+            renderBoard(fd.board);
+            updateIntegrity(fd.board.integrity);
+            if (fd.bugs && currentPipeline) renderPipeline(currentPipeline);
+            switchTab(activeTab);
+          }
+        }
+      } else {
+        // Fetch mode (server-based)
+        fetch('/api/meta').then(r => r.json()).then(meta => {
+          const label = document.getElementById('projectLabel');
+          const dirName = meta.projectPath.split('/').pop();
+          label.textContent = dirName;
+          label.title = meta.projectPath;
+        }).catch(() => {});
+        loadFeatures();
+      }
     })();
 
     // ====== Task List Toggle (global, called from onclick) ======

@@ -2,7 +2,7 @@
   "name": "iikit-dashboard",
   "version": "1.7.0",
   "description": "Real-time dashboard for Intent Integrity Kit (IIKit) — visualizes every phase of specification-driven AI development",
-  "main": "src/server.js",
+  "main": "src/generate-dashboard.js",
   "bin": {
     "iikit-dashboard": "bin/iikit-dashboard.js"
   },
@@ -11,10 +11,11 @@
     "src/"
   ],
   "scripts": {
-    "start": "node bin/iikit-dashboard.js",
+    "start": "node src/generate-dashboard.js . --watch",
     "test": "jest --testPathIgnorePatterns=test/visual",
     "test:visual": "npx playwright test",
-    "test:visual:update": "npx playwright test --update-snapshots"
+    "test:visual:update": "npx playwright test --update-snapshots",
+    "build:generator": "node build/bundle-generator.js"
   },
   "keywords": [
     "iikit",
@@ -36,13 +37,11 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.74.0",
-    "chokidar": "^3.6.0",
-    "express": "^5.2.1",
-    "ws": "^8.19.0"
+    "chokidar": "^3.6.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
+    "esbuild": "^0.27.3",
     "jest": "^30.2.0"
   }
 }

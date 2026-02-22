@@ -10,6 +10,26 @@
         {
           "tag": "div",
           "classes": [
+            "premise-section"
+          ],
+          "children": [
+            {
+              "tag": "h3",
+              "classes": [
+                "premise-title"
+              ]
+            },
+            {
+              "tag": "p",
+              "classes": [
+                "premise-text"
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "div",
+          "classes": [
             "constitution-layout"
           ],
           "children": [

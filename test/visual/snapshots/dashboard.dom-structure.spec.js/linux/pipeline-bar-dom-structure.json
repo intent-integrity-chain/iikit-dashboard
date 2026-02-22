@@ -24,7 +24,22 @@
         {
           "tag": "span",
           "classes": [
-            "pipeline-label"
+            "pipeline-label",
+            "pipeline-label-multiline"
+          ],
+          "children": [
+            {
+              "tag": "span",
+              "classes": [
+                "pipeline-label-line"
+              ]
+            },
+            {
+              "tag": "span",
+              "classes": [
+                "pipeline-label-line"
+              ]
+            }
           ]
         },
         {
