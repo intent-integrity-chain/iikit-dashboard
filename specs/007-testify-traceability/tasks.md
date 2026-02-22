@@ -140,3 +140,10 @@ Phase 9:          [T022, T023] (independent) | T024 | T025
 **Increment 2 (Phase 7-8)**: US5 + US6 = Hover interaction and real-time updates. Polish interactions for complex diagrams.
 
 **Final (Phase 9)**: Accessibility, animation, edge cases. Production-grade polish.
+
+---
+
+## Bug Fix Tasks
+
+- [ ] T-B001 [BUG-001] Implement fix for BUG-001 referencing test specs TS-033 through TS-037: migrate parseTestSpecs to Gherkin .feature format, update computeAssertionHash for Gherkin step lines, update computeTestifyState/computePipelineState/getBoardState to glob tests/features/*.feature, update file watcher glob, update test fixtures and tests (GitHub #30)
+- [ ] T-B002 [BUG-001] Verify fix passes tests TS-033 through TS-037 for BUG-001: run full test suite confirming Gherkin parsing, multi-file integrity hash, pipeline detection, multi-file aggregation, and advanced Gherkin constructs (GitHub #30)
