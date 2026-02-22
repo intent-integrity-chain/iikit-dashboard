@@ -312,6 +312,21 @@ describe('HTML output', () => {
     const tmpFile = path.join(tmpDir, '.specify', 'dashboard.html.tmp');
     expect(fs.existsSync(tmpFile)).toBe(false);
   });
+
+  test('DASHBOARD_DATA script block is not broken by </script> in project content (SC-008)', () => {
+    const { buildHtml } = require('../src/generate-dashboard');
+    const template = '<!DOCTYPE html><html><head></head><body></body></html>';
+    const data = { meta: {}, features: [], featureData: {}, payload: '</script><script>alert(1)' };
+    const result = buildHtml(template, data);
+    // Extract the DASHBOARD_DATA assignment line
+    const assignmentMatch = result.match(/window\.DASHBOARD_DATA\s*=\s*(\{[^\n]+\});/);
+    expect(assignmentMatch).not.toBeNull();
+    // The assignment must not contain a bare </script> (which would break the script block)
+    expect(assignmentMatch[0]).not.toContain('</script>');
+    // The data must round-trip correctly through JSON parse
+    const parsed = JSON.parse(assignmentMatch[1]);
+    expect(parsed.payload).toBe('</script><script>alert(1)');
+  });
 });
 
 // T010: Watch mode tests (TS-005, TS-007)

@@ -140,8 +140,10 @@ function buildHtml(templateHtml, dashboardData) {
 
   // Inject DASHBOARD_DATA and meta-refresh into <head> (FR-004, FR-005, FR-007)
   // DASHBOARD_DATA must be in <head> so it's available before the IIFE in <body> runs
+  // Escape </script> to prevent script-tag injection from data file content (SC-008)
+  const safeJson = JSON.stringify(dashboardData).replace(/<\/script>/gi, '<\\/script>');
   const headInject = `  <meta http-equiv="refresh" content="2">\n` +
-    `  <script>window.DASHBOARD_DATA = ${JSON.stringify(dashboardData)};</script>\n`;
+    `  <script>window.DASHBOARD_DATA = ${safeJson};</script>\n`;
   html = html.replace('</head>', headInject + '</head>');
 
   // Inject JS fallback reload before </body> (FR-007)
@@ -181,7 +183,6 @@ async function generate(projectPath) {
   const dashboardData = await assembleDashboardData(resolvedPath);
 
   // Size warning (SC-007)
-  const jsonStr = JSON.stringify(dashboardData);
   for (const feature of dashboardData.features) {
     const featureJson = JSON.stringify(dashboardData.featureData[feature.id] || {});
     if (featureJson.length > 500 * 1024) {
