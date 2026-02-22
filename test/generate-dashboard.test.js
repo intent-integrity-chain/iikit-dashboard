@@ -238,7 +238,7 @@ describe('DASHBOARD_DATA assembly', () => {
   });
 
   test('output contains all features', () => {
-    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(.+?);\s*<\/script>/s);
+    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(\{.+?\});\s*<\/script>/s);
     expect(match).not.toBeNull();
     const data = JSON.parse(match[1]);
     const featureIds = data.features.map(f => f.id);
@@ -247,7 +247,7 @@ describe('DASHBOARD_DATA assembly', () => {
   });
 
   test('each feature has 8 view keys', () => {
-    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(.+?);\s*<\/script>/s);
+    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(\{.+?\});\s*<\/script>/s);
     const data = JSON.parse(match[1]);
     const expectedKeys = ['board', 'pipeline', 'storyMap', 'planView', 'checklist', 'testify', 'analyze', 'bugs'];
     for (const featureId of Object.keys(data.featureData)) {
@@ -259,14 +259,14 @@ describe('DASHBOARD_DATA assembly', () => {
   });
 
   test('meta.projectPath is non-empty', () => {
-    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(.+?);\s*<\/script>/s);
+    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(\{.+?\});\s*<\/script>/s);
     const data = JSON.parse(match[1]);
     expect(data.meta.projectPath).toBeTruthy();
     expect(data.meta.projectPath.length).toBeGreaterThan(0);
   });
 
   test('meta.generatedAt is ISO-8601', () => {
-    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(.+?);\s*<\/script>/s);
+    const match = htmlContent.match(/window\.DASHBOARD_DATA\s*=\s*(\{.+?\});\s*<\/script>/s);
     const data = JSON.parse(match[1]);
     expect(data.meta.generatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
     expect(new Date(data.meta.generatedAt).toISOString()).toBe(data.meta.generatedAt);
@@ -290,7 +290,7 @@ describe('HTML output', () => {
   });
 
   test('contains window.DASHBOARD_DATA script', () => {
-    expect(htmlContent).toMatch(/<script>\s*window\.DASHBOARD_DATA\s*=/);
+    expect(htmlContent).toMatch(/window\.DASHBOARD_DATA\s*=\s*\{/);
   });
 
   test('contains meta http-equiv refresh', () => {

@@ -513,64 +513,7 @@ test.describe('Cross-Panel Navigation', () => {
 });
 
 // ============================================================
-// WebSocket Live Updates
-// ============================================================
-
-test.describe('WebSocket Live Updates', () => {
-  test('activity indicator lights up on file change', async ({ page }) => {
-    await waitForDashboard(page);
-
-    const indicator = page.locator('#activityIndicator');
-    await expect(indicator).toHaveClass(/idle/);
-
-    // Modify a file to trigger chokidar -> WebSocket push
-    const tasksPath = path.join(projectPath, 'specs', '001-auth', 'tasks.md');
-    const content = fs.readFileSync(tasksPath, 'utf-8');
-    fs.writeFileSync(tasksPath, content + '\n- [ ] T016 [US1] New task for test\n');
-
-    // Wait for debounce (300ms) + processing + WebSocket push
-    await page.waitForTimeout(2000);
-
-    await expect(indicator).toHaveClass(/active/);
-  });
-
-  test('board updates when tasks file changes', async ({ page }) => {
-    await waitForDashboard(page);
-    await selectFeatureByIndex(page, 1); // 001-auth
-    await switchToTab(page, 'Implement');
-
-    // Add a new story's task
-    const tasksPath = path.join(projectPath, 'specs', '001-auth', 'tasks.md');
-    const content = fs.readFileSync(tasksPath, 'utf-8');
-    fs.writeFileSync(tasksPath, content + '\n- [ ] T099 [US4] Brand new task for session mgmt\n');
-
-    // Wait for update cycle
-    await page.waitForTimeout(2000);
-
-    // Board should now have US4 card (Session Management story)
-    const html = await page.locator('#contentArea').innerHTML();
-    expect(html).toContain('Session Management');
-  });
-
-  test('pipeline updates when new file is created', async ({ page }) => {
-    await waitForDashboard(page);
-
-    const initialPipeline = await page.locator('#pipelineBar').innerHTML();
-
-    // Create a new checklist file
-    const checklistDir = path.join(projectPath, 'specs', '001-auth', 'checklists');
-    fs.writeFileSync(
-      path.join(checklistDir, 'perf.md'),
-      '# Performance\n\n- [x] CHK-301 (perf) Response time under 3s\n- [x] CHK-302 (perf) No memory leaks\n'
-    );
-
-    await page.waitForTimeout(2000);
-
-    // Pipeline should have been re-rendered
-    const updatedPipeline = await page.locator('#pipelineBar').innerHTML();
-    expect(updatedPipeline.length).toBeGreaterThan(0);
-  });
-});
+// WebSocket Live Updates — REMOVED (replaced by meta-refresh in static HTML mode)
 
 // ============================================================
 // Toast Notifications

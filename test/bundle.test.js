@@ -25,7 +25,7 @@ function createTestProject() {
 
 function extractDashboardData(htmlPath) {
   const html = fs.readFileSync(htmlPath, 'utf-8');
-  const match = html.match(/window\.DASHBOARD_DATA\s*=\s*(.+?);\s*<\/script>/s);
+  const match = html.match(/window\.DASHBOARD_DATA\s*=\s*(\{.+?\});\s*<\/script>/s);
   if (!match) throw new Error('DASHBOARD_DATA not found in HTML');
   const data = JSON.parse(match[1]);
   // Remove fields that will differ between runs

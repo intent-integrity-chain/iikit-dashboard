@@ -115,10 +115,6 @@
         },
         {
           "tag": "div",
-          "classes": [
-            "activity-indicator",
-            "idle"
-          ],
           "ariaAttrs": {
             "aria-label": "Agent activity: idle"
           },

@@ -204,47 +204,7 @@ test.describe('Performance Baselines', () => {
     expect(elapsed).toBeLessThan(INITIAL_LOAD_MAX_MS);
   });
 
-  test('WebSocket update: file change to DOM update', async ({ page }) => {
-    await page.goto(url());
-    await page.waitForSelector('.pipeline-node', { timeout: 10000 });
-    await page.waitForSelector('#contentArea:not(:empty)', { timeout: 10000 });
-    await page.selectOption('#featureSelect', { index: 1 });
-    await page.waitForTimeout(500);
-
-    // Switch to Implement tab to see board
-    const implementNode = page.locator('.pipeline-node', { hasText: 'Implement' });
-    await implementNode.click();
-    await page.waitForTimeout(500);
-
-    // Capture current board state
-    const initialHtml = await page.locator('#contentArea').innerHTML();
-
-    // Modify tasks file and start timing
-    const tasksPath = path.join(projectPath, 'specs', '001-auth', 'tasks.md');
-    const content = fs.readFileSync(tasksPath, 'utf-8');
-    const updated = content + '\n- [ ] T098 [US4] Performance test WS task\n';
-
-    const start = Date.now();
-    fs.writeFileSync(tasksPath, updated);
-
-    // Poll for DOM change (board should re-render with new data)
-    let elapsed = 0;
-    for (let i = 0; i < 40; i++) {
-      await page.waitForTimeout(100);
-      const currentHtml = await page.locator('#contentArea').innerHTML();
-      if (currentHtml !== initialHtml) {
-        elapsed = Date.now() - start;
-        break;
-      }
-    }
-
-    // If we never saw a change, measure worst case
-    if (elapsed === 0) {
-      elapsed = Date.now() - start;
-    }
-
-    expect(elapsed).toBeLessThan(WEBSOCKET_UPDATE_MAX_MS);
-  });
+  // WebSocket update test removed — replaced by meta-refresh in static HTML mode
 
   test('full navigation cycle: all tabs within budget', async ({ page }) => {
     await page.goto(url());

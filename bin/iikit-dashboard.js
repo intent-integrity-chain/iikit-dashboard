@@ -2,69 +2,29 @@
 'use strict';
 
 const path = require('path');
-const { createServer, removePidfile } = require('../src/server');
+const { execFileSync } = require('child_process');
 
-// Parse arguments
 const args = process.argv.slice(2);
-let projectPath = path.resolve(process.cwd());
-let port = 3000;
+let projectPath = '.';
+let watch = false;
 
 for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--path' && args[i + 1]) {
-    projectPath = path.resolve(args[i + 1]);
-    i++;
-  } else if (args[i] === '--port' && args[i + 1]) {
-    port = parseInt(args[i + 1], 10);
+  if (args[i] === '--watch' || args[i] === '-w') {
+    watch = true;
+  } else if (args[i] === '--path' && args[i + 1]) {
+    projectPath = args[i + 1];
     i++;
   } else if (!args[i].startsWith('--')) {
-    // Positional argument = project path
-    projectPath = path.resolve(args[i]);
+    projectPath = args[i];
   }
 }
 
-async function main() {
-  console.log(`\n  IIKit Dashboard`);
-  console.log(`  ===============\n`);
-  console.log(`  Project: ${projectPath}`);
+const generatorPath = path.join(__dirname, '..', 'src', 'generate-dashboard.js');
+const generatorArgs = [generatorPath, projectPath];
+if (watch) generatorArgs.push('--watch');
 
-  try {
-    const result = await createServer({ projectPath, port });
-    const url = `http://localhost:${result.port}`;
-    console.log(`  Server:  ${url}`);
-    console.log(`\n  Open your browser to view the dashboard.\n`);
-
-    // Try to open browser (best effort, don't fail if it doesn't work)
-    try {
-      const { exec } = require('child_process');
-      const cmd = process.platform === 'darwin' ? 'open' :
-                  process.platform === 'win32' ? 'start' : 'xdg-open';
-      exec(`${cmd} ${url}`);
-    } catch {
-      // Ignore browser open errors
-    }
-
-    // Handle graceful shutdown
-    process.on('SIGINT', () => {
-      console.log('\n  Shutting down...');
-      removePidfile(projectPath);
-      result.server.close(() => {
-        if (result.watcher) result.watcher.close();
-        process.exit(0);
-      });
-    });
-
-    process.on('SIGTERM', () => {
-      removePidfile(projectPath);
-      result.server.close(() => {
-        if (result.watcher) result.watcher.close();
-        process.exit(0);
-      });
-    });
-
-  } catch (err) {
-    console.error(`  Error: ${err.message}`);
-    process.exit(1);
-  }
+try {
+  execFileSync(process.execPath, generatorArgs, { stdio: 'inherit' });
+} catch (err) {
+  process.exit(err.status || 1);
 }
-
-main();

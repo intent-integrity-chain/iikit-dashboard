@@ -67,6 +67,9 @@ Project documentation MAY be generated from structured artifacts rather than mai
 **Version**: 1.0 | **Ratified**: 2026-02-01 | **Last Amended**: 2026-02-15
 `);
 
+  // PREMISE.md
+  fs.writeFileSync(path.join(testDir, 'PREMISE.md'), '# Project Premise\nThis is an authentication platform.\n');
+
   // Feature 1: 001-auth — rich data for all views
   fs.writeFileSync(path.join(feature1Dir, 'spec.md'), `# Feature Specification: User Authentication
 
@@ -471,18 +474,40 @@ As a user, I want to view my payment history so that I can track my spending.
 }
 
 /**
- * Start the dashboard server on a random port.
+ * Start a static dashboard server on a random port.
+ * Runs the generator to produce dashboard.html, then serves it.
  * Returns { server, port, cleanup }.
  */
 async function startServer(projectPath) {
-  const { createServer } = require('../../src/server');
-  const result = await createServer({ projectPath, port: 0 });
+  const { execSync } = require('child_process');
+  const generatorPath = path.join(__dirname, '..', '..', 'src', 'generate-dashboard.js');
+
+  // Run the generator to produce .specify/dashboard.html
+  execSync(`"${process.execPath}" "${generatorPath}" "${projectPath}"`, {
+    encoding: 'utf-8', timeout: 15000
+  });
+
+  let dashboardHtml = fs.readFileSync(
+    path.join(projectPath, '.specify', 'dashboard.html'), 'utf-8'
+  );
+  // Strip meta-refresh and JS reload for test stability
+  dashboardHtml = dashboardHtml.replace(/<meta\s+http-equiv="refresh"[^>]*>/g, '');
+  dashboardHtml = dashboardHtml.replace(/<script>setInterval\(\s*\(\)\s*=>\s*location\.reload\(\)[^<]*<\/script>/g, '');
+
+  // Serve with a simple static http server
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(dashboardHtml);
+  });
+
+  await new Promise(resolve => server.listen(0, resolve));
+  const port = server.address().port;
+
   const cleanup = async () => {
-    if (result.watcher) await result.watcher.close();
-    await new Promise(resolve => result.server.close(resolve));
+    await new Promise(resolve => server.close(resolve));
     fs.rmSync(projectPath, { recursive: true, force: true });
   };
-  return { server: result.server, port: result.port, cleanup };
+  return { server, port, cleanup };
 }
 
 module.exports = { createFixtureProject, startServer };

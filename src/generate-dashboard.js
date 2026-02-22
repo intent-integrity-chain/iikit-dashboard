@@ -138,13 +138,14 @@ async function assembleDashboardData(projectPath) {
 function buildHtml(templateHtml, dashboardData) {
   let html = templateHtml;
 
-  // Inject <meta http-equiv="refresh" content="2"> before </head> (FR-007)
-  html = html.replace('</head>', '  <meta http-equiv="refresh" content="2">\n</head>');
+  // Inject DASHBOARD_DATA and meta-refresh into <head> (FR-004, FR-005, FR-007)
+  // DASHBOARD_DATA must be in <head> so it's available before the IIFE in <body> runs
+  const headInject = `  <meta http-equiv="refresh" content="2">\n` +
+    `  <script>window.DASHBOARD_DATA = ${JSON.stringify(dashboardData)};</script>\n`;
+  html = html.replace('</head>', headInject + '</head>');
 
-  // Inject DASHBOARD_DATA script + JS fallback before </body> (FR-004, FR-005, FR-007)
-  const dataScript = `<script>window.DASHBOARD_DATA = ${JSON.stringify(dashboardData)};</script>\n` +
-    `<script>setInterval(() => location.reload(), 2000);</script>\n`;
-  html = html.replace('</body>', dataScript + '</body>');
+  // Inject JS fallback reload before </body> (FR-007)
+  html = html.replace('</body>', `<script>setInterval(() => location.reload(), 2000);</script>\n</body>`);
 
   return html;
 }

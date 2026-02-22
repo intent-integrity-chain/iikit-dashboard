@@ -24,7 +24,22 @@
         {
           "tag": "span",
           "classes": [
-            "pipeline-label"
+            "pipeline-label",
+            "pipeline-label-multiline"
+          ],
+          "children": [
+            {
+              "tag": "span",
+              "classes": [
+                "pipeline-label-line"
+              ]
+            },
+            {
+              "tag": "span",
+              "classes": [
+                "pipeline-label-line"
+              ]
+            }
           ]
         },
         {
@@ -311,6 +326,47 @@
           "tag": "span",
           "classes": [
             "pipeline-progress"
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "div",
+      "classes": [
+        "pipeline-bugs-gap"
+      ]
+    },
+    {
+      "tag": "button",
+      "classes": [
+        "bugs-tab",
+        "muted"
+      ],
+      "dataAttrs": {
+        "data-view": "bugs"
+      },
+      "children": [
+        {
+          "tag": "div",
+          "classes": [
+            "bugs-dot",
+            "pipeline-dot"
+          ],
+          "children": [
+            {
+              "tag": "svg",
+              "children": [
+                {
+                  "tag": "path"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tag": "span",
+          "classes": [
+            "pipeline-label"
           ]
         }
       ]
