@@ -7,6 +7,9 @@ node_modules/
 .claude/skills/
 .codex/skills/
 
+# Build output
+dist/
+
 # Dashboard runtime
 .specify/dashboard.pid.json
 
