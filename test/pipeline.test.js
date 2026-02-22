@@ -213,7 +213,7 @@ describe('computePipelineState', () => {
       'spec.md': '# Spec\n## Clarifications\n### Session\n- Q: x -> A: y\n',
       'plan.md': '# Plan',
       'checklists/req.md': '- [x] CHK001 Done\n',
-      'tests/test-specs.md': '# Test Specs\n### TS-001\n',
+      'tests/features/acceptance.feature': '@TS-001 @acceptance @P1\nScenario: Test\n  Given x\n  Then y\n',
       'tasks.md': '# Tasks\n- [x] T001 Done\n- [x] T002 Done\n',
       'analysis.md': '# Analysis Report\nAll clear.\n'
     });

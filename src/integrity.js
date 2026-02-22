@@ -3,10 +3,13 @@
 const crypto = require('crypto');
 
 /**
- * Extract Given/When/Then lines from test-specs.md,
- * normalize whitespace, sort, and compute SHA256 hash.
+ * Extract Gherkin step lines (Given/When/Then/And/But) from .feature content,
+ * normalize whitespace, and compute SHA256 hash.
  *
- * @param {string} content - Raw content of test-specs.md
+ * Order is preserved (deterministic ordering comes from sorted filenames — caller
+ * concatenates all .feature file contents sorted by filename before calling).
+ *
+ * @param {string} content - Concatenated content of .feature files
  * @returns {string|null} SHA256 hex hash, or null if no assertions found
  */
 function computeAssertionHash(content) {
@@ -16,22 +19,14 @@ function computeAssertionHash(content) {
   const assertionLines = [];
 
   for (const line of lines) {
-    const trimmed = line.trim();
-    if (
-      trimmed.startsWith('**Given**:') ||
-      trimmed.startsWith('**When**:') ||
-      trimmed.startsWith('**Then**:')
-    ) {
+    if (/^\s*(Given|When|Then|And|But) /.test(line)) {
       // Normalize whitespace: collapse multiple spaces to single space
-      const normalized = trimmed.replace(/\s+/g, ' ').trim();
+      const normalized = line.replace(/\s+/g, ' ').trim();
       assertionLines.push(normalized);
     }
   }
 
   if (assertionLines.length === 0) return null;
-
-  // Sort for deterministic ordering
-  assertionLines.sort();
 
   const joined = assertionLines.join('\n');
   return crypto.createHash('sha256').update(joined, 'utf8').digest('hex');
@@ -40,7 +35,7 @@ function computeAssertionHash(content) {
 /**
  * Compare current assertion hash against stored hash.
  *
- * @param {string|null} currentHash - Hash computed from current test-specs.md
+ * @param {string|null} currentHash - Hash computed from current .feature files
  * @param {string|null} storedHash - Hash from context.json
  * @returns {{status: string, currentHash: string|null, storedHash: string|null}}
  */

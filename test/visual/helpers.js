@@ -180,69 +180,53 @@ As a user, I want my session to persist so that I don't have to log in repeatedl
 - [ ] T015 [US1] Add authentication event audit logging
 `);
 
-  fs.writeFileSync(path.join(testsDir1, 'test-specs.md'), `# Test Specifications
+  const featuresDir1 = path.join(testsDir1, 'features');
+  fs.mkdirSync(featuresDir1, { recursive: true });
 
-### TS-001: Email Login Authentication (Type: acceptance, Priority: P1)
+  fs.writeFileSync(path.join(featuresDir1, 'acceptance.feature'), `Feature: Acceptance Tests
 
-Verifies that users can log in with valid email and password credentials.
+  @TS-001 @acceptance @P1 @FR-001 @SC-001
+  Scenario: Email Login Authentication
+    Given a registered user with email "test@example.com" and valid password
+    When they submit the login form with correct credentials
+    Then they receive a 200 response with a valid session token within 3 seconds
 
-**Traceability**: FR-001, SC-001
-**Task**: T003, T004
+  @TS-003 @acceptance @P1 @FR-002 @SC-002
+  Scenario: Password Reset Flow
+    Given a registered user who has forgotten their password
+    When they request a password reset for their email
+    Then a reset email is sent within 30 seconds with a valid token
+`);
 
-**Given**: a registered user with email "test@example.com" and valid password
-**When**: they submit the login form with correct credentials
-**Then**: they receive a 200 response with a valid session token within 3 seconds
+  fs.writeFileSync(path.join(featuresDir1, 'contract.feature'), `Feature: Contract Tests
 
-### TS-002: Login Validation Errors (Type: validation, Priority: P1)
+  @TS-004 @contract @P2 @FR-003 @SC-003
+  Scenario: OAuth Google Login
+    Given a user with a valid Google account
+    When they initiate the Google OAuth flow
+    Then the system exchanges the auth code for tokens and creates a session
+`);
 
-Verifies proper error handling for invalid login attempts.
+  fs.writeFileSync(path.join(featuresDir1, 'validation.feature'), `Feature: Validation Tests
 
-**Traceability**: FR-001
-**Task**: T005
+  @TS-002 @validation @P1 @FR-001
+  Scenario: Login Validation Errors
+    Given a user with an invalid email format
+    When they submit the login form
+    Then they see a validation error "Invalid email format"
 
-**Given**: a user with an invalid email format
-**When**: they submit the login form
-**Then**: they see a validation error "Invalid email format"
-
-### TS-003: Password Reset Flow (Type: acceptance, Priority: P1)
-
-Verifies the complete password reset flow from request to completion.
-
-**Traceability**: FR-002, SC-002
-**Task**: T006, T007, T008
-
-**Given**: a registered user who has forgotten their password
-**When**: they request a password reset for their email
-**Then**: a reset email is sent within 30 seconds with a valid token
-
-### TS-004: OAuth Google Login (Type: contract, Priority: P2)
-
-Verifies Google OAuth integration follows the OAuth 2.0 specification.
-
-**Traceability**: FR-003, SC-003
-**Task**: T009, T011
-
-**Given**: a user with a valid Google account
-**When**: they initiate the Google OAuth flow
-**Then**: the system exchanges the auth code for tokens and creates a session
-
-### TS-005: Rate Limiting (Type: validation, Priority: P1)
-
-Verifies that login attempts are properly rate-limited.
-
-**Traceability**: FR-006
-**Task**: T014
-
-**Given**: an IP address that has made 5 failed login attempts in the last minute
-**When**: they attempt a 6th login
-**Then**: the request is rejected with a 429 status code
+  @TS-005 @validation @P1 @FR-006
+  Scenario: Rate Limiting
+    Given an IP address that has made 5 failed login attempts in the last minute
+    When they attempt a 6th login
+    Then the request is rejected with a 429 status code
 `);
 
   fs.writeFileSync(path.join(feature1Dir, 'context.json'), JSON.stringify({
     testify: {
       assertion_hash: 'abc123def456',
       generated_at: '2026-02-10T00:00:00Z',
-      test_specs_file: 'specs/001-auth/tests/test-specs.md'
+      test_specs_file: 'specs/001-auth/tests/features/*.feature'
     }
   }));
 

@@ -6,6 +6,21 @@ const { parseRequirements, parseSuccessCriteria, parseTestSpecs, parseTasks, par
 const { computeAssertionHash, checkIntegrity } = require('./integrity');
 
 /**
+ * Get sorted list of .feature file paths in a feature's tests/features/ directory.
+ *
+ * @param {string} featureDir - Path to the feature directory (e.g., specs/001-auth)
+ * @returns {string[]} Sorted absolute paths to .feature files
+ */
+function getFeatureFiles(featureDir) {
+  const featuresDir = path.join(featureDir, 'tests', 'features');
+  if (!fs.existsSync(featuresDir)) return [];
+  return fs.readdirSync(featuresDir)
+    .filter(f => f.endsWith('.feature'))
+    .sort()
+    .map(f => path.join(featuresDir, f));
+}
+
+/**
  * Build edges between requirements, test specs, and tasks.
  * Only creates edges where both source and target nodes exist.
  *
@@ -98,7 +113,6 @@ function buildPyramid(testSpecs) {
 function computeTestifyState(projectPath, featureId) {
   const featureDir = path.join(projectPath, 'specs', featureId);
   const specPath = path.join(featureDir, 'spec.md');
-  const testSpecsPath = path.join(featureDir, 'tests', 'test-specs.md');
   const tasksPath = path.join(featureDir, 'tasks.md');
   const contextPath = path.join(featureDir, 'context.json');
 
@@ -125,10 +139,14 @@ function computeTestifyState(projectPath, featureId) {
   const scReqs = parseSuccessCriteria(specContent);
   const requirements = [...frReqs, ...scReqs];
 
-  // Parse test specs
-  const testSpecsExist = fs.existsSync(testSpecsPath);
-  const testSpecsContent = testSpecsExist ? fs.readFileSync(testSpecsPath, 'utf-8') : '';
-  const testSpecs = testSpecsExist ? parseTestSpecs(testSpecsContent) : [];
+  // Parse test specs from .feature files
+  const featureFiles = getFeatureFiles(featureDir);
+  const testSpecsExist = featureFiles.length > 0;
+  const featureContents = featureFiles.map(f => fs.readFileSync(f, 'utf-8'));
+  const allFeatureContent = featureContents.join('\n');
+  const testSpecs = testSpecsExist
+    ? featureContents.reduce((acc, content) => acc.concat(parseTestSpecs(content)), [])
+    : [];
 
   // Parse tasks and extract test spec refs
   const tasksContent = fs.existsSync(tasksPath) ? fs.readFileSync(tasksPath, 'utf-8') : '';
@@ -148,7 +166,7 @@ function computeTestifyState(projectPath, featureId) {
   // Integrity check
   let integrity = { status: 'missing', currentHash: null, storedHash: null };
   if (testSpecsExist) {
-    const currentHash = computeAssertionHash(testSpecsContent);
+    const currentHash = computeAssertionHash(allFeatureContent);
 
     let storedHash = null;
     if (fs.existsSync(contextPath)) {
@@ -175,4 +193,4 @@ function computeTestifyState(projectPath, featureId) {
   };
 }
 
-module.exports = { buildEdges, findGaps, buildPyramid, computeTestifyState };
+module.exports = { buildEdges, findGaps, buildPyramid, computeTestifyState, getFeatureFiles };

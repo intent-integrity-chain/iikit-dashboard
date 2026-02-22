@@ -881,58 +881,64 @@ function parseResearchDecisions(content) {
 }
 
 /**
- * Parse tests/test-specs.md to extract test specification entries.
- * Pattern: ### TS-XXX: Title, then **Type**: value, **Priority**: value, **Traceability**: refs
+ * Parse Gherkin .feature file content to extract test specification entries.
+ * Collects @tags before Scenario:/Scenario Outline: lines.
+ * Tags: @TS-XXX (id), @P1/@P2/@P3 (priority), @acceptance/@contract/@validation (type),
+ *        @FR-XXX/@SC-XXX (traceability — @US-XXX filtered out).
  *
- * @param {string} content - Raw markdown content of test-specs.md
+ * @param {string} content - Raw content of one or more .feature files
  * @returns {Array<{id: string, title: string, type: string, priority: string, traceability: string[]}>}
  */
 function parseTestSpecs(content) {
   if (!content || typeof content !== 'string') return [];
 
   const specs = [];
-  const headingRegex = /### TS-(\d+): (.+)/g;
-  const headingStarts = [];
-  let match;
+  const lines = content.split('\n');
+  let pendingTags = [];
 
-  while ((match = headingRegex.exec(content)) !== null) {
-    headingStarts.push({
-      id: `TS-${match[1]}`,
-      title: match[2].trim(),
-      index: match.index
-    });
-  }
+  for (const line of lines) {
+    const trimmed = line.trim();
 
-  for (let i = 0; i < headingStarts.length; i++) {
-    const start = headingStarts[i].index;
-    const end = i + 1 < headingStarts.length ? headingStarts[i + 1].index : content.length;
-    const section = content.substring(start, end);
-
-    // Extract type
-    const typeMatch = section.match(/\*\*Type\*\*:\s*(acceptance|contract|validation)/);
-    const type = typeMatch ? typeMatch[1] : 'validation';
-
-    // Extract priority
-    const priorityMatch = section.match(/\*\*Priority\*\*:\s*(P\d+)/);
-    const priority = priorityMatch ? priorityMatch[1] : 'P3';
-
-    // Extract traceability — comma-separated IDs, filter to FR-/SC- only
-    let traceability = [];
-    const traceMatch = section.match(/\*\*Traceability\*\*:\s*(.+)/);
-    if (traceMatch) {
-      traceability = traceMatch[1]
-        .split(/,\s*/)
-        .map(s => s.trim())
-        .filter(s => /^(FR|SC)-\d+$/.test(s));
+    // Collect tag lines (may have multiple tags per line)
+    if (trimmed.startsWith('@')) {
+      const tags = trimmed.match(/@[\w-]+/g) || [];
+      pendingTags.push(...tags);
+      continue;
     }
 
-    specs.push({
-      id: headingStarts[i].id,
-      title: headingStarts[i].title,
-      type,
-      priority,
-      traceability
-    });
+    // Match Scenario or Scenario Outline
+    const scenarioMatch = trimmed.match(/^Scenario(?: Outline)?:\s*(.+)/);
+    if (scenarioMatch && pendingTags.length > 0) {
+      const title = scenarioMatch[1].trim();
+
+      // Extract id from @TS-XXX
+      const idTag = pendingTags.find(t => /^@TS-\d+$/.test(t));
+      const id = idTag ? idTag.slice(1) : null;
+      if (!id) { pendingTags = []; continue; }
+
+      // Extract type from @acceptance/@contract/@validation
+      const typeTag = pendingTags.find(t => /^@(acceptance|contract|validation)$/.test(t));
+      const type = typeTag ? typeTag.slice(1) : 'validation';
+
+      // Extract priority from @P1/@P2/@P3
+      const priorityTag = pendingTags.find(t => /^@P\d+$/.test(t));
+      const priority = priorityTag ? priorityTag.slice(1) : 'P3';
+
+      // Extract traceability from @FR-XXX/@SC-XXX (filter out @US-XXX)
+      const traceability = pendingTags
+        .filter(t => /^@(FR|SC)-\d+$/.test(t))
+        .map(t => t.slice(1));
+
+      specs.push({ id, title, type, priority, traceability });
+      pendingTags = [];
+      continue;
+    }
+
+    // Skip Background:, Rule:, Feature:, Examples: — just reset tags on non-tag, non-scenario lines
+    if (trimmed.startsWith('Feature:') || trimmed.startsWith('Background:') ||
+        trimmed.startsWith('Rule:') || trimmed.startsWith('Examples:')) {
+      pendingTags = [];
+    }
   }
 
   return specs;

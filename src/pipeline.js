@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseTasks, parseChecklists, parseConstitutionTDD, hasClarifications } = require('./parser');
+const { getFeatureFiles } = require('./testify');
 
 /**
  * Compute pipeline phase states for a feature by examining artifacts on disk.
@@ -17,7 +18,6 @@ function computePipelineState(projectPath, featureId) {
   const specPath = path.join(featureDir, 'spec.md');
   const planPath = path.join(featureDir, 'plan.md');
   const checklistDir = path.join(featureDir, 'checklists');
-  const testSpecsPath = path.join(featureDir, 'tests', 'test-specs.md');
   const tasksPath = path.join(featureDir, 'tasks.md');
 
   const analysisPath = path.join(featureDir, 'analysis.md');
@@ -25,7 +25,7 @@ function computePipelineState(projectPath, featureId) {
   const specExists = fs.existsSync(specPath);
   const planExists = fs.existsSync(planPath);
   const tasksExists = fs.existsSync(tasksPath);
-  const testSpecsExists = fs.existsSync(testSpecsPath);
+  const testSpecsExists = getFeatureFiles(featureDir).length > 0;
   const constitutionExists = fs.existsSync(constitutionPath);
   const premiseExists = fs.existsSync(path.join(projectPath, 'PREMISE.md'));
   const analysisExists = fs.existsSync(analysisPath);

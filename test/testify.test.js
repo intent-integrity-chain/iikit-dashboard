@@ -162,21 +162,26 @@ describe('buildPyramid', () => {
 describe('computeTestifyState integrity', () => {
   let tmpDir;
 
+  function copyFeatureFixtures(featureDir) {
+    const featuresDir = path.join(featureDir, 'tests', 'features');
+    fs.mkdirSync(featuresDir, { recursive: true });
+    const srcFeaturesDir = path.join(FIXTURES_DIR, 'tests', 'features');
+    for (const f of fs.readdirSync(srcFeaturesDir).filter(f => f.endsWith('.feature'))) {
+      fs.copyFileSync(path.join(srcFeaturesDir, f), path.join(featuresDir, f));
+    }
+  }
+
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'testify-integrity-'));
     const featureDir = path.join(tmpDir, 'specs', 'test-feature');
-    const testsDir = path.join(featureDir, 'tests');
-    fs.mkdirSync(testsDir, { recursive: true });
+    fs.mkdirSync(featureDir, { recursive: true });
 
     // Copy fixture files
     fs.copyFileSync(
       path.join(FIXTURES_DIR, 'spec.md'),
       path.join(featureDir, 'spec.md')
     );
-    fs.copyFileSync(
-      path.join(FIXTURES_DIR, 'tests/test-specs.md'),
-      path.join(testsDir, 'test-specs.md')
-    );
+    copyFeatureFixtures(featureDir);
     fs.copyFileSync(
       path.join(FIXTURES_DIR, 'tasks.md'),
       path.join(featureDir, 'tasks.md')
@@ -231,14 +236,22 @@ describe('computeTestifyState integrity', () => {
 describe('computeTestifyState', () => {
   let tmpDir;
 
+  function copyFeatureFixtures(featureDir) {
+    const featuresDir = path.join(featureDir, 'tests', 'features');
+    fs.mkdirSync(featuresDir, { recursive: true });
+    const srcFeaturesDir = path.join(FIXTURES_DIR, 'tests', 'features');
+    for (const f of fs.readdirSync(srcFeaturesDir).filter(f => f.endsWith('.feature'))) {
+      fs.copyFileSync(path.join(srcFeaturesDir, f), path.join(featuresDir, f));
+    }
+  }
+
   beforeEach(() => {
     tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'testify-full-'));
     const featureDir = path.join(tmpDir, 'specs', 'test-feature');
-    const testsDir = path.join(featureDir, 'tests');
-    fs.mkdirSync(testsDir, { recursive: true });
+    fs.mkdirSync(featureDir, { recursive: true });
 
     fs.copyFileSync(path.join(FIXTURES_DIR, 'spec.md'), path.join(featureDir, 'spec.md'));
-    fs.copyFileSync(path.join(FIXTURES_DIR, 'tests/test-specs.md'), path.join(testsDir, 'test-specs.md'));
+    copyFeatureFixtures(featureDir);
     fs.copyFileSync(path.join(FIXTURES_DIR, 'tasks.md'), path.join(featureDir, 'tasks.md'));
     fs.copyFileSync(path.join(FIXTURES_DIR, 'context.json'), path.join(featureDir, 'context.json'));
   });
@@ -271,7 +284,7 @@ describe('computeTestifyState', () => {
     expect(scIds.length).toBe(3);
   });
 
-  test('parses test specs from test-specs.md', () => {
+  test('parses test specs from .feature files', () => {
     const state = computeTestifyState(tmpDir, 'test-feature');
     expect(state.testSpecs).toHaveLength(8);
     expect(state.testSpecs[0]).toHaveProperty('id');
@@ -300,13 +313,8 @@ describe('computeTestifyState', () => {
     expect(testToTask.length).toBeGreaterThan(0);
   });
 
-  test('detects gaps — FR-004 is untested, TS-008 has no tasks with gap computation on test data', () => {
+  test('detects gaps structure is correct', () => {
     const state = computeTestifyState(tmpDir, 'test-feature');
-    // FR-004 is only referenced by TS-004 which traces FR-001, FR-003 (not FR-004)
-    // FR-004 appears in TS-008 traceability field — so it IS traced
-    // The fixture has TS-008 tracing to FR-004, SC-003
-    // FR-005 is only in TS-007 traceability
-    // Let's just check that gaps structure is correct
     expect(state.gaps).toHaveProperty('untestedRequirements');
     expect(state.gaps).toHaveProperty('unimplementedTests');
     expect(Array.isArray(state.gaps.untestedRequirements)).toBe(true);
@@ -320,9 +328,9 @@ describe('computeTestifyState', () => {
     expect(state.pyramid.validation.count).toBe(3);
   });
 
-  test('returns exists false when test-specs.md missing', () => {
+  test('returns exists false when no .feature files exist', () => {
     const featureDir = path.join(tmpDir, 'specs', 'test-feature');
-    fs.unlinkSync(path.join(featureDir, 'tests', 'test-specs.md'));
+    fs.rmSync(path.join(featureDir, 'tests', 'features'), { recursive: true, force: true });
 
     const state = computeTestifyState(tmpDir, 'test-feature');
     expect(state.exists).toBe(false);
