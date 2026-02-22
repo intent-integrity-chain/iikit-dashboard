@@ -1111,15 +1111,16 @@ describe('parseChecklistsDetailed', () => {
   });
 });
 
-// T002: Tests for parseTestSpecs — TS-024, TS-025, TS-026
+// T002: Tests for parseTestSpecs — TS-024, TS-025, TS-026 (Gherkin format)
 describe('parseTestSpecs', () => {
-  const fixtureContent = fs.readFileSync(
-    path.join(__dirname, 'fixtures/testify/tests/test-specs.md'), 'utf-8'
-  );
+  const fixtureFiles = ['acceptance.feature', 'contract.feature', 'validation.feature'];
+  const fixtureContent = fixtureFiles
+    .map(f => fs.readFileSync(path.join(__dirname, 'fixtures/testify/tests/features', f), 'utf-8'))
+    .join('\n');
 
-  // TS-024: extracts id and title from heading pattern
-  test('extracts id and title from heading pattern', () => {
-    const content = '### TS-001: Login with valid credentials\n\n**Type**: acceptance\n**Priority**: P1\n\n**Traceability**: FR-001\n';
+  // TS-024: extracts id and title from Gherkin scenario
+  test('extracts id and title from Gherkin scenario', () => {
+    const content = '  @TS-001 @acceptance @P1 @FR-001\n  Scenario: Login with valid credentials\n    Given a user\n    When they login\n    Then they are authenticated\n';
     const specs = parseTestSpecs(content);
     expect(specs).toHaveLength(1);
     expect(specs[0].id).toBe('TS-001');
@@ -1140,7 +1141,7 @@ describe('parseTestSpecs', () => {
 
   // TS-026: traceability links filtered to FR-/SC- patterns only
   test('filters traceability to FR- and SC- patterns only', () => {
-    const content = '### TS-001: Test\n\n**Type**: acceptance\n**Priority**: P1\n\n**Traceability**: FR-001, SC-002, US-001-scenario-1\n';
+    const content = '  @TS-001 @acceptance @P1 @FR-001 @SC-002 @US-001\n  Scenario: Test\n    Given x\n    Then y\n';
     const specs = parseTestSpecs(content);
     expect(specs[0].traceability).toEqual(['FR-001', 'SC-002']);
   });
@@ -1168,11 +1169,37 @@ describe('parseTestSpecs', () => {
     expect(parseTestSpecs(null)).toEqual([]);
   });
 
-  test('handles test spec with no traceability line', () => {
-    const content = '### TS-001: Test\n\n**Type**: validation\n**Priority**: P2\n';
+  test('handles test spec with no traceability tags', () => {
+    const content = '  @TS-001 @validation @P2\n  Scenario: Test\n    Given x\n    Then y\n';
     const specs = parseTestSpecs(content);
     expect(specs).toHaveLength(1);
     expect(specs[0].traceability).toEqual([]);
+  });
+
+  test('defaults type to validation when no type tag', () => {
+    const content = '  @TS-001 @P1\n  Scenario: Test\n    Given x\n    Then y\n';
+    const specs = parseTestSpecs(content);
+    expect(specs[0].type).toBe('validation');
+  });
+
+  test('defaults priority to P3 when no priority tag', () => {
+    const content = '  @TS-001 @acceptance\n  Scenario: Test\n    Given x\n    Then y\n';
+    const specs = parseTestSpecs(content);
+    expect(specs[0].priority).toBe('P3');
+  });
+
+  test('handles Scenario Outline', () => {
+    const content = '  @TS-001 @acceptance @P1 @FR-001\n  Scenario Outline: Login with <role>\n    Given a <role> user\n    Then they see dashboard\n';
+    const specs = parseTestSpecs(content);
+    expect(specs).toHaveLength(1);
+    expect(specs[0].title).toBe('Login with <role>');
+  });
+
+  test('skips Background and Rule lines gracefully', () => {
+    const content = 'Feature: Auth\n\n  Background:\n    Given a database\n\n  @TS-001 @acceptance @P1\n  Scenario: Login\n    Given a user\n    Then success\n';
+    const specs = parseTestSpecs(content);
+    expect(specs).toHaveLength(1);
+    expect(specs[0].id).toBe('TS-001');
   });
 });
 

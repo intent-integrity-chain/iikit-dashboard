@@ -11,7 +11,7 @@ const { computePipelineState } = require('./pipeline');
 const { computeStoryMapState } = require('./storymap');
 const { computePlanViewState } = require('./planview');
 const { computeChecklistViewState } = require('./checklist');
-const { computeTestifyState } = require('./testify');
+const { computeTestifyState, getFeatureFiles } = require('./testify');
 const { computeAnalyzeState } = require('./analyze');
 const { computeBugsState } = require('./bugs');
 
@@ -62,7 +62,6 @@ function getBoardState(projectPath, featureId) {
   const featureDir = path.join(projectPath, 'specs', featureId);
   const specPath = path.join(featureDir, 'spec.md');
   const tasksPath = path.join(featureDir, 'tasks.md');
-  const testSpecsPath = path.join(featureDir, 'tests', 'test-specs.md');
   const contextPath = path.join(featureDir, 'context.json');
 
   const specContent = fs.existsSync(specPath) ? fs.readFileSync(specPath, 'utf-8') : '';
@@ -73,9 +72,10 @@ function getBoardState(projectPath, featureId) {
   const board = computeBoardState(stories, tasks);
 
   let integrity = { status: 'missing', currentHash: null, storedHash: null };
-  if (fs.existsSync(testSpecsPath)) {
-    const testSpecsContent = fs.readFileSync(testSpecsPath, 'utf-8');
-    const currentHash = computeAssertionHash(testSpecsContent);
+  const featureFiles = getFeatureFiles(featureDir);
+  if (featureFiles.length > 0) {
+    const allFeatureContent = featureFiles.map(f => fs.readFileSync(f, 'utf-8')).join('\n');
+    const currentHash = computeAssertionHash(allFeatureContent);
     let storedHash = null;
     if (fs.existsSync(contextPath)) {
       try {
@@ -260,6 +260,7 @@ async function main() {
 
     const watchGlobs = [
       path.join(projectPath, 'specs', '**', '*.md'),
+      path.join(projectPath, 'specs', '**', '*.feature'),
       path.join(projectPath, 'CONSTITUTION.md'),
       path.join(projectPath, 'PREMISE.md')
     ];
